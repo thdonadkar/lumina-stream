@@ -137,11 +137,14 @@
 }
 
 @utility text-gradient {
-  background: var(--gradient-aurora);
+  background-image: var(--gradient-aurora);
+  background-size: 200% 200%;
   background-clip: text;
   -webkit-background-clip: text;
   color: transparent;
+  animation: aurora-shift 8s ease-in-out infinite;
 }
+
 
 @utility shadow-glow-cyan {
   box-shadow: var(--shadow-glow-cyan);
