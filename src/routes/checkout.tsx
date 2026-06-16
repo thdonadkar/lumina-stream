@@ -59,7 +59,7 @@ function Checkout() {
           transition={{ delay: 0.3 }}
           className="text-4xl md:text-5xl font-extrabold tracking-tighter"
         >
-          Transmission <span className="text-gradient bg-aurora">complete</span>
+          Transmission <span className="text-gradient">complete</span>
         </motion.h1>
         <p className="mt-4 text-muted-foreground">
           Your order is preparing for departure. We've sent confirmation to your inbox.
@@ -286,7 +286,7 @@ function Checkout() {
               key={finalTotal}
               initial={{ opacity: 0, y: -4 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-2xl font-mono font-extrabold text-gradient bg-aurora"
+              className="text-2xl font-mono font-extrabold text-gradient"
             >
               {formatPrice(finalTotal)}
             </motion.span>

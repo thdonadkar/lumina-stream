@@ -170,7 +170,7 @@ export function CartDrawer() {
                   key={subtotal}
                   initial={{ opacity: 0, y: -4 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="font-mono text-gradient bg-aurora"
+                  className="font-mono text-gradient"
                 >
                   {formatPrice(subtotal)}
                 </motion.span>

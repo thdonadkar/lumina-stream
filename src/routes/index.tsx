@@ -55,7 +55,7 @@ function Home() {
 
             <h1 className="text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-extrabold tracking-tighter leading-[0.9] text-balance">
               Objects of pure{" "}
-              <span className="text-gradient bg-aurora animate-aurora">
+              <span className="text-gradient">
                 computational
               </span>{" "}
               light.

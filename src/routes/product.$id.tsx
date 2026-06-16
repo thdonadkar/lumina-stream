@@ -152,7 +152,7 @@ function ProductPage() {
           </div>
 
           <div className="mt-8 flex items-end gap-3">
-            <p className="text-5xl font-extrabold font-mono text-gradient bg-aurora">
+            <p className="text-5xl font-extrabold font-mono text-gradient">
               {formatPrice(product.price)}
             </p>
             {product.originalPrice && (
@@ -206,7 +206,7 @@ function ProductPage() {
         <h2 className="text-2xl font-bold mb-6">Customer signal</h2>
         <div className="grid md:grid-cols-3 gap-6">
           <div className="glass-strong rounded-2xl p-6">
-            <p className="text-5xl font-extrabold font-mono text-gradient bg-aurora">
+            <p className="text-5xl font-extrabold font-mono text-gradient">
               {product.rating}
             </p>
             <p className="text-sm text-muted-foreground mt-2">

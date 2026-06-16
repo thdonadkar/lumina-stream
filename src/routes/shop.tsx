@@ -48,7 +48,7 @@ function Shop() {
           Catalog / {filtered.length} items
         </p>
         <h1 className="text-4xl md:text-5xl font-extrabold tracking-tighter">
-          The full <span className="text-gradient bg-aurora">arsenal</span>
+          The full <span className="text-gradient">arsenal</span>
         </h1>
       </div>
 
