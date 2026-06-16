@@ -1,29 +1,277 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { motion } from "framer-motion";
+import { ArrowRight, Sparkles, Zap, Cpu, Headphones } from "lucide-react";
+import { products, categories } from "@/lib/products";
+import { ProductCard } from "@/components/ProductCard";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Your App" },
-      { name: "description", content: "Replace this with a one-sentence description of your app." },
-      { property: "og:title", content: "Your App" },
-      { property: "og:description", content: "Replace this with a one-sentence description of your app." },
+      { title: "Neural — Future-grade hardware" },
+      { name: "description", content: "Premium futuristic hardware for spatial computing, audio and wearables." },
     ],
   }),
-  component: Index,
+  component: Home,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
-function Index() {
+const categoryIcons: Record<string, any> = {
+  Headsets: Sparkles,
+  Controllers: Zap,
+  Computing: Cpu,
+  Audio: Headphones,
+  Tablets: Cpu,
+  Wearables: Zap,
+  Ambient: Sparkles,
+};
+
+function Home() {
+  const hero = products[0];
+  const trending = products.slice(1, 7);
+
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
+    <div className="px-4 sm:px-6 max-w-7xl mx-auto space-y-24 md:space-y-32">
+      {/* HERO */}
+      <section className="relative pt-8 md:pt-12">
+        <div className="absolute inset-0 bg-hero blur-3xl -z-10" />
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center"
+        >
+          <div className="relative z-10">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.2 }}
+              className="inline-flex items-center gap-2 glass rounded-full px-3 py-1 mb-6"
+            >
+              <span className="size-1.5 rounded-full bg-cyan animate-pulse" />
+              <span className="text-[10px] font-mono uppercase tracking-widest text-cyan">
+                Collection / 024
+              </span>
+            </motion.div>
+
+            <h1 className="text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-extrabold tracking-tighter leading-[0.9] text-balance">
+              Objects of pure{" "}
+              <span className="text-gradient bg-aurora animate-aurora">
+                computational
+              </span>{" "}
+              light.
+            </h1>
+
+            <p className="mt-8 text-base md:text-lg text-muted-foreground max-w-md text-pretty">
+              Next-gen bio-integrated hardware for the seamless synthesis of human
+              consciousness and digital reality. Finished in obsidian glass.
+            </p>
+
+            <div className="mt-10 flex flex-wrap items-center gap-3">
+              <Link
+                to="/product/$id"
+                params={{ id: hero.id }}
+                className="group inline-flex items-center gap-2 px-6 py-3.5 rounded-full bg-aurora animate-aurora font-bold text-background shadow-glow-cyan hover:scale-[1.02] active:scale-95 transition-transform"
+              >
+                Explore Receptor
+                <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
+              </Link>
+              <Link
+                to="/shop"
+                className="inline-flex items-center gap-2 px-6 py-3.5 rounded-full glass-strong font-semibold hover:bg-glass-strong transition-colors"
+              >
+                Browse catalog
+              </Link>
+            </div>
+
+            <div className="mt-12 grid grid-cols-3 gap-6 max-w-md">
+              {[
+                { label: "Latency", value: "0.002ms" },
+                { label: "Battery", value: "14h" },
+                { label: "Resolution", value: "16K" },
+              ].map((s, i) => (
+                <motion.div
+                  key={s.label}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 + i * 0.1 }}
+                >
+                  <p className="text-2xl font-extrabold font-mono text-foreground">
+                    {s.value}
+                  </p>
+                  <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
+                    {s.label}
+                  </p>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 1, delay: 0.2 }}
+            className="relative aspect-square max-w-lg mx-auto lg:max-w-none w-full"
+          >
+            <div className="absolute -inset-10 bg-aurora opacity-30 blur-[100px] rounded-full animate-aurora" />
+            <motion.div
+              animate={{ y: [0, -16, 0] }}
+              transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+              className="relative glass-strong rounded-[40px] overflow-hidden aspect-square shadow-elevated"
+            >
+              <img
+                src={hero.image}
+                alt={hero.name}
+                className="size-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-background/60 via-transparent to-transparent" />
+              <div className="absolute bottom-6 left-6 right-6 flex items-end justify-between">
+                <div>
+                  <p className="text-[10px] font-mono uppercase tracking-widest text-cyan">
+                    Featured
+                  </p>
+                  <p className="text-xl font-bold">{hero.name}</p>
+                </div>
+                <p className="font-mono font-bold text-cyan">
+                  ${hero.price.toLocaleString()}
+                </p>
+              </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.6 }}
+              className="absolute -right-2 sm:-right-6 top-1/4 glass-strong rounded-2xl p-4 w-44 shadow-glow-cyan hidden sm:block"
+            >
+              <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
+                Neural sync
+              </p>
+              <p className="text-2xl font-bold font-mono mt-1">0.002ms</p>
+              <div className="mt-2 h-1 rounded-full bg-secondary overflow-hidden">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: "85%" }}
+                  transition={{ delay: 1, duration: 1.2 }}
+                  className="h-full bg-aurora"
+                />
+              </div>
+            </motion.div>
+          </motion.div>
+        </motion.div>
+      </section>
+
+      {/* CATEGORIES */}
+      <section>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="flex items-end justify-between mb-8"
+        >
+          <div>
+            <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-2">
+              Browse / 07
+            </p>
+            <h2 className="text-3xl md:text-4xl font-bold tracking-tight">Categories</h2>
+          </div>
+        </motion.div>
+
+        <div className="flex gap-3 overflow-x-auto pb-4 -mx-4 px-4 sm:mx-0 sm:px-0 sm:flex-wrap">
+          {categories.map((c, i) => {
+            const Icon = categoryIcons[c] || Sparkles;
+            return (
+              <motion.div
+                key={c}
+                initial={{ opacity: 0, y: 12 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.05 }}
+              >
+                <Link
+                  to="/shop"
+                  className="shrink-0 inline-flex items-center gap-2 glass rounded-full pl-3 pr-5 py-2.5 hover:glass-strong hover:scale-105 transition-all"
+                >
+                  <div className="size-7 rounded-full bg-aurora animate-aurora grid place-items-center">
+                    <Icon className="size-3.5 text-background" />
+                  </div>
+                  <span className="font-medium text-sm whitespace-nowrap">{c}</span>
+                </Link>
+              </motion.div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* TRENDING */}
+      <section>
+        <div className="flex items-end justify-between mb-8">
+          <div>
+            <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-2">
+              Real-time
+            </p>
+            <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
+              Trending now
+            </h2>
+          </div>
+          <Link
+            to="/shop"
+            className="text-sm font-medium text-muted-foreground hover:text-foreground flex items-center gap-1"
+          >
+            View all <ArrowRight className="size-3.5" />
+          </Link>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          {trending.map((p, i) => (
+            <ProductCard key={p.id} product={p} index={i} />
+          ))}
+        </div>
+      </section>
+
+      {/* AI RECOMMENDATIONS */}
+      <section className="relative glass-strong rounded-[32px] p-8 md:p-12 overflow-hidden">
+        <div className="absolute -inset-1 bg-aurora opacity-20 blur-3xl animate-aurora -z-10" />
+        <div className="grid md:grid-cols-2 gap-8 items-center">
+          <div>
+            <div className="inline-flex items-center gap-2 glass rounded-full px-3 py-1 mb-6">
+              <Sparkles className="size-3 text-purple" />
+              <span className="text-[10px] font-mono uppercase tracking-widest text-purple">
+                AI Concierge
+              </span>
+            </div>
+            <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">
+              Tuned to your signal.
+            </h2>
+            <p className="text-muted-foreground max-w-md text-pretty">
+              Our on-device model studies your patterns and surfaces hardware that
+              fits your workflow. Private. Instantaneous. Always learning.
+            </p>
+            <Link
+              to="/shop"
+              className="mt-6 inline-flex items-center gap-2 px-5 py-2.5 rounded-full glass font-semibold hover:glass-strong transition-colors"
+            >
+              See recommendations <ArrowRight className="size-4" />
+            </Link>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            {products.slice(2, 6).map((p, i) => (
+              <motion.div
+                key={p.id}
+                initial={{ opacity: 0, scale: 0.9 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                className="glass rounded-2xl p-2 aspect-square overflow-hidden relative"
+              >
+                <img src={p.image} alt={p.name} className="size-full object-cover rounded-xl" />
+                <div className="absolute bottom-3 left-3 right-3 glass-strong rounded-lg px-2 py-1">
+                  <p className="text-xs font-semibold truncate">{p.name}</p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
