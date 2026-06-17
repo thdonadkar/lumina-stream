@@ -163,11 +163,9 @@ export function Navbar() {
                     </div>
                     <p className="font-bold text-sm">{c.name}</p>
                   </div>
-                  <div className="flex flex-wrap gap-1">
-                    {c.subs.slice(0, 4).map((s) => (
-                      <span key={s.slug} className="text-[10px] text-muted-foreground">{s.name}</span>
-                    )).reduce<React.ReactNode[]>((acc, el, i) => (i ? [...acc, <span key={`d${i}`} className="text-[10px] text-muted-foreground/40">·</span>, el] : [el]), [])}
-                  </div>
+                  <p className="text-[10px] text-muted-foreground">
+                    {c.subs.slice(0, 4).map((s) => s.name).join(" · ")}
+                  </p>
                 </Link>
               );
             })}
