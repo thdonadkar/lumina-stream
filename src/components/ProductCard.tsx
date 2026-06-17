@@ -1,8 +1,9 @@
 import { Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { Star, Plus } from "lucide-react";
+import { Star, Plus, Heart } from "lucide-react";
 import type { Product } from "@/lib/products";
 import { useCart, formatPrice } from "@/lib/cart-store";
+import { useWishlist } from "@/lib/wishlist-store";
 import { toast } from "sonner";
 
 const accentMap: Record<Product["accent"], string> = {
