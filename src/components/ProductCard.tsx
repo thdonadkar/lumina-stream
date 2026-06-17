@@ -49,6 +49,19 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
           <button
             onClick={(e) => {
               e.preventDefault();
+              toggleWish(product);
+              toast.success(wished ? "Removed from wishlist" : "Saved to wishlist");
+            }}
+            className="absolute top-3 right-3 size-9 grid place-items-center rounded-full bg-background/60 backdrop-blur-md ring-1 ring-white/10 hover:bg-background/80 transition-all"
+            aria-label="Toggle wishlist"
+          >
+            <Heart
+              className={`size-4 transition-colors ${wished ? "fill-rose-400 text-rose-400" : "text-foreground"}`}
+            />
+          </button>
+          <button
+            onClick={(e) => {
+              e.preventDefault();
               add(product);
               toast.success(`${product.name} added`, {
                 description: "View your cart to checkout",
