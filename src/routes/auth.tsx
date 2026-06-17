@@ -94,14 +94,7 @@ function Auth() {
             <div className="flex-1 h-px bg-white/10" />
           </div>
 
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              toast.success(mode === "signin" ? "Welcome back" : "Account created");
-              navigate({ to: "/" });
-            }}
-            className="space-y-4"
-          >
+          <form onSubmit={submit} className="space-y-4">
             <AnimatePresence>
               {mode === "signup" && (
                 <motion.div
@@ -109,16 +102,17 @@ function Auth() {
                   animate={{ opacity: 1, height: "auto" }}
                   exit={{ opacity: 0, height: 0 }}
                 >
-                  <FloatField icon={User} label="Full name" type="text" />
+                  <FloatField icon={User} label="Full name" type="text" value={name} onChange={(e) => setName(e.target.value)} />
                 </motion.div>
               )}
             </AnimatePresence>
-            <FloatField icon={Mail} label="Email" type="email" />
+            <FloatField icon={Mail} label="Email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
             <div>
               <FloatField
                 icon={Lock}
                 label="Password"
                 type="password"
+                required
                 value={pw}
                 onChange={(e) => setPw(e.target.value)}
               />
@@ -146,9 +140,10 @@ function Auth() {
 
             <button
               type="submit"
-              className="w-full inline-flex items-center justify-center gap-2 py-3.5 rounded-xl bg-aurora animate-aurora font-bold text-background shadow-glow-cyan hover:scale-[1.01] active:scale-95 transition-transform"
+              disabled={busy}
+              className="w-full inline-flex items-center justify-center gap-2 py-3.5 rounded-xl bg-aurora animate-aurora font-bold text-background shadow-glow-cyan hover:scale-[1.01] active:scale-95 transition-transform disabled:opacity-60"
             >
-              {mode === "signin" ? "Sign in" : "Create account"}
+              {busy ? "…" : mode === "signin" ? "Sign in" : "Create account"}
               <ArrowRight className="size-4" />
             </button>
           </form>
