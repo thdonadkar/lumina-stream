@@ -16,6 +16,11 @@ import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SellerProductsRouteImport } from './routes/seller.products'
+import { Route as SellerOrdersRouteImport } from './routes/seller.orders'
+import { Route as SellerDashboardRouteImport } from './routes/seller.dashboard'
+import { Route as SellerAnalyticsRouteImport } from './routes/seller.analytics'
+import { Route as SellerAddProductRouteImport } from './routes/seller.add-product'
 import { Route as ProductIdRouteImport } from './routes/product.$id'
 import { Route as CategorySlugRouteImport } from './routes/category.$slug'
 
@@ -54,6 +59,31 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SellerProductsRoute = SellerProductsRouteImport.update({
+  id: '/seller/products',
+  path: '/seller/products',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SellerOrdersRoute = SellerOrdersRouteImport.update({
+  id: '/seller/orders',
+  path: '/seller/orders',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SellerDashboardRoute = SellerDashboardRouteImport.update({
+  id: '/seller/dashboard',
+  path: '/seller/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SellerAnalyticsRoute = SellerAnalyticsRouteImport.update({
+  id: '/seller/analytics',
+  path: '/seller/analytics',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SellerAddProductRoute = SellerAddProductRouteImport.update({
+  id: '/seller/add-product',
+  path: '/seller/add-product',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProductIdRoute = ProductIdRouteImport.update({
   id: '/product/$id',
   path: '/product/$id',
@@ -75,6 +105,11 @@ export interface FileRoutesByFullPath {
   '/wishlist': typeof WishlistRoute
   '/category/$slug': typeof CategorySlugRoute
   '/product/$id': typeof ProductIdRoute
+  '/seller/add-product': typeof SellerAddProductRoute
+  '/seller/analytics': typeof SellerAnalyticsRoute
+  '/seller/dashboard': typeof SellerDashboardRoute
+  '/seller/orders': typeof SellerOrdersRoute
+  '/seller/products': typeof SellerProductsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -86,6 +121,11 @@ export interface FileRoutesByTo {
   '/wishlist': typeof WishlistRoute
   '/category/$slug': typeof CategorySlugRoute
   '/product/$id': typeof ProductIdRoute
+  '/seller/add-product': typeof SellerAddProductRoute
+  '/seller/analytics': typeof SellerAnalyticsRoute
+  '/seller/dashboard': typeof SellerDashboardRoute
+  '/seller/orders': typeof SellerOrdersRoute
+  '/seller/products': typeof SellerProductsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -98,6 +138,11 @@ export interface FileRoutesById {
   '/wishlist': typeof WishlistRoute
   '/category/$slug': typeof CategorySlugRoute
   '/product/$id': typeof ProductIdRoute
+  '/seller/add-product': typeof SellerAddProductRoute
+  '/seller/analytics': typeof SellerAnalyticsRoute
+  '/seller/dashboard': typeof SellerDashboardRoute
+  '/seller/orders': typeof SellerOrdersRoute
+  '/seller/products': typeof SellerProductsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -111,6 +156,11 @@ export interface FileRouteTypes {
     | '/wishlist'
     | '/category/$slug'
     | '/product/$id'
+    | '/seller/add-product'
+    | '/seller/analytics'
+    | '/seller/dashboard'
+    | '/seller/orders'
+    | '/seller/products'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -122,6 +172,11 @@ export interface FileRouteTypes {
     | '/wishlist'
     | '/category/$slug'
     | '/product/$id'
+    | '/seller/add-product'
+    | '/seller/analytics'
+    | '/seller/dashboard'
+    | '/seller/orders'
+    | '/seller/products'
   id:
     | '__root__'
     | '/'
@@ -133,6 +188,11 @@ export interface FileRouteTypes {
     | '/wishlist'
     | '/category/$slug'
     | '/product/$id'
+    | '/seller/add-product'
+    | '/seller/analytics'
+    | '/seller/dashboard'
+    | '/seller/orders'
+    | '/seller/products'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -145,6 +205,11 @@ export interface RootRouteChildren {
   WishlistRoute: typeof WishlistRoute
   CategorySlugRoute: typeof CategorySlugRoute
   ProductIdRoute: typeof ProductIdRoute
+  SellerAddProductRoute: typeof SellerAddProductRoute
+  SellerAnalyticsRoute: typeof SellerAnalyticsRoute
+  SellerDashboardRoute: typeof SellerDashboardRoute
+  SellerOrdersRoute: typeof SellerOrdersRoute
+  SellerProductsRoute: typeof SellerProductsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -198,6 +263,41 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/seller/products': {
+      id: '/seller/products'
+      path: '/seller/products'
+      fullPath: '/seller/products'
+      preLoaderRoute: typeof SellerProductsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/seller/orders': {
+      id: '/seller/orders'
+      path: '/seller/orders'
+      fullPath: '/seller/orders'
+      preLoaderRoute: typeof SellerOrdersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/seller/dashboard': {
+      id: '/seller/dashboard'
+      path: '/seller/dashboard'
+      fullPath: '/seller/dashboard'
+      preLoaderRoute: typeof SellerDashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/seller/analytics': {
+      id: '/seller/analytics'
+      path: '/seller/analytics'
+      fullPath: '/seller/analytics'
+      preLoaderRoute: typeof SellerAnalyticsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/seller/add-product': {
+      id: '/seller/add-product'
+      path: '/seller/add-product'
+      fullPath: '/seller/add-product'
+      preLoaderRoute: typeof SellerAddProductRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/product/$id': {
       id: '/product/$id'
       path: '/product/$id'
@@ -225,6 +325,11 @@ const rootRouteChildren: RootRouteChildren = {
   WishlistRoute: WishlistRoute,
   CategorySlugRoute: CategorySlugRoute,
   ProductIdRoute: ProductIdRoute,
+  SellerAddProductRoute: SellerAddProductRoute,
+  SellerAnalyticsRoute: SellerAnalyticsRoute,
+  SellerDashboardRoute: SellerDashboardRoute,
+  SellerOrdersRoute: SellerOrdersRoute,
+  SellerProductsRoute: SellerProductsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
