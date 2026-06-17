@@ -1,8 +1,9 @@
 import { Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { Star, Plus } from "lucide-react";
+import { Star, Plus, Heart } from "lucide-react";
 import type { Product } from "@/lib/products";
 import { useCart, formatPrice } from "@/lib/cart-store";
+import { useWishlist } from "@/lib/wishlist-store";
 import { toast } from "sonner";
 
 const accentMap: Record<Product["accent"], string> = {
@@ -13,6 +14,8 @@ const accentMap: Record<Product["accent"], string> = {
 
 export function ProductCard({ product, index = 0 }: { product: Product; index?: number }) {
   const add = useCart((s) => s.add);
+  const wished = useWishlist((s) => s.has(product.id));
+  const toggleWish = useWishlist((s) => s.toggle);
 
   return (
     <motion.div
@@ -43,6 +46,19 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
               {product.badge}
             </span>
           )}
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              toggleWish(product);
+              toast.success(wished ? "Removed from wishlist" : "Saved to wishlist");
+            }}
+            className="absolute top-3 right-3 size-9 grid place-items-center rounded-full bg-background/60 backdrop-blur-md ring-1 ring-white/10 hover:bg-background/80 transition-all"
+            aria-label="Toggle wishlist"
+          >
+            <Heart
+              className={`size-4 transition-colors ${wished ? "fill-rose-400 text-rose-400" : "text-foreground"}`}
+            />
+          </button>
           <button
             onClick={(e) => {
               e.preventDefault();

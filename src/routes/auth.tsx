@@ -3,6 +3,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Mail, Lock, User, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({ meta: [{ title: "Sign in — Neural" }] }),
@@ -13,8 +14,39 @@ function Auth() {
   const navigate = useNavigate();
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [pw, setPw] = useState("");
+  const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
+  const [busy, setBusy] = useState(false);
 
   const strength = Math.min(4, Math.floor(pw.length / 3));
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    try {
+      if (mode === "signup") {
+        const { error } = await supabase.auth.signUp({
+          email,
+          password: pw,
+          options: {
+            emailRedirectTo: `${window.location.origin}/`,
+            data: { display_name: name || email.split("@")[0] },
+          },
+        });
+        if (error) throw error;
+        toast.success("Account created — check your email if confirmation is required.");
+      } else {
+        const { error } = await supabase.auth.signInWithPassword({ email, password: pw });
+        if (error) throw error;
+        toast.success("Welcome back");
+      }
+      navigate({ to: "/" });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Authentication failed");
+    } finally {
+      setBusy(false);
+    }
+  }
 
   return (
     <div className="px-4 min-h-[80vh] grid place-items-center">
@@ -62,14 +94,7 @@ function Auth() {
             <div className="flex-1 h-px bg-white/10" />
           </div>
 
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              toast.success(mode === "signin" ? "Welcome back" : "Account created");
-              navigate({ to: "/" });
-            }}
-            className="space-y-4"
-          >
+          <form onSubmit={submit} className="space-y-4">
             <AnimatePresence>
               {mode === "signup" && (
                 <motion.div
@@ -77,16 +102,17 @@ function Auth() {
                   animate={{ opacity: 1, height: "auto" }}
                   exit={{ opacity: 0, height: 0 }}
                 >
-                  <FloatField icon={User} label="Full name" type="text" />
+                  <FloatField icon={User} label="Full name" type="text" value={name} onChange={(e) => setName(e.target.value)} />
                 </motion.div>
               )}
             </AnimatePresence>
-            <FloatField icon={Mail} label="Email" type="email" />
+            <FloatField icon={Mail} label="Email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
             <div>
               <FloatField
                 icon={Lock}
                 label="Password"
                 type="password"
+                required
                 value={pw}
                 onChange={(e) => setPw(e.target.value)}
               />
@@ -114,9 +140,10 @@ function Auth() {
 
             <button
               type="submit"
-              className="w-full inline-flex items-center justify-center gap-2 py-3.5 rounded-xl bg-aurora animate-aurora font-bold text-background shadow-glow-cyan hover:scale-[1.01] active:scale-95 transition-transform"
+              disabled={busy}
+              className="w-full inline-flex items-center justify-center gap-2 py-3.5 rounded-xl bg-aurora animate-aurora font-bold text-background shadow-glow-cyan hover:scale-[1.01] active:scale-95 transition-transform disabled:opacity-60"
             >
-              {mode === "signin" ? "Sign in" : "Create account"}
+              {busy ? "…" : mode === "signin" ? "Sign in" : "Create account"}
               <ArrowRight className="size-4" />
             </button>
           </form>
