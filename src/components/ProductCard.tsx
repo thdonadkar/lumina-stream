@@ -14,6 +14,8 @@ const accentMap: Record<Product["accent"], string> = {
 
 export function ProductCard({ product, index = 0 }: { product: Product; index?: number }) {
   const add = useCart((s) => s.add);
+  const wished = useWishlist((s) => s.has(product.id));
+  const toggleWish = useWishlist((s) => s.toggle);
 
   return (
     <motion.div
