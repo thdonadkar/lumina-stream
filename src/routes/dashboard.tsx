@@ -288,20 +288,29 @@ function AddressForm({ onSubmit }: { onSubmit: (p: any) => void }) {
     label: "Home", recipient: "", phone: "", line1: "", line2: "",
     city: "", state: "", postal_code: "", country: "IN", is_default: false,
   });
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (f.country === "IN") {
+      if (!/^\d{6}$/.test(f.postal_code)) { alert("Pincode must be 6 digits for India"); return; }
+      if (f.phone && !/^[6-9]\d{9}$/.test(f.phone.replace(/\D/g, "").slice(-10))) {
+        alert("Enter a valid 10-digit Indian phone number"); return;
+      }
+    } else if (f.phone && f.phone.replace(/\D/g, "").length < 7) {
+      alert("Enter a valid phone number"); return;
+    }
+    onSubmit(f);
+  }
   return (
-    <form
-      onSubmit={(e) => { e.preventDefault(); onSubmit(f); }}
-      className="glass rounded-2xl p-4 space-y-3 mt-4"
-    >
+    <form onSubmit={handleSubmit} className="glass rounded-2xl p-4 space-y-3 mt-4">
       <div className="grid sm:grid-cols-2 gap-3">
         <Input label="Label" value={f.label} onChange={(v) => setF({ ...f, label: v })} />
-        <Input label="Recipient *" value={f.recipient} onChange={(v) => setF({ ...f, recipient: v })} required />
-        <Input label="Phone" value={f.phone} onChange={(v) => setF({ ...f, phone: v })} />
-        <Input label="Postal code *" value={f.postal_code} onChange={(v) => setF({ ...f, postal_code: v })} required />
+        <Input label="Recipient name *" value={f.recipient} onChange={(v) => setF({ ...f, recipient: v })} required />
+        <Input label={`Phone${f.country === "IN" ? " (10 digits) *" : ""}`} value={f.phone} onChange={(v) => setF({ ...f, phone: v })} required={f.country === "IN"} />
+        <Input label={`${f.country === "IN" ? "Pincode" : "Postal code"} *`} value={f.postal_code} onChange={(v) => setF({ ...f, postal_code: v })} required />
         <Input label="Address line 1 *" value={f.line1} onChange={(v) => setF({ ...f, line1: v })} required className="sm:col-span-2" />
         <Input label="Address line 2" value={f.line2} onChange={(v) => setF({ ...f, line2: v })} className="sm:col-span-2" />
         <Input label="City *" value={f.city} onChange={(v) => setF({ ...f, city: v })} required />
-        <Input label="State / Region" value={f.state} onChange={(v) => setF({ ...f, state: v })} />
+        <Input label="State / Region *" value={f.state} onChange={(v) => setF({ ...f, state: v })} required />
         <label className="text-xs">
           <span className="block text-muted-foreground mb-1 uppercase tracking-wider font-mono">Country</span>
           <select value={f.country} onChange={(e) => setF({ ...f, country: e.target.value })} className="w-full glass rounded-xl px-3 py-2 text-sm outline-none">
