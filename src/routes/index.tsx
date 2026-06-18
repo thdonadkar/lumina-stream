@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowRight, Sparkles, Zap, Cpu, Headphones } from "lucide-react";
+import { ArrowRight, Sparkles, Zap, Cpu, Headphones, Flame } from "lucide-react";
 import { products, categories } from "@/lib/products";
 import { ProductCard } from "@/components/ProductCard";
 import { listActiveBanners } from "@/lib/banners.functions";
