@@ -238,7 +238,10 @@ export function AdminNav() {
     { to: "/admin/sellers", label: "Sellers" },
     { to: "/admin/products", label: "Products" },
     { to: "/admin/orders", label: "Orders" },
+    { to: "/admin/returns", label: "Returns" },
+    { to: "/admin/banners", label: "Banners" },
     { to: "/admin/categories", label: "Categories" },
+    { to: "/admin/support", label: "Support" },
   ];
   return (
     <nav className="mt-10 glass rounded-2xl p-2 flex flex-wrap gap-1">
