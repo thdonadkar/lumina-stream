@@ -99,7 +99,7 @@ function Page() {
               </defs>
               <CartesianGrid stroke="oklch(1 0 0 / 0.06)" vertical={false} />
               <XAxis dataKey="date" stroke="oklch(0.65 0.02 270)" tick={{ fontSize: 10 }} tickLine={false} axisLine={false} interval={Math.ceil(days / 8)} />
-              <YAxis stroke="oklch(0.65 0.02 270)" tick={{ fontSize: 10 }} tickLine={false} axisLine={false} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} />
+              <YAxis stroke="oklch(0.65 0.02 270)" tick={{ fontSize: 10 }} tickLine={false} axisLine={false} tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}k`} />
               <Tooltip content={<ChartTooltip />} cursor={{ stroke: "oklch(0.85 0.17 200 / 0.4)" }} />
               <Area type="monotone" dataKey="revenue" stroke="oklch(0.85 0.17 200)" strokeWidth={2} fill="url(#rev)" />
             </AreaChart>
