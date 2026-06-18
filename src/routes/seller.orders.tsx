@@ -28,7 +28,7 @@ const NEXT: Record<string, string> = {
 function Page() {
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const fetchOrders = useServerFn(listAllOrders);
+  const fetchOrders = useServerFn(listSellerOrders);
   const updateStatus = useServerFn(updateOrderStatus);
 
   const load = () => {
