@@ -85,12 +85,22 @@ export const listSellerTickets = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const { data, error } = await context.supabase
       .from("support_tickets")
-      .select("*, profiles:user_id(display_name)")
+      .select("*")
       .eq("seller_id", context.userId)
       .order("updated_at", { ascending: false })
       .limit(200);
     if (error) throw error;
-    return data ?? [];
+    const tickets = data ?? [];
+    const ids = Array.from(new Set(tickets.map((t: any) => t.user_id).filter(Boolean)));
+    let nameMap: Record<string, string> = {};
+    if (ids.length) {
+      const { data: profs } = await context.supabase
+        .from("profiles")
+        .select("id, display_name")
+        .in("id", ids);
+      nameMap = Object.fromEntries((profs ?? []).map((p: any) => [p.id, p.display_name]));
+    }
+    return tickets.map((t: any) => ({ ...t, profiles: { display_name: nameMap[t.user_id] ?? null } }));
   });
 
 export const listAllTickets = createServerFn({ method: "GET" })
@@ -103,11 +113,21 @@ export const listAllTickets = createServerFn({ method: "GET" })
     if (!isAdmin) throw new Error("Forbidden");
     const { data, error } = await context.supabase
       .from("support_tickets")
-      .select("*, profiles:user_id(display_name)")
+      .select("*")
       .order("updated_at", { ascending: false })
       .limit(200);
     if (error) throw error;
-    return data ?? [];
+    const tickets = data ?? [];
+    const ids = Array.from(new Set(tickets.map((t: any) => t.user_id).filter(Boolean)));
+    let nameMap: Record<string, string> = {};
+    if (ids.length) {
+      const { data: profs } = await context.supabase
+        .from("profiles")
+        .select("id, display_name")
+        .in("id", ids);
+      nameMap = Object.fromEntries((profs ?? []).map((p: any) => [p.id, p.display_name]));
+    }
+    return tickets.map((t: any) => ({ ...t, profiles: { display_name: nameMap[t.user_id] ?? null } }));
   });
 
 export const getTicketThread = createServerFn({ method: "POST" })
