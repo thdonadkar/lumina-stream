@@ -239,15 +239,16 @@ export const requestReturn = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { data: existing } = await supabase
-      .from("orders").select("status, user_id, notes").eq("id", data.id).maybeSingle();
+      .from("orders").select("status, user_id").eq("id", data.id).maybeSingle();
     if (!existing) throw new Error("Order not found");
     if (existing.user_id !== userId) throw new Error("Forbidden");
     if (existing.status !== "delivered") throw new Error("Only delivered orders can be returned");
-    const { data: order, error } = await supabase
+    const { data: order, error } = await (supabase as any)
       .from("orders")
       .update({
-        status: "return_requested" as never,
-        notes: `${existing.notes ?? ""}\n[Return requested]: ${data.reason}`.trim(),
+        status: "return_requested",
+        return_reason: data.reason,
+        refund_status: "pending",
       })
       .eq("id", data.id).select().single();
     if (error) throw error;
@@ -282,3 +283,81 @@ export const cancelOrder = createServerFn({ method: "POST" })
     });
     return order;
   });
+
+async function assertAdmin(ctx: any) {
+  const { data: isAdmin } = await ctx.supabase.rpc("has_role", {
+    _user_id: ctx.userId, _role: "admin",
+  });
+  if (!isAdmin) throw new Error("Forbidden");
+}
+
+export const listReturnRequests = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context);
+    const { data, error } = await (context.supabase as any)
+      .from("orders")
+      .select("*, order_items(*)")
+      .in("status", ["return_requested", "returned"])
+      .order("updated_at", { ascending: false });
+    if (error) throw error;
+    return data ?? [];
+  });
+
+export const approveReturn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { id: string }) => d)
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { data: order, error } = await (context.supabase as any)
+      .from("orders")
+      .update({ status: "returned", refund_status: "approved" })
+      .eq("id", data.id).select().single();
+    if (error) throw error;
+    await context.supabase.from("notifications").insert({
+      user_id: order.user_id, type: "order",
+      title: "Return approved",
+      body: `Your return for #${order.id.slice(0, 8)} has been approved. Refund in progress.`,
+      link: `/orders/${order.id}`,
+    });
+    return order;
+  });
+
+export const rejectReturn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { id: string; reason?: string }) => d)
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { data: order, error } = await (context.supabase as any)
+      .from("orders")
+      .update({ status: "delivered", refund_status: "rejected" })
+      .eq("id", data.id).select().single();
+    if (error) throw error;
+    await context.supabase.from("notifications").insert({
+      user_id: order.user_id, type: "order",
+      title: "Return rejected",
+      body: `Your return for #${order.id.slice(0, 8)} was not approved.${data.reason ? " Reason: " + data.reason : ""}`,
+      link: `/orders/${order.id}`,
+    });
+    return order;
+  });
+
+export const markRefunded = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { id: string; amount?: number }) => d)
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { data: order, error } = await (context.supabase as any)
+      .from("orders")
+      .update({ refund_status: "refunded", refund_amount: data.amount ?? null })
+      .eq("id", data.id).select().single();
+    if (error) throw error;
+    await context.supabase.from("notifications").insert({
+      user_id: order.user_id, type: "order",
+      title: "Refund processed",
+      body: `₹${data.amount ?? order.total} has been refunded for order #${order.id.slice(0, 8)}.`,
+      link: `/orders/${order.id}`,
+    });
+    return order;
+  });
+
