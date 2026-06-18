@@ -628,6 +628,14 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_order_owner: {
+        Args: { _order_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_order_seller: {
+        Args: { _order_id: string; _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "user" | "seller" | "admin"
