@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { Star, Plus, Heart } from "lucide-react";
+import { Star, Plus, Heart, Tag } from "lucide-react";
 import type { Product } from "@/lib/products";
 import { useCart, formatPrice } from "@/lib/cart-store";
 import { useWishlist } from "@/lib/wishlist-store";
