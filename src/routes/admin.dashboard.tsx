@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import {
   Users, Store, Package, ShoppingBag, TrendingUp, ShieldAlert,
   ShoppingCart, UserPlus, BadgeCheck, Activity, ArrowUpRight,
+  Megaphone, Undo2, LifeBuoy, FolderTree,
 } from "lucide-react";
 import {
   Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Legend, Line, LineChart,
