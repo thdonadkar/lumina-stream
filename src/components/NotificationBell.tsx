@@ -21,6 +21,8 @@ export function NotificationBell() {
 
   async function refresh() {
     if (!userId) return;
+    const { data } = await supabase.auth.getSession();
+    if (!data.session?.access_token) return;
     try {
       setItems(await fetchList());
     } catch {
