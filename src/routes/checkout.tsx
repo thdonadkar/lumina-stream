@@ -191,8 +191,9 @@ function Checkout() {
         })}
       </div>
 
-      <div className="grid lg:grid-cols-[1fr_380px] gap-8">
-        <div className="glass-strong rounded-3xl p-6 md:p-8 min-h-[420px]">
+      <div className="grid lg:grid-cols-[1fr_380px] gap-6 lg:gap-8">
+        <div className="glass-strong rounded-3xl p-4 sm:p-6 md:p-8 min-h-[420px]">
+
           <AnimatePresence mode="wait">
             {step === 0 && (
               <motion.div key="address" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-3">
