@@ -194,6 +194,30 @@ function OrderDetail() {
               </div>
             </form>
           )}
+
+          {!helpOpen ? (
+            <button onClick={() => setHelpOpen(true)} className="w-full rounded-2xl glass-strong hover:glass transition-all p-3 text-sm font-bold inline-flex items-center justify-center gap-2">
+              <LifeBuoy className="size-4" /> Need help with this order?
+            </button>
+          ) : (
+            <form onSubmit={submitHelp} className="glass-strong rounded-2xl p-4 space-y-2">
+              <p className="text-sm font-bold">Contact support</p>
+              <input
+                value={helpSubject} onChange={(e) => setHelpSubject(e.target.value)} required maxLength={200}
+                placeholder="Subject"
+                className="w-full glass rounded-xl px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-cyan"
+              />
+              <textarea
+                value={helpMessage} onChange={(e) => setHelpMessage(e.target.value)} required maxLength={4000} rows={3}
+                placeholder="Describe the issue. The seller and our team will both see this."
+                className="w-full glass rounded-xl px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-cyan resize-y"
+              />
+              <div className="flex justify-end gap-2">
+                <button type="button" onClick={() => setHelpOpen(false)} className="rounded-full px-3 py-1.5 text-xs glass">Cancel</button>
+                <button className="rounded-full px-4 py-1.5 text-xs font-bold bg-aurora text-background">Open ticket</button>
+              </div>
+            </form>
+          )}
         </aside>
       </div>
     </div>
