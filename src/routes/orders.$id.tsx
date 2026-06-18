@@ -64,9 +64,27 @@ function OrderDetail() {
             <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">Order</p>
             <h1 className="text-3xl font-extrabold tracking-tighter font-mono">#{order.id.slice(0, 8)}</h1>
           </div>
-          <span className="px-3 py-1 rounded-full bg-aurora text-background text-xs font-bold uppercase">{order.status.replace("_", " ")}</span>
+          <div className="flex items-center gap-2">
+            <span className="px-3 py-1 rounded-full bg-aurora text-background text-xs font-bold uppercase">{order.status.replace(/_/g, " ")}</span>
+            {order.refund_status && order.refund_status !== "none" && (
+              <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase ring-1 ${
+                order.refund_status === "refunded" ? "text-emerald-300 ring-emerald-300/40 bg-emerald-300/10" :
+                order.refund_status === "approved" ? "text-cyan ring-cyan/40 bg-cyan/10" :
+                order.refund_status === "rejected" ? "text-rose-400 ring-rose-400/40 bg-rose-400/10" :
+                "text-amber-300 ring-amber-300/40 bg-amber-300/10"
+              }`}>refund: {order.refund_status}</span>
+            )}
+          </div>
         </div>
         <p className="text-sm text-muted-foreground">Placed {new Date(order.created_at).toLocaleString()}</p>
+
+        {order.return_reason && (
+          <div className="mt-4 glass rounded-xl p-3">
+            <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-mono mb-1">Return reason</p>
+            <p className="text-sm">{order.return_reason}</p>
+            {order.refund_amount && <p className="text-xs text-emerald-300 mt-2">Refund issued: {formatPrice(Number(order.refund_amount))}</p>}
+          </div>
+        )}
 
         {statusIdx >= 0 && (
           <div className="mt-8 flex items-center justify-between gap-1">
@@ -83,16 +101,14 @@ function OrderDetail() {
                   {i <= statusIdx ? <CheckCircle2 className="size-4" /> : <span className="text-xs font-mono">{i + 1}</span>}
                 </motion.div>
                 <p className={`text-[10px] mt-2 uppercase font-mono ${i <= statusIdx ? "text-cyan" : "text-muted-foreground"}`}>
-                  {s.replace("_", " ")}
+                  {s.replace(/_/g, " ")}
                 </p>
-                {i < TIMELINE.length - 1 && (
-                  <div className={`absolute h-px ${i < statusIdx ? "bg-cyan" : "bg-white/10"}`} />
-                )}
               </div>
             ))}
           </div>
         )}
       </div>
+
 
       <div className="grid md:grid-cols-[1fr_320px] gap-6">
         <div className="glass-strong rounded-3xl p-6">

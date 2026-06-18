@@ -1,8 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { ArrowRight, Sparkles, Zap, Cpu, Headphones } from "lucide-react";
 import { products, categories } from "@/lib/products";
 import { ProductCard } from "@/components/ProductCard";
+import { listActiveBanners } from "@/lib/banners.functions";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -27,12 +30,36 @@ const categoryIcons: Record<string, any> = {
 function Home() {
   const hero = products[0];
   const trending = products.slice(1, 7);
+  const [banners, setBanners] = useState<any[]>([]);
+  const fetchBanners = useServerFn(listActiveBanners);
+  useEffect(() => { fetchBanners().then(setBanners).catch(() => {}); }, [fetchBanners]);
 
   return (
     <div className="px-4 sm:px-6 max-w-7xl mx-auto space-y-24 md:space-y-32">
+      {banners.length > 0 && (
+        <section className="pt-6 -mb-16">
+          <div className="grid sm:grid-cols-2 gap-3">
+            {banners.slice(0, 4).map((b) => (
+              <Link key={b.id} to={b.cta_link || "/shop"} className="glass-strong rounded-2xl overflow-hidden flex group hover:ring-1 hover:ring-cyan/30 transition-all">
+                {b.image_url ? (
+                  <img src={b.image_url} alt="" className="size-24 object-cover shrink-0" />
+                ) : (
+                  <div className="size-24 bg-aurora animate-aurora shrink-0 opacity-60" />
+                )}
+                <div className="p-4 flex-1 min-w-0">
+                  <p className="font-bold truncate">{b.title}</p>
+                  {b.subtitle && <p className="text-xs text-muted-foreground truncate">{b.subtitle}</p>}
+                  {b.cta_text && <span className="text-[10px] uppercase font-mono tracking-widest text-cyan mt-1 inline-flex items-center gap-1">{b.cta_text} <ArrowRight className="size-3 group-hover:translate-x-0.5 transition-transform" /></span>}
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
       {/* HERO */}
       <section className="relative pt-8 md:pt-12">
         <div className="absolute inset-0 bg-hero blur-3xl -z-10" />
+
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
