@@ -100,6 +100,32 @@ function Auth() {
             </p>
           </div>
 
+          {/* Demo account quick-login */}
+          <div className="mb-6">
+            <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground text-center mb-2">
+              Try a demo role
+            </p>
+            <div className="grid grid-cols-3 gap-2">
+              {DEMO_BTNS.map((d) => {
+                const I = d.icon;
+                const loading = demoBusy === d.email;
+                return (
+                  <button
+                    key={d.email}
+                    onClick={() => loginDemo(d)}
+                    disabled={demoBusy !== null}
+                    className="flex flex-col items-center gap-1 py-2.5 rounded-xl glass hover:glass-strong text-[11px] font-medium transition-all disabled:opacity-60"
+                  >
+                    <I className={`size-4 ${d.tone}`} />
+                    {loading ? "…" : d.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+
+
           <div className="grid grid-cols-2 gap-2 mb-6">
             <button className="flex items-center justify-center gap-2 py-2.5 rounded-xl glass hover:glass-strong text-sm font-medium transition-all">
               <svg viewBox="0 0 24 24" className="size-4">
