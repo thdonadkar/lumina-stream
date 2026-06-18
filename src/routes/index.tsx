@@ -132,7 +132,7 @@ function Home() {
                   <p className="text-xl font-bold">{hero.name}</p>
                 </div>
                 <p className="font-mono font-bold text-cyan">
-                  ${hero.price.toLocaleString()}
+                  ₹{hero.price.toLocaleString("en-IN")}
                 </p>
               </div>
             </motion.div>
