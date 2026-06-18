@@ -62,6 +62,45 @@ export type Database = {
         }
         Relationships: []
       }
+      banners: {
+        Row: {
+          active: boolean
+          created_at: string
+          cta_link: string | null
+          cta_text: string | null
+          id: string
+          image_url: string | null
+          position: number
+          subtitle: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          cta_link?: string | null
+          cta_text?: string | null
+          id?: string
+          image_url?: string | null
+          position?: number
+          subtitle?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          cta_link?: string | null
+          cta_text?: string | null
+          id?: string
+          image_url?: string | null
+          position?: number
+          subtitle?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       categories: {
         Row: {
           created_at: string
@@ -263,6 +302,9 @@ export type Database = {
           discount: number
           id: string
           notes: string | null
+          refund_amount: number | null
+          refund_status: Database["public"]["Enums"]["refund_status"]
+          return_reason: string | null
           shipping: number
           status: Database["public"]["Enums"]["order_status"]
           subtotal: number
@@ -278,6 +320,9 @@ export type Database = {
           discount?: number
           id?: string
           notes?: string | null
+          refund_amount?: number | null
+          refund_status?: Database["public"]["Enums"]["refund_status"]
+          return_reason?: string | null
           shipping?: number
           status?: Database["public"]["Enums"]["order_status"]
           subtotal: number
@@ -293,6 +338,9 @@ export type Database = {
           discount?: number
           id?: string
           notes?: string | null
+          refund_amount?: number | null
+          refund_status?: Database["public"]["Enums"]["refund_status"]
+          return_reason?: string | null
           shipping?: number
           status?: Database["public"]["Enums"]["order_status"]
           subtotal?: number
@@ -597,6 +645,7 @@ export type Database = {
         | "returned"
         | "refunded"
       product_status: "draft" | "pending" | "active" | "rejected"
+      refund_status: "none" | "pending" | "approved" | "rejected" | "refunded"
       ticket_status: "open" | "in_progress" | "resolved" | "closed"
     }
     CompositeTypes: {
@@ -741,6 +790,7 @@ export const Constants = {
         "refunded",
       ],
       product_status: ["draft", "pending", "active", "rejected"],
+      refund_status: ["none", "pending", "approved", "rejected", "refunded"],
       ticket_status: ["open", "in_progress", "resolved", "closed"],
     },
   },
