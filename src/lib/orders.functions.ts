@@ -27,7 +27,7 @@ async function notifySellersOfOrder(
   }
 }
 
-async function notifyAdminsOfOrder(payload: { type: string; title: string; body: string; link: string }) {
+async function notifyAdminsOfOrder(payload: { type: "order" | "system" | "offer"; title: string; body: string; link: string }) {
   try {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: admins } = await supabaseAdmin
