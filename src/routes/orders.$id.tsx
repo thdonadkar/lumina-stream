@@ -2,8 +2,9 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { motion } from "framer-motion";
-import { ChevronLeft, Package, MapPin, CreditCard, CheckCircle2 } from "lucide-react";
-import { getOrder } from "@/lib/orders.functions";
+import { ChevronLeft, Package, MapPin, CreditCard, CheckCircle2, RotateCcw, XCircle } from "lucide-react";
+import { toast } from "sonner";
+import { getOrder, requestReturn, cancelOrder } from "@/lib/orders.functions";
 import { formatPrice } from "@/lib/cart-store";
 
 export const Route = createFileRoute("/orders/$id")({
@@ -11,19 +12,38 @@ export const Route = createFileRoute("/orders/$id")({
   component: OrderDetail,
 });
 
-const TIMELINE = ["pending", "packed", "shipped", "out_for_delivery", "delivered"];
+const TIMELINE = ["pending", "confirmed", "packed", "shipped", "out_for_delivery", "delivered"];
 
 function OrderDetail() {
   const { id } = Route.useParams();
   const [order, setOrder] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [returnOpen, setReturnOpen] = useState(false);
+  const [reason, setReason] = useState("");
   const fetchOrder = useServerFn(getOrder);
+  const doReturn = useServerFn(requestReturn);
+  const doCancel = useServerFn(cancelOrder);
 
-  useEffect(() => {
-    fetchOrder({ data: { id } })
-      .then(setOrder)
-      .finally(() => setLoading(false));
-  }, [id, fetchOrder]);
+  function refresh() {
+    fetchOrder({ data: { id } }).then(setOrder).finally(() => setLoading(false));
+  }
+  useEffect(refresh, [id, fetchOrder]);
+
+  async function submitReturn(e: React.FormEvent) {
+    e.preventDefault();
+    try {
+      await doReturn({ data: { id, reason } });
+      toast.success("Return requested");
+      setReturnOpen(false); setReason(""); refresh();
+    } catch (err: any) { toast.error(err.message); }
+  }
+  async function handleCancel() {
+    if (!confirm("Cancel this order?")) return;
+    try {
+      await doCancel({ data: { id } });
+      toast.success("Order cancelled"); refresh();
+    } catch (err: any) { toast.error(err.message); }
+  }
 
   if (loading) return <div className="p-20 text-center text-muted-foreground">Loading…</div>;
   if (!order) return <div className="p-20 text-center">Order not found.</div>;
@@ -119,6 +139,31 @@ function OrderDetail() {
               </div>
             </div>
           </div>
+
+          {(order.status === "pending" || order.status === "confirmed") && (
+            <button onClick={handleCancel} className="w-full rounded-2xl glass-strong hover:bg-rose-400/10 hover:text-rose-400 transition-all p-3 text-sm font-bold inline-flex items-center justify-center gap-2">
+              <XCircle className="size-4" /> Cancel order
+            </button>
+          )}
+          {order.status === "delivered" && !returnOpen && (
+            <button onClick={() => setReturnOpen(true)} className="w-full rounded-2xl glass-strong hover:glass transition-all p-3 text-sm font-bold inline-flex items-center justify-center gap-2">
+              <RotateCcw className="size-4" /> Request return
+            </button>
+          )}
+          {returnOpen && (
+            <form onSubmit={submitReturn} className="glass-strong rounded-2xl p-4 space-y-2">
+              <p className="text-sm font-bold">Return reason</p>
+              <textarea
+                value={reason} onChange={(e) => setReason(e.target.value)} required maxLength={500} rows={3}
+                placeholder="Tell us what went wrong…"
+                className="w-full glass rounded-xl px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-cyan resize-y"
+              />
+              <div className="flex justify-end gap-2">
+                <button type="button" onClick={() => setReturnOpen(false)} className="rounded-full px-3 py-1.5 text-xs glass">Cancel</button>
+                <button className="rounded-full px-4 py-1.5 text-xs font-bold bg-aurora text-background">Submit return</button>
+              </div>
+            </form>
+          )}
         </aside>
       </div>
     </div>

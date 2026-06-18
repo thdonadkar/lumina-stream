@@ -453,6 +453,41 @@ export type Database = {
           },
         ]
       }
+      support_ticket_messages: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          is_admin: boolean
+          sender_id: string
+          ticket_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          is_admin?: boolean
+          sender_id: string
+          ticket_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          is_admin?: boolean
+          sender_id?: string
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_ticket_messages_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "support_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       support_tickets: {
         Row: {
           created_at: string
@@ -552,6 +587,7 @@ export type Database = {
       notification_type: "order" | "offer" | "system"
       order_status:
         | "pending"
+        | "confirmed"
         | "packed"
         | "shipped"
         | "out_for_delivery"
@@ -694,6 +730,7 @@ export const Constants = {
       notification_type: ["order", "offer", "system"],
       order_status: [
         "pending",
+        "confirmed",
         "packed",
         "shipped",
         "out_for_delivery",

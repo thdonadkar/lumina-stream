@@ -223,8 +223,61 @@ export const updateOrderStatus = createServerFn({ method: "POST" })
     await supabase.from("notifications").insert({
       user_id: order.user_id,
       type: "order",
-      title: `Order ${data.status}`,
-      body: `Your order #${order.id.slice(0, 8)} is now ${data.status}.`,
+      title: `Order ${data.status.replace(/_/g, " ")}`,
+      body: `Your order #${order.id.slice(0, 8)} is now ${data.status.replace(/_/g, " ")}.`,
+      link: `/orders/${order.id}`,
+    });
+    return order;
+  });
+
+export const requestReturn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { id: string; reason: string }) => {
+    if (!d.reason?.trim() || d.reason.length > 500) throw new Error("Reason required (max 500 chars)");
+    return d;
+  })
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { data: existing } = await supabase
+      .from("orders").select("status, user_id, notes").eq("id", data.id).maybeSingle();
+    if (!existing) throw new Error("Order not found");
+    if (existing.user_id !== userId) throw new Error("Forbidden");
+    if (existing.status !== "delivered") throw new Error("Only delivered orders can be returned");
+    const { data: order, error } = await supabase
+      .from("orders")
+      .update({
+        status: "return_requested" as never,
+        notes: `${existing.notes ?? ""}\n[Return requested]: ${data.reason}`.trim(),
+      })
+      .eq("id", data.id).select().single();
+    if (error) throw error;
+    await supabase.from("notifications").insert({
+      user_id: order.user_id, type: "order",
+      title: "Return requested",
+      body: `Your return for order #${order.id.slice(0, 8)} is being reviewed.`,
+      link: `/orders/${order.id}`,
+    });
+    return order;
+  });
+
+export const cancelOrder = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { id: string }) => d)
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { data: existing } = await supabase
+      .from("orders").select("status, user_id").eq("id", data.id).maybeSingle();
+    if (!existing) throw new Error("Order not found");
+    if (existing.user_id !== userId) throw new Error("Forbidden");
+    if (!["pending", "confirmed"].includes(existing.status))
+      throw new Error("This order can no longer be cancelled");
+    const { data: order, error } = await supabase
+      .from("orders").update({ status: "cancelled" as never }).eq("id", data.id).select().single();
+    if (error) throw error;
+    await supabase.from("notifications").insert({
+      user_id: order.user_id, type: "order",
+      title: "Order cancelled",
+      body: `Your order #${order.id.slice(0, 8)} has been cancelled.`,
       link: `/orders/${order.id}`,
     });
     return order;

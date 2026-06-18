@@ -18,21 +18,25 @@ export const Route = createFileRoute("/admin/orders")({
   ),
 });
 
-const STATUSES = ["all", "pending", "packed", "shipped", "out_for_delivery", "delivered", "cancelled", "return_requested"] as const;
+const STATUSES = ["all", "pending", "confirmed", "packed", "shipped", "out_for_delivery", "delivered", "cancelled", "return_requested", "returned"] as const;
 const NEXT: Record<string, string> = {
-  pending: "packed",
+  pending: "confirmed",
+  confirmed: "packed",
   packed: "shipped",
   shipped: "out_for_delivery",
   out_for_delivery: "delivered",
+  return_requested: "returned",
 };
 const STATUS_TONE: Record<string, string> = {
   pending: "text-amber-300 ring-amber-300/30",
+  confirmed: "text-amber-200 ring-amber-200/30",
   packed: "text-purple ring-purple/30",
   shipped: "text-cyan ring-cyan/30",
   out_for_delivery: "text-cyan ring-cyan/30",
   delivered: "text-emerald-300 ring-emerald-300/30",
   cancelled: "text-rose-400 ring-rose-400/30",
   return_requested: "text-rose-400 ring-rose-400/30",
+  returned: "text-rose-300 ring-rose-300/30",
 };
 
 function Page() {

@@ -13,9 +13,9 @@ export const Route = createFileRoute("/admin/sellers")({
 });
 
 const PENDING = [
-  { id: "s_201", brand: "Lumen Co.", products: 12, revenue: "$48k" },
+  { id: "s_201", brand: "Lumen Co.", products: 12, revenue: "₹48k" },
   { id: "s_202", brand: "Onyx Labs", products: 5, revenue: "—" },
-  { id: "s_203", brand: "Prism Studio", products: 28, revenue: "$210k" },
+  { id: "s_203", brand: "Prism Studio", products: 28, revenue: "₹210k" },
 ];
 
 function Page() {

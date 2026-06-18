@@ -19,7 +19,8 @@ export const Route = createFileRoute("/seller/orders")({
 });
 
 const NEXT: Record<string, string> = {
-  pending: "packed",
+  pending: "confirmed",
+  confirmed: "packed",
   packed: "shipped",
   shipped: "out_for_delivery",
   out_for_delivery: "delivered",

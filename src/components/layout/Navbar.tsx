@@ -1,11 +1,14 @@
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, ShoppingBag, User, Mic, Heart, ChevronDown, ShieldAlert, Store } from "lucide-react";
+import { Search, ShoppingBag, User, Mic, Heart, ChevronDown, ShieldAlert, Store, LogOut, LifeBuoy } from "lucide-react";
 import { useState } from "react";
 import { useCart } from "@/lib/cart-store";
 import { useWishlist } from "@/lib/wishlist-store";
 import { useAuth } from "@/hooks/use-auth";
 import { CATEGORIES } from "@/lib/categories";
+import { NotificationBell } from "@/components/NotificationBell";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const navLinks = [
   { to: "/", label: "Home" },
@@ -18,7 +21,14 @@ export function Navbar() {
   const wishCount = useWishlist((s) => s.count());
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { isAdmin, isSeller, userId } = useAuth();
+  const navigate = useNavigate();
   const [catsOpen, setCatsOpen] = useState(false);
+
+  async function handleLogout() {
+    await supabase.auth.signOut();
+    toast.success("Signed out");
+    navigate({ to: "/" });
+  }
 
   return (
     <motion.header
@@ -109,6 +119,8 @@ export function Navbar() {
             )}
           </Link>
 
+          <NotificationBell />
+
           <button
             onClick={openCart}
             className="relative grid place-items-center size-9 rounded-full glass hover:glass-strong transition-all"
@@ -128,12 +140,32 @@ export function Navbar() {
           </button>
 
           <Link
+            to="/support"
+            className="hidden sm:grid place-items-center size-9 rounded-full glass hover:glass-strong transition-all"
+            aria-label="Support"
+            title="Support"
+          >
+            <LifeBuoy className="size-4" />
+          </Link>
+
+          <Link
             to={userId ? "/dashboard" : "/auth"}
             className="grid place-items-center size-9 rounded-full glass hover:glass-strong transition-all"
             aria-label="Account"
           >
             <User className="size-4" />
           </Link>
+
+          {userId && (
+            <button
+              onClick={handleLogout}
+              aria-label="Sign out"
+              title="Sign out"
+              className="grid place-items-center size-9 rounded-full glass hover:glass-strong transition-all text-muted-foreground hover:text-rose-400"
+            >
+              <LogOut className="size-4" />
+            </button>
+          )}
         </div>
       </div>
 
