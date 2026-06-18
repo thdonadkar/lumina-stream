@@ -110,7 +110,18 @@ function Page() {
           </div>
         ))}
         {banners.length === 0 && (
-          <p className="col-span-2 text-center text-muted-foreground text-sm p-8 glass rounded-2xl">No banners yet.</p>
+          <div className="col-span-2 text-center p-12 glass rounded-3xl border border-dashed border-white/10">
+            <div className="size-14 mx-auto rounded-2xl bg-aurora animate-aurora grid place-items-center mb-4">
+              <Plus className="size-6 text-background" />
+            </div>
+            <p className="font-bold text-lg">No banners yet</p>
+            <p className="text-sm text-muted-foreground mt-1 max-w-sm mx-auto">
+              Banners appear in the <strong>Featured Offers</strong> section on the homepage. Create your first to start driving traffic.
+            </p>
+            <button onClick={() => setEditing({ ...EMPTY })} className="mt-5 inline-flex items-center gap-1.5 rounded-full px-5 py-2 text-xs font-bold bg-aurora animate-aurora text-background">
+              <Plus className="size-3.5" /> Create first banner
+            </button>
+          </div>
         )}
       </div>
 
