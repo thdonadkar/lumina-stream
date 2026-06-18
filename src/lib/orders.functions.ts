@@ -306,8 +306,21 @@ export const requestReturn = createServerFn({ method: "POST" })
       body: `Your return for order #${order.id.slice(0, 8)} is being reviewed.`,
       link: `/orders/${order.id}`,
     });
+    await notifyAdminsOfOrder({
+      type: "order",
+      title: "Return requested",
+      body: `A return was requested on order #${order.id.slice(0, 8)}.`,
+      link: `/admin/returns`,
+    });
+    await notifySellersOfOrder(order.id, {
+      type: "order",
+      title: "Return requested",
+      body: `A buyer requested a return on order #${order.id.slice(0, 8)}.`,
+      link: `/seller/orders`,
+    });
     return order;
   });
+
 
 export const cancelOrder = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
