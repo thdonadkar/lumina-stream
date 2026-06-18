@@ -2,9 +2,10 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { motion } from "framer-motion";
-import { ChevronLeft, Package, MapPin, CreditCard, CheckCircle2, RotateCcw, XCircle } from "lucide-react";
+import { ChevronLeft, Package, MapPin, CreditCard, CheckCircle2, RotateCcw, XCircle, LifeBuoy } from "lucide-react";
 import { toast } from "sonner";
 import { getOrder, requestReturn, cancelOrder } from "@/lib/orders.functions";
+import { createTicket } from "@/lib/support.functions";
 import { formatPrice } from "@/lib/cart-store";
 
 export const Route = createFileRoute("/orders/$id")({
