@@ -34,7 +34,7 @@ function Page() {
   const cats = useMemo(() => categoryDistribution().slice(0, 4), []);
 
   const stats = [
-    { label: "Avg order value", value: `$${t.aov}` },
+    { label: "Avg order value", value: `₹${t.aov}` },
     { label: "Refund rate", value: "1.2%" },
     { label: "Repeat customers", value: "38%" },
     { label: "Cart abandonment", value: "24%" },
@@ -66,7 +66,7 @@ function Page() {
             <LineChart data={series} margin={{ left: -10, right: 8, top: 8 }}>
               <CartesianGrid stroke="oklch(1 0 0 / 0.06)" vertical={false} />
               <XAxis dataKey="date" stroke="oklch(0.65 0.02 270)" tick={{ fontSize: 10 }} tickLine={false} axisLine={false} interval={Math.ceil(days / 8)} />
-              <YAxis stroke="oklch(0.65 0.02 270)" tick={{ fontSize: 10 }} tickLine={false} axisLine={false} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} />
+              <YAxis stroke="oklch(0.65 0.02 270)" tick={{ fontSize: 10 }} tickLine={false} axisLine={false} tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}k`} />
               <Tooltip content={<ChartTooltip />} cursor={{ stroke: "oklch(0.85 0.17 200 / 0.4)" }} />
               <Line type="monotone" dataKey="revenue" stroke="oklch(0.85 0.17 200)" strokeWidth={2.5} dot={false} activeDot={{ r: 5, fill: "oklch(0.85 0.17 200)" }} />
               <Line type="monotone" dataKey="orders" stroke="oklch(0.7 0.22 300)" strokeWidth={2} dot={false} />
