@@ -256,6 +256,3 @@ export function AdminNav() {
     </nav>
   );
 }
-
-// Re-export so seller pages can be used uniformly with LineChart if needed
-export { LineChart, Line };
