@@ -2,10 +2,11 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { motion } from "framer-motion";
-import { ChevronLeft, Package, MapPin, CreditCard, CheckCircle2, RotateCcw, XCircle, LifeBuoy } from "lucide-react";
+import { ChevronLeft, Package, MapPin, CreditCard, CheckCircle2, RotateCcw, XCircle, LifeBuoy, Download } from "lucide-react";
 import { toast } from "sonner";
 import { getOrder, requestReturn, cancelOrder } from "@/lib/orders.functions";
 import { createTicket } from "@/lib/support.functions";
+import { downloadInvoice } from "@/lib/invoice";
 import { formatPrice } from "@/lib/cart-store";
 
 export const Route = createFileRoute("/orders/$id")({
@@ -78,8 +79,14 @@ function OrderDetail() {
             <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">Order</p>
             <h1 className="text-3xl font-extrabold tracking-tighter font-mono">#{order.id.slice(0, 8)}</h1>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <span className="px-3 py-1 rounded-full bg-aurora text-background text-xs font-bold uppercase">{order.status.replace(/_/g, " ")}</span>
+            <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase ring-1 ${
+              order.payment_status === "paid" ? "text-emerald-300 ring-emerald-300/40 bg-emerald-300/10" :
+              order.payment_status === "failed" ? "text-rose-400 ring-rose-400/40 bg-rose-400/10" :
+              order.payment_status === "refunded" ? "text-cyan ring-cyan/40 bg-cyan/10" :
+              "text-amber-300 ring-amber-300/40 bg-amber-300/10"
+            }`}>payment: {order.payment_status ?? "paid"}</span>
             {order.refund_status && order.refund_status !== "none" && (
               <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase ring-1 ${
                 order.refund_status === "refunded" ? "text-emerald-300 ring-emerald-300/40 bg-emerald-300/10" :
@@ -88,6 +95,13 @@ function OrderDetail() {
                 "text-amber-300 ring-amber-300/40 bg-amber-300/10"
               }`}>refund: {order.refund_status}</span>
             )}
+            <button
+              onClick={() => downloadInvoice(order)}
+              className="px-3 py-1 rounded-full glass-strong hover:bg-aurora hover:text-background transition-all text-xs font-bold inline-flex items-center gap-1.5"
+              title="Download invoice"
+            >
+              <Download className="size-3.5" /> Invoice
+            </button>
           </div>
         </div>
         <p className="text-sm text-muted-foreground">Placed {new Date(order.created_at).toLocaleString()}</p>

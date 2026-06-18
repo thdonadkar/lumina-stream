@@ -302,6 +302,9 @@ export type Database = {
           discount: number
           id: string
           notes: string | null
+          payment_method: string
+          payment_ref: string | null
+          payment_status: Database["public"]["Enums"]["payment_status"]
           refund_amount: number | null
           refund_status: Database["public"]["Enums"]["refund_status"]
           return_reason: string | null
@@ -320,6 +323,9 @@ export type Database = {
           discount?: number
           id?: string
           notes?: string | null
+          payment_method?: string
+          payment_ref?: string | null
+          payment_status?: Database["public"]["Enums"]["payment_status"]
           refund_amount?: number | null
           refund_status?: Database["public"]["Enums"]["refund_status"]
           return_reason?: string | null
@@ -338,6 +344,9 @@ export type Database = {
           discount?: number
           id?: string
           notes?: string | null
+          payment_method?: string
+          payment_ref?: string | null
+          payment_status?: Database["public"]["Enums"]["payment_status"]
           refund_amount?: number | null
           refund_status?: Database["public"]["Enums"]["refund_status"]
           return_reason?: string | null
@@ -669,6 +678,7 @@ export type Database = {
         | "return_requested"
         | "returned"
         | "refunded"
+      payment_status: "pending" | "paid" | "failed" | "refunded"
       product_status: "draft" | "pending" | "active" | "rejected"
       refund_status: "none" | "pending" | "approved" | "rejected" | "refunded"
       ticket_status: "open" | "in_progress" | "resolved" | "closed"
@@ -814,6 +824,7 @@ export const Constants = {
         "returned",
         "refunded",
       ],
+      payment_status: ["pending", "paid", "failed", "refunded"],
       product_status: ["draft", "pending", "active", "rejected"],
       refund_status: ["none", "pending", "approved", "rejected", "refunded"],
       ticket_status: ["open", "in_progress", "resolved", "closed"],
