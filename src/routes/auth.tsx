@@ -1,24 +1,54 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mail, Lock, User, ArrowRight } from "lucide-react";
+import { Mail, Lock, User, ArrowRight, ShieldAlert, Store, UserRound } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { ensureDemoAccounts } from "@/lib/demo-accounts.functions";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({ meta: [{ title: "Sign in — Neural" }] }),
   component: Auth,
 });
 
+const DEMO_BTNS = [
+  { email: "admin@demo.com", password: "Admin123", label: "Admin", icon: ShieldAlert, tone: "text-rose-400" },
+  { email: "seller@demo.com", password: "Seller123", label: "Seller", icon: Store, tone: "text-cyan" },
+  { email: "user@demo.com", password: "User123", label: "User", icon: UserRound, tone: "text-purple" },
+] as const;
+
 function Auth() {
   const navigate = useNavigate();
+  const ensureDemo = useServerFn(ensureDemoAccounts);
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [pw, setPw] = useState("");
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
+  const [demoBusy, setDemoBusy] = useState<string | null>(null);
 
   const strength = Math.min(4, Math.floor(pw.length / 3));
+
+  async function loginDemo(d: (typeof DEMO_BTNS)[number]) {
+    setDemoBusy(d.email);
+    try {
+      // Try sign in first — if account already exists, this is instant.
+      let { error } = await supabase.auth.signInWithPassword({ email: d.email, password: d.password });
+      if (error) {
+        // Bootstrap demo accounts (server-side, allowlisted), then retry.
+        await ensureDemo();
+        const retry = await supabase.auth.signInWithPassword({ email: d.email, password: d.password });
+        if (retry.error) throw retry.error;
+      }
+      toast.success(`Signed in as ${d.label}`);
+      navigate({ to: d.label === "Admin" ? "/admin/dashboard" : d.label === "Seller" ? "/seller/dashboard" : "/dashboard" });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Demo sign-in failed");
+    } finally {
+      setDemoBusy(null);
+    }
+  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -69,6 +99,32 @@ function Auth() {
                 : "Create an account to enter the network"}
             </p>
           </div>
+
+          {/* Demo account quick-login */}
+          <div className="mb-6">
+            <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground text-center mb-2">
+              Try a demo role
+            </p>
+            <div className="grid grid-cols-3 gap-2">
+              {DEMO_BTNS.map((d) => {
+                const I = d.icon;
+                const loading = demoBusy === d.email;
+                return (
+                  <button
+                    key={d.email}
+                    onClick={() => loginDemo(d)}
+                    disabled={demoBusy !== null}
+                    className="flex flex-col items-center gap-1 py-2.5 rounded-xl glass hover:glass-strong text-[11px] font-medium transition-all disabled:opacity-60"
+                  >
+                    <I className={`size-4 ${d.tone}`} />
+                    {loading ? "…" : d.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+
 
           <div className="grid grid-cols-2 gap-2 mb-6">
             <button className="flex items-center justify-center gap-2 py-2.5 rounded-xl glass hover:glass-strong text-sm font-medium transition-all">
