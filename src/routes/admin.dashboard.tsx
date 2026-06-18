@@ -202,20 +202,23 @@ function Page() {
       </div>
 
       {/* Quick tiles + AdminNav */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 mb-4">
         {[
-          { to: "/admin/users", label: "Users", icon: Users },
-          { to: "/admin/sellers", label: "Sellers", icon: Store },
+          { to: "/admin/banners", label: "Manage Banners", icon: Megaphone, accent: "ring-1 ring-cyan/40 bg-cyan/5" },
           { to: "/admin/products", label: "Products", icon: Package },
           { to: "/admin/orders", label: "Orders", icon: ShoppingBag },
-          { to: "/admin/categories", label: "Categories", icon: Activity },
+          { to: "/admin/returns", label: "Returns & Refunds", icon: Undo2 },
+          { to: "/admin/users", label: "Users", icon: Users },
+          { to: "/admin/sellers", label: "Sellers", icon: Store },
+          { to: "/admin/categories", label: "Categories", icon: FolderTree },
+          { to: "/admin/support", label: "Support", icon: LifeBuoy },
         ].map((q) => {
           const I = q.icon;
           return (
             <Link
               key={q.to}
               to={q.to}
-              className="glass hover:glass-strong rounded-2xl p-4 flex items-center justify-between group transition-all"
+              className={`glass hover:glass-strong rounded-2xl p-4 flex items-center justify-between group transition-all ${q.accent ?? ""}`}
             >
               <span className="flex items-center gap-3 text-sm font-medium">
                 <I className="size-4 text-muted-foreground group-hover:text-cyan transition-colors" />
