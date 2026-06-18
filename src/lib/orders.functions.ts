@@ -1,6 +1,45 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+// Fan-out notifications to all sellers whose products appear in an order.
+// Uses the admin client to bypass RLS on the notifications table.
+async function notifySellersOfOrder(
+  orderId: string,
+  payload: { type: string; title: string; body: string; link: string },
+) {
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: items } = await supabaseAdmin
+      .from("order_items")
+      .select("products:product_id(seller_id)")
+      .eq("order_id", orderId);
+    const sellers = new Set<string>();
+    for (const row of (items ?? []) as any[]) {
+      const sid = row?.products?.seller_id;
+      if (sid) sellers.add(sid);
+    }
+    if (sellers.size === 0) return;
+    await supabaseAdmin.from("notifications").insert(
+      Array.from(sellers).map((sid) => ({ user_id: sid, ...payload })),
+    );
+  } catch {
+    // best-effort; never fail the parent operation
+  }
+}
+
+async function notifyAdminsOfOrder(payload: { type: string; title: string; body: string; link: string }) {
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: admins } = await supabaseAdmin
+      .from("user_roles").select("user_id").eq("role", "admin");
+    if (!admins?.length) return;
+    await supabaseAdmin.from("notifications").insert(
+      admins.map((a: any) => ({ user_id: a.user_id, ...payload })),
+    );
+  } catch {}
+}
+
+
 type CartLine = {
   product_id: string | null;
   title: string;
