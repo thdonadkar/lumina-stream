@@ -95,7 +95,7 @@ export function downloadInvoice(order: InvoiceOrder) {
   }
 
   // Items header
-  doc.setFillColor(245);
+  doc.setFillColor(245, 245, 245);
   doc.rect(M, y, W - 2 * M, 22, "F");
   doc.setFont("helvetica", "bold");
   doc.text("Item", M + 8, y + 15);
