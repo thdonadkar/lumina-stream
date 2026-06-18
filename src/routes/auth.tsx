@@ -1,14 +1,22 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mail, Lock, User, ArrowRight } from "lucide-react";
+import { Mail, Lock, User, ArrowRight, ShieldAlert, Store, UserRound } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { ensureDemoAccounts } from "@/lib/demo-accounts.functions";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({ meta: [{ title: "Sign in — Neural" }] }),
   component: Auth,
 });
+
+const DEMO_BTNS = [
+  { email: "admin@demo.com", password: "Admin123", label: "Admin", icon: ShieldAlert, tone: "text-rose-400" },
+  { email: "seller@demo.com", password: "Seller123", label: "Seller", icon: Store, tone: "text-cyan" },
+  { email: "user@demo.com", password: "User123", label: "User", icon: UserRound, tone: "text-purple" },
+] as const;
 
 function Auth() {
   const navigate = useNavigate();
