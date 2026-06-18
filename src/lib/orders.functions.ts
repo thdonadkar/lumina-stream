@@ -5,7 +5,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 // Uses the admin client to bypass RLS on the notifications table.
 async function notifySellersOfOrder(
   orderId: string,
-  payload: { type: string; title: string; body: string; link: string },
+  payload: { type: "order" | "system" | "offer"; title: string; body: string; link: string },
 ) {
   try {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
