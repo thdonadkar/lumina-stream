@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { Package2 } from "lucide-react";
 import { RoleGate } from "@/components/RoleGate";
 import { SellerNav } from "./seller.dashboard";
-import { listAllOrders, updateOrderStatus } from "@/lib/orders.functions";
+import { listSellerOrders, updateOrderStatus } from "@/lib/orders.functions";
 import { formatPrice } from "@/lib/cart-store";
 import { toast } from "sonner";
 
