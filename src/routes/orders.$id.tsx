@@ -11,7 +11,7 @@ export const Route = createFileRoute("/orders/$id")({
   component: OrderDetail,
 });
 
-const TIMELINE = ["pending", "packed", "shipped", "out_for_delivery", "delivered"];
+const TIMELINE = ["pending", "confirmed", "packed", "shipped", "out_for_delivery", "delivered"];
 
 function OrderDetail() {
   const { id } = Route.useParams();
