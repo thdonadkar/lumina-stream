@@ -21,9 +21,13 @@ function OrderDetail() {
   const [loading, setLoading] = useState(true);
   const [returnOpen, setReturnOpen] = useState(false);
   const [reason, setReason] = useState("");
+  const [helpOpen, setHelpOpen] = useState(false);
+  const [helpSubject, setHelpSubject] = useState("");
+  const [helpMessage, setHelpMessage] = useState("");
   const fetchOrder = useServerFn(getOrder);
   const doReturn = useServerFn(requestReturn);
   const doCancel = useServerFn(cancelOrder);
+  const openTicket = useServerFn(createTicket);
 
   function refresh() {
     fetchOrder({ data: { id } }).then(setOrder).finally(() => setLoading(false));
