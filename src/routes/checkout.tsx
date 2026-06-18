@@ -1,10 +1,15 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, ChevronRight, CreditCard, MapPin, Truck, Sparkles } from "lucide-react";
+import { Check, ChevronRight, CreditCard, MapPin, Truck, Sparkles, Plus, Trash2, Tag } from "lucide-react";
 import { useCart, formatPrice } from "@/lib/cart-store";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useAuth } from "@/hooks/use-auth";
+import { listAddresses, saveAddress, deleteAddress } from "@/lib/addresses.functions";
+import { validateCoupon, placeOrder } from "@/lib/orders.functions";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/checkout")({
   head: () => ({ meta: [{ title: "Checkout — Neural" }] }),
@@ -17,25 +22,62 @@ const steps = [
   { id: 2, label: "Payment", icon: CreditCard },
 ];
 
+type Address = Awaited<ReturnType<typeof listAddresses>>[number];
+
 function Checkout() {
   const { items, total, clear } = useCart();
+  const { userId, loading } = useAuth();
+  const navigate = useNavigate();
   const [step, setStep] = useState(0);
-  const [done, setDone] = useState(false);
+  const [done, setDone] = useState<{ id: string; total: number } | null>(null);
   const [delivery, setDelivery] = useState<"standard" | "express" | "drone">("express");
 
+  const [addresses, setAddresses] = useState<Address[]>([]);
+  const [selectedAddr, setSelectedAddr] = useState<string | null>(null);
+  const [showAddrForm, setShowAddrForm] = useState(false);
+
+  const [couponInput, setCouponInput] = useState("");
+  const [coupon, setCoupon] = useState<{ code: string; discount: number; freeShipping: boolean } | null>(null);
+  const [placing, setPlacing] = useState(false);
+
+  const listAddrs = useServerFn(listAddresses);
+  const saveAddrFn = useServerFn(saveAddress);
+  const delAddrFn = useServerFn(deleteAddress);
+  const validateCouponFn = useServerFn(validateCoupon);
+  const placeOrderFn = useServerFn(placeOrder);
+
   const subtotal = total();
-  const shipping = delivery === "drone" ? 40 : delivery === "express" ? 15 : 0;
-  const finalTotal = subtotal + shipping;
+  const shippingBase = delivery === "drone" ? 400 : delivery === "express" ? 150 : 0;
+  const shipping = coupon?.freeShipping ? 0 : shippingBase;
+  const discount = coupon?.discount ?? 0;
+  const tax = Math.round((subtotal - discount) * 0.18);
+  const finalTotal = Math.max(0, subtotal - discount) + shipping + tax;
+
+  useEffect(() => {
+    if (!userId) return;
+    listAddrs().then((rows) => {
+      setAddresses(rows);
+      const def = rows.find((r) => r.is_default) ?? rows[0];
+      if (def) setSelectedAddr(def.id);
+    });
+  }, [userId, listAddrs]);
+
+  if (!loading && !userId) {
+    return (
+      <div className="px-6 max-w-2xl mx-auto py-16 text-center">
+        <h1 className="text-3xl font-bold">Sign in to checkout</h1>
+        <Link to="/auth" className="mt-6 inline-block px-6 py-3 rounded-full bg-aurora text-background font-bold">
+          Sign in
+        </Link>
+      </div>
+    );
+  }
 
   if (items.length === 0 && !done) {
     return (
       <div className="px-6 max-w-2xl mx-auto py-16 text-center">
         <h1 className="text-3xl font-bold">Your cart is empty</h1>
-        <p className="text-muted-foreground mt-2">Add hardware before checking out.</p>
-        <Link
-          to="/shop"
-          className="mt-6 inline-block px-6 py-3 rounded-full bg-aurora text-background font-bold"
-        >
+        <Link to="/shop" className="mt-6 inline-block px-6 py-3 rounded-full bg-aurora text-background font-bold">
           Browse catalog
         </Link>
       </div>
@@ -53,59 +95,77 @@ function Checkout() {
         >
           <Check className="size-12 text-background" strokeWidth={3} />
         </motion.div>
-        <motion.h1
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="text-4xl md:text-5xl font-extrabold tracking-tighter"
-        >
-          Transmission <span className="text-gradient">complete</span>
-        </motion.h1>
-        <p className="mt-4 text-muted-foreground">
-          Your order is preparing for departure. We've sent confirmation to your inbox.
+        <h1 className="text-4xl md:text-5xl font-extrabold tracking-tighter">
+          Order <span className="text-gradient">confirmed</span>
+        </h1>
+        <p className="mt-4 text-muted-foreground font-mono text-sm">
+          #{done.id.slice(0, 8)} · {formatPrice(done.total)}
         </p>
-
-        {/* Confetti */}
-        <div className="fixed inset-0 pointer-events-none">
-          {Array.from({ length: 40 }).map((_, i) => (
-            <motion.span
-              key={i}
-              initial={{ x: "50vw", y: "30vh", opacity: 1 }}
-              animate={{
-                x: `${Math.random() * 100}vw`,
-                y: `${50 + Math.random() * 50}vh`,
-                opacity: 0,
-                rotate: Math.random() * 720,
-              }}
-              transition={{ duration: 2 + Math.random() * 2, ease: "easeOut" }}
-              className="absolute size-2 rounded-sm bg-aurora"
-              style={{ backgroundColor: ["#22d3ee", "#a855f7", "#f43f5e"][i % 3] }}
-            />
-          ))}
+        <div className="mt-8 flex gap-3 justify-center">
+          <Link to="/orders/$id" params={{ id: done.id }} className="px-6 py-3 rounded-full bg-aurora text-background font-bold shadow-glow-cyan">
+            View order
+          </Link>
+          <Link to="/dashboard" className="px-6 py-3 rounded-full glass font-bold">
+            My orders
+          </Link>
         </div>
-
-        <Link
-          to="/dashboard"
-          className="mt-8 inline-block px-6 py-3 rounded-full bg-aurora text-background font-bold shadow-glow-cyan"
-        >
-          View order
-        </Link>
       </div>
     );
+  }
+
+  async function applyCoupon() {
+    if (!couponInput.trim()) return;
+    try {
+      const res = await validateCouponFn({ data: { code: couponInput, subtotal } });
+      if (!res.ok) {
+        toast.error(res.reason);
+        return;
+      }
+      setCoupon({ code: res.code, discount: res.discount, freeShipping: res.freeShipping });
+      toast.success(`Coupon ${res.code} applied`);
+    } catch (e: any) {
+      toast.error(e.message ?? "Failed");
+    }
+  }
+
+  async function submitOrder() {
+    if (!selectedAddr) {
+      toast.error("Add a shipping address");
+      setStep(0);
+      return;
+    }
+    setPlacing(true);
+    try {
+      const res = await placeOrderFn({
+        data: {
+          items: items.map((i) => ({
+            product_id: null,
+            title: i.product.name,
+            image: i.product.image,
+            unit_price: i.product.price,
+            qty: i.qty,
+          })),
+          address_id: selectedAddr,
+          shipping: shippingBase,
+          coupon_code: coupon?.code ?? null,
+        },
+      });
+      clear();
+      setDone(res);
+    } catch (e: any) {
+      toast.error(e.message ?? "Order failed");
+    } finally {
+      setPlacing(false);
+    }
   }
 
   return (
     <div className="px-4 sm:px-6 max-w-6xl mx-auto">
       <div className="mb-8">
-        <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-2">
-          Checkout
-        </p>
-        <h1 className="text-3xl md:text-4xl font-extrabold tracking-tighter">
-          Almost there.
-        </h1>
+        <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-2">Checkout</p>
+        <h1 className="text-3xl md:text-4xl font-extrabold tracking-tighter">Almost there.</h1>
       </div>
 
-      {/* Stepper */}
       <div className="glass-strong rounded-2xl p-4 mb-8 flex items-center justify-between">
         {steps.map((s, i) => {
           const active = step === i;
@@ -115,29 +175,15 @@ function Checkout() {
               <motion.div
                 animate={{ scale: active ? 1.1 : 1 }}
                 className={`size-10 grid place-items-center rounded-full shrink-0 ${
-                  complete
-                    ? "bg-aurora text-background"
-                    : active
-                    ? "glass-strong text-cyan ring-2 ring-cyan shadow-glow-cyan"
-                    : "glass text-muted-foreground"
+                  complete ? "bg-aurora text-background" : active ? "glass-strong text-cyan ring-2 ring-cyan shadow-glow-cyan" : "glass text-muted-foreground"
                 }`}
               >
                 {complete ? <Check className="size-4" /> : <s.icon className="size-4" />}
               </motion.div>
-              <span
-                className={`hidden sm:block text-sm font-semibold ${
-                  active ? "text-foreground" : "text-muted-foreground"
-                }`}
-              >
-                {s.label}
-              </span>
+              <span className={`hidden sm:block text-sm font-semibold ${active ? "text-foreground" : "text-muted-foreground"}`}>{s.label}</span>
               {i < steps.length - 1 && (
                 <div className="flex-1 h-px bg-white/10 relative">
-                  <motion.div
-                    initial={{ width: "0%" }}
-                    animate={{ width: complete ? "100%" : "0%" }}
-                    className="absolute inset-y-0 left-0 bg-aurora"
-                  />
+                  <motion.div initial={{ width: "0%" }} animate={{ width: complete ? "100%" : "0%" }} className="absolute inset-y-0 left-0 bg-aurora" />
                 </div>
               )}
             </div>
@@ -149,75 +195,92 @@ function Checkout() {
         <div className="glass-strong rounded-3xl p-6 md:p-8 min-h-[420px]">
           <AnimatePresence mode="wait">
             {step === 0 && (
-              <motion.div
-                key="address"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                className="space-y-4"
-              >
-                <h2 className="text-xl font-bold mb-2">Shipping address</h2>
-                <div className="grid sm:grid-cols-2 gap-4">
-                  <Field label="Full name" placeholder="Aria Kim" />
-                  <Field label="Email" placeholder="aria@neural.io" type="email" />
+              <motion.div key="address" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-3">
+                <div className="flex items-center justify-between mb-2">
+                  <h2 className="text-xl font-bold">Shipping address</h2>
+                  <button onClick={() => setShowAddrForm((v) => !v)} className="text-xs flex items-center gap-1 text-cyan">
+                    <Plus className="size-3.5" /> {showAddrForm ? "Cancel" : "Add new"}
+                  </button>
                 </div>
-                <Field label="Address line 1" placeholder="1 Orbital Way" />
-                <div className="grid sm:grid-cols-3 gap-4">
-                  <Field label="City" placeholder="Tokyo" />
-                  <Field label="Region" placeholder="Shibuya" />
-                  <Field label="Postal" placeholder="150-0001" />
-                </div>
+
+                {addresses.map((a) => (
+                  <button
+                    key={a.id}
+                    onClick={() => setSelectedAddr(a.id)}
+                    className={`w-full text-left p-4 rounded-2xl transition-all flex items-start gap-3 ${
+                      selectedAddr === a.id ? "glass-strong ring-2 ring-cyan shadow-glow-cyan" : "glass hover:glass-strong"
+                    }`}
+                  >
+                    <MapPin className="size-4 text-cyan mt-1 shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold">
+                        {a.recipient} {a.is_default && <span className="ml-2 text-[10px] text-cyan font-mono">DEFAULT</span>}
+                      </p>
+                      <p className="text-sm text-muted-foreground truncate">
+                        {a.line1}, {a.city}, {a.state} {a.postal_code}, {a.country}
+                      </p>
+                      {a.phone && <p className="text-xs text-muted-foreground">{a.phone}</p>}
+                    </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        delAddrFn({ data: { id: a.id } }).then(() => {
+                          setAddresses((p) => p.filter((x) => x.id !== a.id));
+                          if (selectedAddr === a.id) setSelectedAddr(null);
+                        });
+                      }}
+                      className="text-muted-foreground hover:text-rose-400 p-1"
+                    >
+                      <Trash2 className="size-4" />
+                    </button>
+                  </button>
+                ))}
+
+                {(addresses.length === 0 || showAddrForm) && (
+                  <AddressForm
+                    onSave={async (d) => {
+                      const row = await saveAddrFn({ data: d });
+                      const list = await listAddrs();
+                      setAddresses(list);
+                      setSelectedAddr(row.id);
+                      setShowAddrForm(false);
+                    }}
+                  />
+                )}
               </motion.div>
             )}
+
             {step === 1 && (
-              <motion.div
-                key="delivery"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                className="space-y-3"
-              >
+              <motion.div key="delivery" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-3">
                 <h2 className="text-xl font-bold mb-2">Delivery method</h2>
                 {[
                   { id: "standard", label: "Standard", desc: "3–5 days", price: 0 },
-                  { id: "express", label: "Express", desc: "Next day", price: 15 },
-                  { id: "drone", label: "Autonomous drone", desc: "2 hours", price: 40 },
+                  { id: "express", label: "Express", desc: "Next day", price: 150 },
+                  { id: "drone", label: "Autonomous drone", desc: "2 hours", price: 400 },
                 ].map((d) => (
                   <button
                     key={d.id}
                     onClick={() => setDelivery(d.id as any)}
                     className={`w-full text-left p-4 rounded-2xl flex items-center justify-between transition-all ${
-                      delivery === d.id
-                        ? "glass-strong ring-2 ring-cyan shadow-glow-cyan"
-                        : "glass hover:glass-strong"
+                      delivery === d.id ? "glass-strong ring-2 ring-cyan shadow-glow-cyan" : "glass hover:glass-strong"
                     }`}
                   >
                     <div>
                       <p className="font-bold">{d.label}</p>
                       <p className="text-sm text-muted-foreground">{d.desc}</p>
                     </div>
-                    <p className="font-mono font-bold">
-                      {d.price === 0 ? "Free" : formatPrice(d.price)}
-                    </p>
+                    <p className="font-mono font-bold">{d.price === 0 ? "Free" : formatPrice(d.price)}</p>
                   </button>
                 ))}
               </motion.div>
             )}
+
             {step === 2 && (
-              <motion.div
-                key="payment"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                className="space-y-4"
-              >
+              <motion.div key="payment" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-4">
                 <h2 className="text-xl font-bold mb-2">Payment</h2>
                 <div className="flex gap-2 flex-wrap">
-                  {["Card", "Apple Pay", "Google Pay", "Crypto"].map((m) => (
-                    <button
-                      key={m}
-                      className="px-4 py-2 rounded-full glass hover:glass-strong text-sm font-medium"
-                    >
+                  {["Card", "UPI", "Wallet", "Cash on delivery"].map((m) => (
+                    <button key={m} className="px-4 py-2 rounded-full glass hover:glass-strong text-sm font-medium">
                       {m}
                     </button>
                   ))}
@@ -226,8 +289,9 @@ function Checkout() {
                 <div className="grid sm:grid-cols-3 gap-4">
                   <Field label="Expiry" placeholder="12/27" />
                   <Field label="CVC" placeholder="123" />
-                  <Field label="ZIP" placeholder="150-0001" />
+                  <Field label="ZIP" placeholder="560001" />
                 </div>
+                <p className="text-xs text-muted-foreground">Demo only — no payment will be charged.</p>
               </motion.div>
             )}
           </AnimatePresence>
@@ -242,25 +306,24 @@ function Checkout() {
             </button>
             <button
               onClick={() => {
-                if (step < 2) setStep(step + 1);
-                else {
-                  setDone(true);
-                  clear();
+                if (step === 0 && !selectedAddr) {
+                  toast.error("Select a shipping address");
+                  return;
                 }
+                if (step < 2) setStep(step + 1);
+                else submitOrder();
               }}
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-aurora animate-aurora font-bold text-background shadow-glow-cyan hover:scale-[1.02] active:scale-95 transition-transform"
+              disabled={placing}
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-aurora animate-aurora font-bold text-background shadow-glow-cyan hover:scale-[1.02] active:scale-95 transition-transform disabled:opacity-60"
             >
-              {step === 2 ? "Place order" : "Continue"}
+              {step === 2 ? (placing ? "Placing…" : "Place order") : "Continue"}
               <ChevronRight className="size-4" />
             </button>
           </div>
         </div>
 
-        {/* Summary */}
         <aside className="glass-strong rounded-3xl p-6 h-fit sticky top-24">
-          <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-4">
-            Order summary
-          </p>
+          <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-4">Order summary</p>
           <div className="space-y-3 max-h-64 overflow-y-auto">
             {items.map((i) => (
               <div key={i.product.id} className="flex gap-3 items-center">
@@ -275,25 +338,43 @@ function Checkout() {
               </div>
             ))}
           </div>
+
+          <div className="mt-4 pt-4 border-t border-white/5">
+            <div className="flex gap-2">
+              <input
+                value={couponInput}
+                onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                placeholder="Coupon code"
+                className="flex-1 h-10 rounded-xl bg-glass border border-white/10 px-3 text-sm font-mono"
+              />
+              <button onClick={applyCoupon} className="h-10 px-4 rounded-xl glass-strong text-sm font-bold flex items-center gap-1">
+                <Tag className="size-3.5" /> Apply
+              </button>
+            </div>
+            {coupon && (
+              <p className="text-xs mt-2 text-cyan flex items-center justify-between">
+                <span>{coupon.code} active</span>
+                <button onClick={() => setCoupon(null)} className="text-muted-foreground hover:text-rose-400">Remove</button>
+              </p>
+            )}
+            <p className="text-[10px] text-muted-foreground mt-2 font-mono">Try: WELCOME10 · NEURAL50 · FREESHIP · FLASH25</p>
+          </div>
+
           <div className="mt-4 pt-4 border-t border-white/5 space-y-2 text-sm">
             <Row label="Subtotal" value={formatPrice(subtotal)} />
+            {discount > 0 && <Row label="Discount" value={`− ${formatPrice(discount)}`} />}
             <Row label="Shipping" value={shipping === 0 ? "Free" : formatPrice(shipping)} />
-            <Row label="Tax" value="Calculated next" muted />
+            <Row label="GST (18%)" value={formatPrice(tax)} muted />
           </div>
           <div className="mt-4 pt-4 border-t border-white/10 flex items-center justify-between">
             <span className="font-bold">Total</span>
-            <motion.span
-              key={finalTotal}
-              initial={{ opacity: 0, y: -4 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-2xl font-mono font-extrabold text-gradient"
-            >
+            <motion.span key={finalTotal} initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} className="text-2xl font-mono font-extrabold text-gradient">
               {formatPrice(finalTotal)}
             </motion.span>
           </div>
           <div className="mt-4 glass rounded-xl p-3 flex items-center gap-2 text-xs text-muted-foreground">
             <Sparkles className="size-3.5 text-purple shrink-0" />
-            Add Echo Implants & save 8% bundle credit
+            Secure encrypted checkout · 7-day returns
           </div>
         </aside>
       </div>
@@ -313,13 +394,59 @@ function Row({ label, value, muted }: { label: string; value: string; muted?: bo
 function Field({ label, ...props }: { label: string } & React.InputHTMLAttributes<HTMLInputElement>) {
   return (
     <div className="relative">
-      <Label className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-1.5 block">
-        {label}
-      </Label>
-      <Input
-        {...props}
-        className="bg-glass border-white/10 h-12 rounded-xl focus-visible:ring-cyan focus-visible:ring-2"
-      />
+      <Label className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-1.5 block">{label}</Label>
+      <Input {...props} className="bg-glass border-white/10 h-12 rounded-xl focus-visible:ring-cyan focus-visible:ring-2" />
+    </div>
+  );
+}
+
+function AddressForm({ onSave }: { onSave: (d: any) => Promise<void> }) {
+  const [d, setD] = useState({
+    recipient: "",
+    phone: "",
+    line1: "",
+    city: "",
+    state: "",
+    postal_code: "",
+    country: "IN",
+    is_default: true,
+  });
+  const [saving, setSaving] = useState(false);
+  const set = (k: string, v: any) => setD((p) => ({ ...p, [k]: v }));
+
+  return (
+    <div className="glass rounded-2xl p-4 mt-3 space-y-3">
+      <div className="grid sm:grid-cols-2 gap-3">
+        <Field label="Full name" value={d.recipient} onChange={(e) => set("recipient", e.target.value)} />
+        <Field label="Phone" value={d.phone} onChange={(e) => set("phone", e.target.value)} />
+      </div>
+      <Field label="Address line" value={d.line1} onChange={(e) => set("line1", e.target.value)} />
+      <div className="grid sm:grid-cols-3 gap-3">
+        <Field label="City" value={d.city} onChange={(e) => set("city", e.target.value)} />
+        <Field label="State" value={d.state} onChange={(e) => set("state", e.target.value)} />
+        <Field label="Pincode" value={d.postal_code} onChange={(e) => set("postal_code", e.target.value)} />
+      </div>
+      <button
+        disabled={saving}
+        onClick={async () => {
+          if (!d.recipient || !d.line1 || !d.city || !d.postal_code) {
+            toast.error("Fill required fields");
+            return;
+          }
+          setSaving(true);
+          try {
+            await onSave(d);
+            toast.success("Address saved");
+          } catch (e: any) {
+            toast.error(e.message ?? "Failed");
+          } finally {
+            setSaving(false);
+          }
+        }}
+        className="w-full h-11 rounded-xl bg-aurora text-background font-bold disabled:opacity-60"
+      >
+        {saving ? "Saving…" : "Save address"}
+      </button>
     </div>
   );
 }
