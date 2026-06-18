@@ -139,6 +139,31 @@ function OrderDetail() {
               </div>
             </div>
           </div>
+
+          {(order.status === "pending" || order.status === "confirmed") && (
+            <button onClick={handleCancel} className="w-full rounded-2xl glass-strong hover:bg-rose-400/10 hover:text-rose-400 transition-all p-3 text-sm font-bold inline-flex items-center justify-center gap-2">
+              <XCircle className="size-4" /> Cancel order
+            </button>
+          )}
+          {order.status === "delivered" && !returnOpen && (
+            <button onClick={() => setReturnOpen(true)} className="w-full rounded-2xl glass-strong hover:glass transition-all p-3 text-sm font-bold inline-flex items-center justify-center gap-2">
+              <RotateCcw className="size-4" /> Request return
+            </button>
+          )}
+          {returnOpen && (
+            <form onSubmit={submitReturn} className="glass-strong rounded-2xl p-4 space-y-2">
+              <p className="text-sm font-bold">Return reason</p>
+              <textarea
+                value={reason} onChange={(e) => setReason(e.target.value)} required maxLength={500} rows={3}
+                placeholder="Tell us what went wrong…"
+                className="w-full glass rounded-xl px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-cyan resize-y"
+              />
+              <div className="flex justify-end gap-2">
+                <button type="button" onClick={() => setReturnOpen(false)} className="rounded-full px-3 py-1.5 text-xs glass">Cancel</button>
+                <button className="rounded-full px-4 py-1.5 text-xs font-bold bg-aurora text-background">Submit return</button>
+              </div>
+            </form>
+          )}
         </aside>
       </div>
     </div>
