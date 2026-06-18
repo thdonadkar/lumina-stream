@@ -1,6 +1,45 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+// Fan-out notifications to all sellers whose products appear in an order.
+// Uses the admin client to bypass RLS on the notifications table.
+async function notifySellersOfOrder(
+  orderId: string,
+  payload: { type: "order" | "system" | "offer"; title: string; body: string; link: string },
+) {
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: items } = await supabaseAdmin
+      .from("order_items")
+      .select("products:product_id(seller_id)")
+      .eq("order_id", orderId);
+    const sellers = new Set<string>();
+    for (const row of (items ?? []) as any[]) {
+      const sid = row?.products?.seller_id;
+      if (sid) sellers.add(sid);
+    }
+    if (sellers.size === 0) return;
+    await supabaseAdmin.from("notifications").insert(
+      Array.from(sellers).map((sid) => ({ user_id: sid, ...payload })),
+    );
+  } catch {
+    // best-effort; never fail the parent operation
+  }
+}
+
+async function notifyAdminsOfOrder(payload: { type: "order" | "system" | "offer"; title: string; body: string; link: string }) {
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: admins } = await supabaseAdmin
+      .from("user_roles").select("user_id").eq("role", "admin");
+    if (!admins?.length) return;
+    await supabaseAdmin.from("notifications").insert(
+      admins.map((a: any) => ({ user_id: a.user_id, ...payload })),
+    );
+  } catch {}
+}
+
+
 type CartLine = {
   product_id: string | null;
   title: string;
@@ -147,8 +186,17 @@ export const placeOrder = createServerFn({ method: "POST" })
       link: `/orders/${order.id}`,
     });
 
+    // Fan-out: notify each seller of a new order containing their products
+    await notifySellersOfOrder(order.id, {
+      type: "order",
+      title: "New order received",
+      body: `New order #${order.id.slice(0, 8)} contains your products. Worth ₹${total}.`,
+      link: `/seller/orders`,
+    });
+
     return { id: order.id, total };
   });
+
 
 export const listMyOrders = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -258,8 +306,21 @@ export const requestReturn = createServerFn({ method: "POST" })
       body: `Your return for order #${order.id.slice(0, 8)} is being reviewed.`,
       link: `/orders/${order.id}`,
     });
+    await notifyAdminsOfOrder({
+      type: "order",
+      title: "Return requested",
+      body: `A return was requested on order #${order.id.slice(0, 8)}.`,
+      link: `/admin/returns`,
+    });
+    await notifySellersOfOrder(order.id, {
+      type: "order",
+      title: "Return requested",
+      body: `A buyer requested a return on order #${order.id.slice(0, 8)}.`,
+      link: `/seller/orders`,
+    });
     return order;
   });
+
 
 export const cancelOrder = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

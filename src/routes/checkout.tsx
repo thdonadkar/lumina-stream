@@ -191,8 +191,9 @@ function Checkout() {
         })}
       </div>
 
-      <div className="grid lg:grid-cols-[1fr_380px] gap-8">
-        <div className="glass-strong rounded-3xl p-6 md:p-8 min-h-[420px]">
+      <div className="grid lg:grid-cols-[1fr_380px] gap-6 lg:gap-8">
+        <div className="glass-strong rounded-3xl p-4 sm:p-6 md:p-8 min-h-[420px]">
+
           <AnimatePresence mode="wait">
             {step === 0 && (
               <motion.div key="address" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-3">
@@ -204,19 +205,22 @@ function Checkout() {
                 </div>
 
                 {addresses.map((a) => (
-                  <button
+                  <div
                     key={a.id}
+                    role="button"
+                    tabIndex={0}
                     onClick={() => setSelectedAddr(a.id)}
-                    className={`w-full text-left p-4 rounded-2xl transition-all flex items-start gap-3 ${
+                    onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") setSelectedAddr(a.id); }}
+                    className={`w-full text-left p-4 rounded-2xl transition-all flex items-start gap-3 cursor-pointer ${
                       selectedAddr === a.id ? "glass-strong ring-2 ring-cyan shadow-glow-cyan" : "glass hover:glass-strong"
                     }`}
                   >
                     <MapPin className="size-4 text-cyan mt-1 shrink-0" />
                     <div className="flex-1 min-w-0">
-                      <p className="font-bold">
+                      <p className="font-bold truncate">
                         {a.recipient} {a.is_default && <span className="ml-2 text-[10px] text-cyan font-mono">DEFAULT</span>}
                       </p>
-                      <p className="text-sm text-muted-foreground truncate">
+                      <p className="text-sm text-muted-foreground break-words">
                         {a.line1}, {a.city}, {a.state} {a.postal_code}, {a.country}
                       </p>
                       {a.phone && <p className="text-xs text-muted-foreground">{a.phone}</p>}
@@ -229,12 +233,14 @@ function Checkout() {
                           if (selectedAddr === a.id) setSelectedAddr(null);
                         });
                       }}
-                      className="text-muted-foreground hover:text-rose-400 p-1"
+                      className="text-muted-foreground hover:text-rose-400 p-1 shrink-0"
+                      aria-label="Delete address"
                     >
                       <Trash2 className="size-4" />
                     </button>
-                  </button>
+                  </div>
                 ))}
+
 
                 {(addresses.length === 0 || showAddrForm) && (
                   <AddressForm
@@ -322,7 +328,7 @@ function Checkout() {
           </div>
         </div>
 
-        <aside className="glass-strong rounded-3xl p-6 h-fit sticky top-24">
+        <aside className="glass-strong rounded-3xl p-4 sm:p-6 h-fit lg:sticky lg:top-24">
           <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-4">Order summary</p>
           <div className="space-y-3 max-h-64 overflow-y-auto">
             {items.map((i) => (
