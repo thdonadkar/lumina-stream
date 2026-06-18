@@ -37,7 +37,7 @@ function Page() {
   const feed = useMemo(() => activityFeed(), []);
 
   const kpis = [
-    { label: "Total revenue", value: `$${t.revenue.toLocaleString()}`, delta: "+18.4%", icon: TrendingUp, tone: "cyan" },
+    { label: "Total revenue", value: `₹${t.revenue.toLocaleString("en-IN")}`, delta: "+18.4%", icon: TrendingUp, tone: "cyan" },
     { label: "Total orders", value: t.orders.toLocaleString(), delta: "+12.1%", icon: ShoppingBag, tone: "purple" },
     { label: "Active users", value: t.users.toLocaleString(), delta: "+8.3%", icon: Users, tone: "rose" },
     { label: "Total sellers", value: "238", delta: "+6 new", icon: Store, tone: "cyan" },
