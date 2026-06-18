@@ -50,6 +50,15 @@ function OrderDetail() {
     } catch (err: any) { toast.error(err.message); }
   }
 
+  async function submitHelp(e: React.FormEvent) {
+    e.preventDefault();
+    try {
+      await openTicket({ data: { subject: helpSubject, message: helpMessage, orderId: id } });
+      toast.success("Support ticket opened — seller and our team have been notified");
+      setHelpOpen(false); setHelpSubject(""); setHelpMessage("");
+    } catch (err: any) { toast.error(err.message); }
+  }
+
   if (loading) return <div className="p-20 text-center text-muted-foreground">Loading…</div>;
   if (!order) return <div className="p-20 text-center">Order not found.</div>;
 
