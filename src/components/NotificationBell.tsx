@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Bell, CheckCheck, Package, Tag, Info } from "lucide-react";
 import { listNotifications, markNotificationRead, markAllNotificationsRead } from "@/lib/notifications.functions";
 import { useAuth } from "@/hooks/use-auth";
+import { supabase } from "@/integrations/supabase/client";
 
 type Notif = Awaited<ReturnType<typeof listNotifications>>[number];
 
@@ -20,6 +21,8 @@ export function NotificationBell() {
 
   async function refresh() {
     if (!userId) return;
+    const { data } = await supabase.auth.getSession();
+    if (!data.session?.access_token) return;
     try {
       setItems(await fetchList());
     } catch {
