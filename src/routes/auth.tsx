@@ -20,13 +20,35 @@ const DEMO_BTNS = [
 
 function Auth() {
   const navigate = useNavigate();
+  const ensureDemo = useServerFn(ensureDemoAccounts);
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [pw, setPw] = useState("");
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
+  const [demoBusy, setDemoBusy] = useState<string | null>(null);
 
   const strength = Math.min(4, Math.floor(pw.length / 3));
+
+  async function loginDemo(d: (typeof DEMO_BTNS)[number]) {
+    setDemoBusy(d.email);
+    try {
+      // Try sign in first — if account already exists, this is instant.
+      let { error } = await supabase.auth.signInWithPassword({ email: d.email, password: d.password });
+      if (error) {
+        // Bootstrap demo accounts (server-side, allowlisted), then retry.
+        await ensureDemo();
+        const retry = await supabase.auth.signInWithPassword({ email: d.email, password: d.password });
+        if (retry.error) throw retry.error;
+      }
+      toast.success(`Signed in as ${d.label}`);
+      navigate({ to: d.label === "Admin" ? "/admin/dashboard" : d.label === "Seller" ? "/seller/dashboard" : "/dashboard" });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Demo sign-in failed");
+    } finally {
+      setDemoBusy(null);
+    }
+  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
