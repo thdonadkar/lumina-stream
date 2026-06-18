@@ -37,19 +37,42 @@ function Home() {
   return (
     <div className="px-4 sm:px-6 max-w-7xl mx-auto space-y-24 md:space-y-32">
       {banners.length > 0 && (
-        <section className="pt-6 -mb-16">
-          <div className="grid sm:grid-cols-2 gap-3">
-            {banners.slice(0, 4).map((b) => (
-              <Link key={b.id} to={b.cta_link || "/shop"} className="glass-strong rounded-2xl overflow-hidden flex group hover:ring-1 hover:ring-cyan/30 transition-all">
-                {b.image_url ? (
-                  <img src={b.image_url} alt="" className="size-24 object-cover shrink-0" />
-                ) : (
-                  <div className="size-24 bg-aurora animate-aurora shrink-0 opacity-60" />
-                )}
-                <div className="p-4 flex-1 min-w-0">
-                  <p className="font-bold truncate">{b.title}</p>
-                  {b.subtitle && <p className="text-xs text-muted-foreground truncate">{b.subtitle}</p>}
-                  {b.cta_text && <span className="text-[10px] uppercase font-mono tracking-widest text-cyan mt-1 inline-flex items-center gap-1">{b.cta_text} <ArrowRight className="size-3 group-hover:translate-x-0.5 transition-transform" /></span>}
+        <section className="pt-8 -mb-12">
+          <div className="flex items-end justify-between mb-5">
+            <div>
+              <p className="text-[10px] font-mono uppercase tracking-widest text-rose-400 mb-2 flex items-center gap-1.5">
+                <Flame className="size-3" /> Limited time
+              </p>
+              <h2 className="text-2xl md:text-3xl font-bold tracking-tight">🔥 Featured Offers</h2>
+            </div>
+            <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground hidden sm:block">
+              {banners.length} live deal{banners.length === 1 ? "" : "s"}
+            </span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {banners.slice(0, 4).map((b, i) => (
+              <Link
+                key={b.id}
+                to={b.cta_link || "/shop"}
+                className="group relative glass-strong rounded-3xl overflow-hidden flex min-h-[160px] hover:ring-2 hover:ring-cyan/40 transition-all shadow-elevated"
+              >
+                <div className="relative w-2/5 sm:w-1/2 shrink-0 overflow-hidden">
+                  {b.image_url ? (
+                    <img src={b.image_url} alt="" className="absolute inset-0 size-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                  ) : (
+                    <div className="absolute inset-0 bg-aurora animate-aurora opacity-70" />
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent to-background/60" />
+                </div>
+                <div className="p-5 flex-1 min-w-0 flex flex-col justify-center">
+                  <span className="text-[10px] font-mono uppercase tracking-widest text-rose-400 mb-1">Offer #{i + 1}</span>
+                  <p className="font-bold text-lg leading-tight">{b.title}</p>
+                  {b.subtitle && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{b.subtitle}</p>}
+                  {b.cta_text && (
+                    <span className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-cyan w-fit">
+                      {b.cta_text} <ArrowRight className="size-3.5 group-hover:translate-x-1 transition-transform" />
+                    </span>
+                  )}
                 </div>
               </Link>
             ))}
