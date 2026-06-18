@@ -186,8 +186,17 @@ export const placeOrder = createServerFn({ method: "POST" })
       link: `/orders/${order.id}`,
     });
 
+    // Fan-out: notify each seller of a new order containing their products
+    await notifySellersOfOrder(order.id, {
+      type: "order",
+      title: "New order received",
+      body: `New order #${order.id.slice(0, 8)} contains your products. Worth ₹${total}.`,
+      link: `/seller/orders`,
+    });
+
     return { id: order.id, total };
   });
+
 
 export const listMyOrders = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
