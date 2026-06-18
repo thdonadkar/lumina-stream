@@ -99,8 +99,11 @@ function ProductPage() {
               />
             </AnimatePresence>
             {product.badge && (
-              <span className="absolute top-4 left-4 px-3 py-1 rounded-full glass-strong text-[10px] font-mono uppercase tracking-wider text-cyan">
-                {product.badge}
+              <span
+                title="Seller Promotion"
+                className="absolute top-4 left-4 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-rose-500/90 backdrop-blur-md text-[11px] font-bold uppercase tracking-wider text-white ring-1 ring-rose-300/40 shadow-glow-cyan"
+              >
+                🏷️ Seller Promo · {product.badge}
               </span>
             )}
           </motion.div>

@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import {
   Users, Store, Package, ShoppingBag, TrendingUp, ShieldAlert,
   ShoppingCart, UserPlus, BadgeCheck, Activity, ArrowUpRight,
+  Megaphone, Undo2, LifeBuoy, FolderTree,
 } from "lucide-react";
 import {
   Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Legend, Line, LineChart,
@@ -36,7 +37,7 @@ function Page() {
   const feed = useMemo(() => activityFeed(), []);
 
   const kpis = [
-    { label: "Total revenue", value: `$${t.revenue.toLocaleString()}`, delta: "+18.4%", icon: TrendingUp, tone: "cyan" },
+    { label: "Total revenue", value: `₹${t.revenue.toLocaleString("en-IN")}`, delta: "+18.4%", icon: TrendingUp, tone: "cyan" },
     { label: "Total orders", value: t.orders.toLocaleString(), delta: "+12.1%", icon: ShoppingBag, tone: "purple" },
     { label: "Active users", value: t.users.toLocaleString(), delta: "+8.3%", icon: Users, tone: "rose" },
     { label: "Total sellers", value: "238", delta: "+6 new", icon: Store, tone: "cyan" },
@@ -98,7 +99,7 @@ function Page() {
               </defs>
               <CartesianGrid stroke="oklch(1 0 0 / 0.06)" vertical={false} />
               <XAxis dataKey="date" stroke="oklch(0.65 0.02 270)" tick={{ fontSize: 10 }} tickLine={false} axisLine={false} interval={Math.ceil(days / 8)} />
-              <YAxis stroke="oklch(0.65 0.02 270)" tick={{ fontSize: 10 }} tickLine={false} axisLine={false} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} />
+              <YAxis stroke="oklch(0.65 0.02 270)" tick={{ fontSize: 10 }} tickLine={false} axisLine={false} tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}k`} />
               <Tooltip content={<ChartTooltip />} cursor={{ stroke: "oklch(0.85 0.17 200 / 0.4)" }} />
               <Area type="monotone" dataKey="revenue" stroke="oklch(0.85 0.17 200)" strokeWidth={2} fill="url(#rev)" />
             </AreaChart>
@@ -201,20 +202,23 @@ function Page() {
       </div>
 
       {/* Quick tiles + AdminNav */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 mb-4">
         {[
-          { to: "/admin/users", label: "Users", icon: Users },
-          { to: "/admin/sellers", label: "Sellers", icon: Store },
+          { to: "/admin/banners", label: "Manage Banners", icon: Megaphone, accent: "ring-1 ring-cyan/40 bg-cyan/5" },
           { to: "/admin/products", label: "Products", icon: Package },
           { to: "/admin/orders", label: "Orders", icon: ShoppingBag },
-          { to: "/admin/categories", label: "Categories", icon: Activity },
+          { to: "/admin/returns", label: "Returns & Refunds", icon: Undo2 },
+          { to: "/admin/users", label: "Users", icon: Users },
+          { to: "/admin/sellers", label: "Sellers", icon: Store },
+          { to: "/admin/categories", label: "Categories", icon: FolderTree },
+          { to: "/admin/support", label: "Support", icon: LifeBuoy },
         ].map((q) => {
           const I = q.icon;
           return (
             <Link
               key={q.to}
               to={q.to}
-              className="glass hover:glass-strong rounded-2xl p-4 flex items-center justify-between group transition-all"
+              className={`glass hover:glass-strong rounded-2xl p-4 flex items-center justify-between group transition-all ${q.accent ?? ""}`}
             >
               <span className="flex items-center gap-3 text-sm font-medium">
                 <I className="size-4 text-muted-foreground group-hover:text-cyan transition-colors" />

@@ -110,7 +110,18 @@ function Page() {
           </div>
         ))}
         {banners.length === 0 && (
-          <p className="col-span-2 text-center text-muted-foreground text-sm p-8 glass rounded-2xl">No banners yet.</p>
+          <div className="col-span-2 text-center p-12 glass rounded-3xl border border-dashed border-white/10">
+            <div className="size-14 mx-auto rounded-2xl bg-aurora animate-aurora grid place-items-center mb-4">
+              <Plus className="size-6 text-background" />
+            </div>
+            <p className="font-bold text-lg">No banners yet</p>
+            <p className="text-sm text-muted-foreground mt-1 max-w-sm mx-auto">
+              Banners appear in the <strong>Featured Offers</strong> section on the homepage. Create your first to start driving traffic.
+            </p>
+            <button onClick={() => setEditing({ ...EMPTY })} className="mt-5 inline-flex items-center gap-1.5 rounded-full px-5 py-2 text-xs font-bold bg-aurora animate-aurora text-background">
+              <Plus className="size-3.5" /> Create first banner
+            </button>
+          </div>
         )}
       </div>
 
@@ -142,6 +153,24 @@ function Page() {
               <input type="checkbox" checked={editing.active ?? true} onChange={(e) => setEditing({ ...editing!, active: e.target.checked })} className="size-4 accent-cyan" />
               <span>Active (visible on homepage)</span>
             </label>
+            <div>
+              <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-mono">Live preview</span>
+              <div className="mt-1.5 glass-strong rounded-2xl overflow-hidden flex min-h-[110px]">
+                <div className="relative w-2/5 shrink-0">
+                  {editing.image_url ? (
+                    <img src={editing.image_url} alt="" className="absolute inset-0 size-full object-cover" />
+                  ) : (
+                    <div className="absolute inset-0 bg-aurora animate-aurora opacity-70" />
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent to-background/60" />
+                </div>
+                <div className="p-3 flex-1 min-w-0 flex flex-col justify-center">
+                  <p className="font-bold leading-tight truncate">{editing.title || "Banner title"}</p>
+                  {editing.subtitle && <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{editing.subtitle}</p>}
+                  {editing.cta_text && <span className="mt-1.5 text-[10px] font-bold text-cyan">{editing.cta_text} →</span>}
+                </div>
+              </div>
+            </div>
             <div className="flex justify-end gap-2 pt-2">
               <button onClick={() => setEditing(null)} className="rounded-full px-4 py-1.5 text-xs glass">Cancel</button>
               <button onClick={handleSave} className="rounded-full px-4 py-1.5 text-xs font-bold bg-aurora text-background inline-flex items-center gap-1.5">

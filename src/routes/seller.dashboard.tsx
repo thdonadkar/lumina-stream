@@ -35,7 +35,7 @@ function SellerDashboard() {
   const mine = products.slice(0, 4);
 
   const stats = [
-    { label: "Revenue", value: `$${t.revenue.toLocaleString()}`, delta: "+18.4%", icon: DollarSign },
+    { label: "Revenue", value: `₹${t.revenue.toLocaleString()}`, delta: "+18.4%", icon: DollarSign },
     { label: "Orders", value: t.orders.toLocaleString(), delta: "+12.1%", icon: ShoppingBag },
     { label: "Active products", value: String(mine.length), delta: "+2", icon: Package },
     { label: "Conversion", value: "3.42%", delta: "+0.4pt", icon: TrendingUp },
@@ -108,7 +108,7 @@ function SellerDashboard() {
               </defs>
               <CartesianGrid stroke="oklch(1 0 0 / 0.06)" vertical={false} />
               <XAxis dataKey="date" stroke="oklch(0.65 0.02 270)" tick={{ fontSize: 10 }} tickLine={false} axisLine={false} interval={Math.ceil(days / 8)} />
-              <YAxis stroke="oklch(0.65 0.02 270)" tick={{ fontSize: 10 }} tickLine={false} axisLine={false} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} />
+              <YAxis stroke="oklch(0.65 0.02 270)" tick={{ fontSize: 10 }} tickLine={false} axisLine={false} tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}k`} />
               <Tooltip content={<ChartTooltip />} cursor={{ stroke: "oklch(0.7 0.22 300 / 0.4)" }} />
               <Area type="monotone" dataKey="revenue" stroke="oklch(0.7 0.22 300)" strokeWidth={2} fill="url(#srev)" />
             </AreaChart>

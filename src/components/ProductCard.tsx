@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { Star, Plus, Heart } from "lucide-react";
+import { Star, Plus, Heart, Tag } from "lucide-react";
 import type { Product } from "@/lib/products";
 import { useCart, formatPrice } from "@/lib/cart-store";
 import { useWishlist } from "@/lib/wishlist-store";
@@ -42,8 +42,11 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
             className="size-full object-cover transition-transform duration-700 group-hover:scale-110"
           />
           {product.badge && (
-            <span className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-background/70 backdrop-blur-md text-[10px] font-mono uppercase tracking-wider text-cyan ring-1 ring-cyan/30">
-              {product.badge}
+            <span
+              title="Seller Promotion"
+              className="absolute top-3 left-3 inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-rose-500/90 backdrop-blur-md text-[10px] font-bold uppercase tracking-wider text-white ring-1 ring-rose-300/40 shadow-glow-cyan"
+            >
+              <Tag className="size-3" /> {product.badge}
             </span>
           )}
           <button
