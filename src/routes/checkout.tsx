@@ -328,7 +328,7 @@ function Checkout() {
           </div>
         </div>
 
-        <aside className="glass-strong rounded-3xl p-6 h-fit sticky top-24">
+        <aside className="glass-strong rounded-3xl p-4 sm:p-6 h-fit lg:sticky lg:top-24">
           <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-4">Order summary</p>
           <div className="space-y-3 max-h-64 overflow-y-auto">
             {items.map((i) => (
