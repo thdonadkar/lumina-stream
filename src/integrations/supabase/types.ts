@@ -508,6 +508,7 @@ export type Database = {
           id: string
           is_admin: boolean
           sender_id: string
+          sender_role: string
           ticket_id: string
         }
         Insert: {
@@ -516,6 +517,7 @@ export type Database = {
           id?: string
           is_admin?: boolean
           sender_id: string
+          sender_role?: string
           ticket_id: string
         }
         Update: {
@@ -524,6 +526,7 @@ export type Database = {
           id?: string
           is_admin?: boolean
           sender_id?: string
+          sender_role?: string
           ticket_id?: string
         }
         Relationships: [
@@ -541,6 +544,8 @@ export type Database = {
           created_at: string
           id: string
           message: string
+          order_id: string | null
+          seller_id: string | null
           status: Database["public"]["Enums"]["ticket_status"]
           subject: string
           updated_at: string
@@ -550,6 +555,8 @@ export type Database = {
           created_at?: string
           id?: string
           message: string
+          order_id?: string | null
+          seller_id?: string | null
           status?: Database["public"]["Enums"]["ticket_status"]
           subject: string
           updated_at?: string
@@ -559,12 +566,22 @@ export type Database = {
           created_at?: string
           id?: string
           message?: string
+          order_id?: string | null
+          seller_id?: string | null
           status?: Database["public"]["Enums"]["ticket_status"]
           subject?: string
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "support_tickets_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {

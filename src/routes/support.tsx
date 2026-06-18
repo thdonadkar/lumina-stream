@@ -105,15 +105,20 @@ function Support() {
           </div>
         </div>
         <div className="space-y-3 mb-4">
-          {thread.messages.map((m: any) => (
-            <div key={m.id} className={`flex ${m.is_admin ? "justify-start" : "justify-end"}`}>
-              <div className={`max-w-[80%] rounded-2xl p-3 ${m.is_admin ? "glass-strong" : "bg-aurora text-background"}`}>
-                <p className="text-[10px] uppercase font-mono opacity-70">{m.is_admin ? "Support Agent" : "You"}</p>
-                <p className="text-sm whitespace-pre-wrap mt-1">{m.body}</p>
-                <p className="text-[10px] opacity-60 mt-1">{new Date(m.created_at).toLocaleString()}</p>
+          {thread.messages.map((m: any) => {
+            const role = m.sender_role || (m.is_admin ? "admin" : "user");
+            const mine = role === "user";
+            const label = role === "admin" ? "Support Agent" : role === "seller" ? "Seller" : "You";
+            return (
+              <div key={m.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
+                <div className={`max-w-[85%] rounded-2xl p-3 ${mine ? "bg-aurora text-background" : "glass-strong"}`}>
+                  <p className="text-[10px] uppercase font-mono opacity-70">{label}</p>
+                  <p className="text-sm whitespace-pre-wrap mt-1 break-words">{m.body}</p>
+                  <p className="text-[10px] opacity-60 mt-1">{new Date(m.created_at).toLocaleString()}</p>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
         {closed ? (
           <p className="text-xs text-muted-foreground text-center py-4">This ticket is {t.status.replace("_", " ")}. Open a new one if you need more help.</p>

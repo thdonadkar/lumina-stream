@@ -184,6 +184,7 @@ export function SellerNav() {
     { to: "/seller/products", label: "Products" },
     { to: "/seller/add-product", label: "Add product" },
     { to: "/seller/orders", label: "Orders" },
+    { to: "/seller/support", label: "Support" },
     { to: "/seller/analytics", label: "Analytics" },
   ];
   return (

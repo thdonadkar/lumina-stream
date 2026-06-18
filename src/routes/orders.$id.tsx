@@ -2,9 +2,10 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { motion } from "framer-motion";
-import { ChevronLeft, Package, MapPin, CreditCard, CheckCircle2, RotateCcw, XCircle } from "lucide-react";
+import { ChevronLeft, Package, MapPin, CreditCard, CheckCircle2, RotateCcw, XCircle, LifeBuoy } from "lucide-react";
 import { toast } from "sonner";
 import { getOrder, requestReturn, cancelOrder } from "@/lib/orders.functions";
+import { createTicket } from "@/lib/support.functions";
 import { formatPrice } from "@/lib/cart-store";
 
 export const Route = createFileRoute("/orders/$id")({
@@ -20,9 +21,13 @@ function OrderDetail() {
   const [loading, setLoading] = useState(true);
   const [returnOpen, setReturnOpen] = useState(false);
   const [reason, setReason] = useState("");
+  const [helpOpen, setHelpOpen] = useState(false);
+  const [helpSubject, setHelpSubject] = useState("");
+  const [helpMessage, setHelpMessage] = useState("");
   const fetchOrder = useServerFn(getOrder);
   const doReturn = useServerFn(requestReturn);
   const doCancel = useServerFn(cancelOrder);
+  const openTicket = useServerFn(createTicket);
 
   function refresh() {
     fetchOrder({ data: { id } }).then(setOrder).finally(() => setLoading(false));
@@ -42,6 +47,15 @@ function OrderDetail() {
     try {
       await doCancel({ data: { id } });
       toast.success("Order cancelled"); refresh();
+    } catch (err: any) { toast.error(err.message); }
+  }
+
+  async function submitHelp(e: React.FormEvent) {
+    e.preventDefault();
+    try {
+      await openTicket({ data: { subject: helpSubject, message: helpMessage, orderId: id } });
+      toast.success("Support ticket opened — seller and our team have been notified");
+      setHelpOpen(false); setHelpSubject(""); setHelpMessage("");
     } catch (err: any) { toast.error(err.message); }
   }
 
@@ -177,6 +191,30 @@ function OrderDetail() {
               <div className="flex justify-end gap-2">
                 <button type="button" onClick={() => setReturnOpen(false)} className="rounded-full px-3 py-1.5 text-xs glass">Cancel</button>
                 <button className="rounded-full px-4 py-1.5 text-xs font-bold bg-aurora text-background">Submit return</button>
+              </div>
+            </form>
+          )}
+
+          {!helpOpen ? (
+            <button onClick={() => setHelpOpen(true)} className="w-full rounded-2xl glass-strong hover:glass transition-all p-3 text-sm font-bold inline-flex items-center justify-center gap-2">
+              <LifeBuoy className="size-4" /> Need help with this order?
+            </button>
+          ) : (
+            <form onSubmit={submitHelp} className="glass-strong rounded-2xl p-4 space-y-2">
+              <p className="text-sm font-bold">Contact support</p>
+              <input
+                value={helpSubject} onChange={(e) => setHelpSubject(e.target.value)} required maxLength={200}
+                placeholder="Subject"
+                className="w-full glass rounded-xl px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-cyan"
+              />
+              <textarea
+                value={helpMessage} onChange={(e) => setHelpMessage(e.target.value)} required maxLength={4000} rows={3}
+                placeholder="Describe the issue. The seller and our team will both see this."
+                className="w-full glass rounded-xl px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-cyan resize-y"
+              />
+              <div className="flex justify-end gap-2">
+                <button type="button" onClick={() => setHelpOpen(false)} className="rounded-full px-3 py-1.5 text-xs glass">Cancel</button>
+                <button className="rounded-full px-4 py-1.5 text-xs font-bold bg-aurora text-background">Open ticket</button>
               </div>
             </form>
           )}
