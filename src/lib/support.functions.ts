@@ -243,16 +243,28 @@ export const replyToTicket = createServerFn({ method: "POST" })
     const { data: isAdmin } = await supabase.rpc("has_role", { _user_id: userId, _role: "admin" });
     const { data: ticket, error: tErr } = await supabase
       .from("support_tickets")
-      .select("user_id, seller_id, subject")
+      .select("user_id, seller_id, subject, order_id")
       .eq("id", data.id)
       .maybeSingle();
     if (tErr) throw tErr;
     if (!ticket) throw new UserError("Ticket not found");
 
+    // Resilient role detection: if seller_id is missing on the ticket but the
+    // caller actually owns a product in the linked order, treat them as seller.
+    let effectiveSellerId = ticket.seller_id as string | null;
+    if (!effectiveSellerId && ticket.order_id) {
+      effectiveSellerId = await resolveSellerForOrder(ticket.order_id);
+      if (effectiveSellerId) {
+        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+        await supabaseAdmin.from("support_tickets").update({ seller_id: effectiveSellerId }).eq("id", data.id);
+      }
+    }
+
     let role: "user" | "seller" | "admin" = "user";
     if (isAdmin) role = "admin";
-    else if (ticket.seller_id === userId) role = "seller";
+    else if (effectiveSellerId === userId) role = "seller";
     else if (ticket.user_id === userId) role = "user";
+    else if (ticket.order_id && await userIsSellerOfOrder(ticket.order_id, userId)) role = "seller";
     else throw new UserError("Forbidden");
 
     await supabase.from("support_ticket_messages").insert({
@@ -267,21 +279,29 @@ export const replyToTicket = createServerFn({ method: "POST" })
     if (role !== "user") patch.status = "in_progress";
     await supabase.from("support_tickets").update(patch).eq("id", data.id);
 
-    // Notify the other parties
+    // Notify the other parties: customer, seller, and all admins.
     const recipients = new Set<string>();
     if (ticket.user_id && ticket.user_id !== userId) recipients.add(ticket.user_id);
-    if (ticket.seller_id && ticket.seller_id !== userId) recipients.add(ticket.seller_id);
+    if (effectiveSellerId && effectiveSellerId !== userId) recipients.add(effectiveSellerId);
+    const adminIds = await listAdminIds();
+    for (const aid of adminIds) if (aid !== userId) recipients.add(aid);
+
     if (recipients.size) {
       const senderLabel = role === "admin" ? "Support agent" : role === "seller" ? "Seller" : "Customer";
-      await supabase.from("notifications").insert(
-        Array.from(recipients).map((uid) => ({
+      const rows = Array.from(recipients).map((uid) => {
+        const isSellerRecipient = uid === effectiveSellerId;
+        const isAdminRecipient = adminIds.includes(uid);
+        const link = isAdminRecipient ? "/admin/support" : isSellerRecipient ? "/seller/support" : "/support";
+        return {
           user_id: uid,
           type: "system",
           title: `${senderLabel} replied`,
           body: `New message on ticket "${ticket.subject}".`,
-          link: role === "seller" || (role === "admin" && uid === ticket.seller_id) ? "/seller/support" : "/support",
-        })),
-      );
+          link,
+        };
+      });
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      await supabaseAdmin.from("notifications").insert(rows);
     }
     return { ok: true };
   });
