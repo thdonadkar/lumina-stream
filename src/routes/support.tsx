@@ -30,13 +30,11 @@ function Support() {
   const [creating, setCreating] = useState(false);
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
-  const [reply, setReply] = useState("");
   const [busy, setBusy] = useState(false);
 
   const fetchList = useServerFn(listMyTickets);
   const fetchThread = useServerFn(getTicketThread);
   const create = useServerFn(createTicket);
-  const send = useServerFn(replyToTicket);
   const markRead = useServerFn(markTicketRead);
 
   async function refreshList() {
