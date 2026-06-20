@@ -11,11 +11,51 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/product/$id")({
   head: ({ params }) => {
     const p = getProduct(params.id);
+    if (!p) {
+      return { meta: [{ title: "Product not found — Neural" }] };
+    }
+    const desc = (p.tagline ?? p.description ?? p.name).slice(0, 160);
+    const url = `/product/${params.id}`;
     return {
       meta: [
-        { title: p ? `${p.name} — Neural` : "Product" },
-        { name: "description", content: p?.tagline ?? "" },
-        { property: "og:image", content: p?.image ?? "" },
+        { title: `${p.name} — Neural` },
+        { name: "description", content: desc },
+        { property: "og:title", content: p.name },
+        { property: "og:description", content: desc },
+        { property: "og:type", content: "product" },
+        { property: "og:url", content: url },
+        { property: "og:image", content: p.image ?? "" },
+        { name: "twitter:card", content: "summary_large_image" },
+        { name: "twitter:title", content: p.name },
+        { name: "twitter:description", content: desc },
+        { name: "twitter:image", content: p.image ?? "" },
+        { property: "product:price:amount", content: String(p.price) },
+        { property: "product:price:currency", content: "INR" },
+      ],
+      links: [{ rel: "canonical", href: url }],
+      scripts: [
+        {
+          type: "application/ld+json",
+          children: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Product",
+            name: p.name,
+            description: p.tagline ?? p.description ?? "",
+            image: p.image ? [p.image] : undefined,
+            sku: p.id,
+            brand: { "@type": "Brand", name: "Neural" },
+            offers: {
+              "@type": "Offer",
+              priceCurrency: "INR",
+              price: p.price,
+              availability: "https://schema.org/InStock",
+              url,
+            },
+            aggregateRating: p.rating
+              ? { "@type": "AggregateRating", ratingValue: p.rating, reviewCount: p.reviews ?? 1 }
+              : undefined,
+          }),
+        },
       ],
     };
   },
