@@ -81,8 +81,6 @@ function Shop() {
       </div>
 
       {/* Toolbar */}
-      <div className="sticky top-20 z-30 glass-strong rounded-2xl p-3 mb-6 flex items-center gap-3 flex-wrap">
-      {/* Toolbar */}
       <div className="sticky top-20 z-30 glass-strong rounded-2xl p-3 mb-6 flex flex-col gap-3">
         <div className="flex items-center gap-2 glass rounded-xl px-3 py-2">
           <Search className="size-4 text-cyan shrink-0" aria-hidden="true" />
