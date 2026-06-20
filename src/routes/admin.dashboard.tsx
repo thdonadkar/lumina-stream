@@ -186,7 +186,11 @@ function Page() {
                   transition={{ delay: 0.3 + i * 0.04 }}
                   className="flex items-start gap-3"
                 >
-                  <div className={`size-8 rounded-xl grid place-items-center shrink-0 ring-1 ring-${f.tone}/30 text-${f.tone}`}>
+                  <div className={`size-8 rounded-xl grid place-items-center shrink-0 ring-1 ${
+                    f.tone === "cyan" ? "ring-cyan/30 text-cyan"
+                    : f.tone === "purple" ? "ring-purple-500/30 text-purple-400"
+                    : "ring-rose-500/30 text-rose-400"
+                  }`}>
                     <Icon className="size-3.5" />
                   </div>
                   <div className="min-w-0 flex-1">
