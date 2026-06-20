@@ -399,6 +399,13 @@ export const cancelOrder = createServerFn({ method: "POST" })
     const { data: order, error } = await supabase
       .from("orders").update({ status: "cancelled" as never }).eq("id", data.id).select().single();
     if (error) throw error;
+    // Return reserved stock to inventory (best-effort; do not fail the cancel).
+    const { data: items } = await supabase
+      .from("order_items").select("product_id, qty").eq("order_id", data.id);
+    for (const it of (items ?? []) as any[]) {
+      if (!it.product_id) continue;
+      await (supabase as any).rpc("increment_stock", { p_product_id: it.product_id, p_qty: it.qty });
+    }
     await supabase.from("notifications").insert({
       user_id: order.user_id, type: "order",
       title: "Order cancelled",
