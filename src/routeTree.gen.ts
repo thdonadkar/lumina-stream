@@ -23,6 +23,7 @@ import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as CartRouteImport } from './routes/cart'
 import { Route as CareersRouteImport } from './routes/careers'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AddressesRouteImport } from './routes/addresses'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SellerSupportRouteImport } from './routes/seller.support'
@@ -114,6 +115,11 @@ const CareersRoute = CareersRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AddressesRoute = AddressesRouteImport.update({
+  id: '/addresses',
+  path: '/addresses',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AboutRoute = AboutRouteImport.update({
@@ -231,6 +237,7 @@ const ApiPublicRazorpayWebhookRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/addresses': typeof AddressesRoute
   '/auth': typeof AuthRoute
   '/careers': typeof CareersRoute
   '/cart': typeof CartRoute
@@ -269,6 +276,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/addresses': typeof AddressesRoute
   '/auth': typeof AuthRoute
   '/careers': typeof CareersRoute
   '/cart': typeof CartRoute
@@ -308,6 +316,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/addresses': typeof AddressesRoute
   '/auth': typeof AuthRoute
   '/careers': typeof CareersRoute
   '/cart': typeof CartRoute
@@ -348,6 +357,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/about'
+    | '/addresses'
     | '/auth'
     | '/careers'
     | '/cart'
@@ -386,6 +396,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/about'
+    | '/addresses'
     | '/auth'
     | '/careers'
     | '/cart'
@@ -424,6 +435,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/about'
+    | '/addresses'
     | '/auth'
     | '/careers'
     | '/cart'
@@ -463,6 +475,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
+  AddressesRoute: typeof AddressesRoute
   AuthRoute: typeof AuthRoute
   CareersRoute: typeof CareersRoute
   CartRoute: typeof CartRoute
@@ -597,6 +610,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/addresses': {
+      id: '/addresses'
+      path: '/addresses'
+      fullPath: '/addresses'
+      preLoaderRoute: typeof AddressesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/about': {
@@ -759,6 +779,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
+  AddressesRoute: AddressesRoute,
   AuthRoute: AuthRoute,
   CareersRoute: CareersRoute,
   CartRoute: CartRoute,
