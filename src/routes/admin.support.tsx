@@ -1,13 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { requireRole } from "@/lib/route-guards";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { motion } from "framer-motion";
 import { Send, ChevronLeft, LifeBuoy } from "lucide-react";
 import { toast } from "sonner";
 import { RoleGate } from "@/components/RoleGate";
 import { AdminNav } from "./admin.dashboard";
-import { listAllTickets, getTicketThread, replyToTicket, setTicketStatus } from "@/lib/support.functions";
+import { useTicketRealtime } from "@/hooks/use-ticket-realtime";
+import { relativeTimeShort, senderLabel } from "@/lib/support-format";
+import { listAllTickets, getTicketThread, replyToTicket, setTicketStatus, markTicketRead } from "@/lib/support.functions";
 
 export const Route = createFileRoute("/admin/support")({
   ssr: false,
