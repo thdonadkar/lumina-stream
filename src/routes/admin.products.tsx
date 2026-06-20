@@ -27,9 +27,12 @@ function Page() {
   const setStatus = useServerFn(setProductStatus);
   const del = useServerFn(deleteProductAdmin);
 
-  const { data = [], isLoading } = useQuery({
+  const { data = [], isLoading, isError, error, refetch } = useQuery({
     queryKey: ["admin-products"],
     queryFn: () => list(),
+    retry: false,
+    refetchOnWindowFocus: false,
+    staleTime: 10_000,
   });
 
   const invalidate = () => qc.invalidateQueries({ queryKey: ["admin-products"] });
