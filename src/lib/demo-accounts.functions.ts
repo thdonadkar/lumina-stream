@@ -10,6 +10,9 @@ const DEMO = [
 ];
 
 export const ensureDemoAccounts = createServerFn({ method: "POST" }).handler(async () => {
+  if (process.env.NODE_ENV === "production" && process.env.ALLOW_DEMO_ACCOUNTS !== "true") {
+    throw new Error("Demo accounts are disabled in production");
+  }
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
   const { data: list, error: listErr } = await supabaseAdmin.auth.admin.listUsers({
