@@ -57,6 +57,13 @@ export const setProductStatus = createServerFn({ method: "POST" })
     }
     const { error } = await db.from("products").update({ status: data.status }).eq("id", data.id);
     if (error) throw error;
+    await db.from("audit_log").insert({
+      actor_id: context.userId,
+      action: "product.status_change",
+      target_table: "products",
+      target_id: data.id,
+      metadata: { to_status: data.status, forced: !!data.force },
+    });
     return { ok: true as const };
   });
 
