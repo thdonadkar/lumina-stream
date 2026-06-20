@@ -24,6 +24,19 @@ export function Navbar() {
   const { isAdmin, isSeller, userId } = useAuth();
   const navigate = useNavigate();
   const [catsOpen, setCatsOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  // close mobile menu on route change + ESC
+  useEffect(() => {
+    setMobileOpen(false);
+    setCatsOpen(false);
+  }, [pathname]);
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setMobileOpen(false);
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [mobileOpen]);
 
   async function handleLogout() {
     await supabase.auth.signOut();
