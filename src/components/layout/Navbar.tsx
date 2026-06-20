@@ -1,7 +1,7 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, ShoppingBag, User, Mic, Heart, ChevronDown, ShieldAlert, Store, LogOut, LifeBuoy } from "lucide-react";
-import { useState } from "react";
+import { Search, ShoppingBag, User, Mic, Heart, ChevronDown, ShieldAlert, Store, LogOut, LifeBuoy, Menu, X } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useCart } from "@/lib/cart-store";
 import { useWishlist } from "@/lib/wishlist-store";
 import { useAuth } from "@/hooks/use-auth";
@@ -9,6 +9,7 @@ import { CATEGORIES } from "@/lib/categories";
 import { NotificationBell } from "@/components/NotificationBell";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+
 
 const navLinks = [
   { to: "/", label: "Home" },
