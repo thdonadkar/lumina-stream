@@ -49,7 +49,8 @@ function Page() {
       <h1 className="text-4xl font-extrabold tracking-tighter mb-6">User management</h1>
 
       <div className="glass-strong rounded-2xl overflow-hidden">
-        <table className="w-full text-sm">
+        <div className="overflow-x-auto">
+        <table className="w-full text-sm min-w-[560px]">
           <thead className="text-xs uppercase tracking-widest text-muted-foreground">
             <tr className="border-b border-white/5">
               <th className="text-left p-4">User</th>
@@ -113,6 +114,7 @@ function Page() {
             })}
           </tbody>
         </table>
+        </div>
       </div>
 
       <AdminNav />

@@ -65,35 +65,39 @@ function Page() {
       ) : (
         <div className="grid gap-3">
           {data.map((p: any) => (
-            <div key={p.id} className="glass-strong rounded-2xl p-4 flex items-center gap-4 flex-wrap">
-              <img referrerPolicy="no-referrer" src={p.images?.[0] ?? ""} alt="" className="size-14 rounded-xl object-cover bg-white/5" />
-              <div className="flex-1 min-w-0">
-                <p className="font-bold truncate">{p.title}</p>
-                <p className="text-xs text-muted-foreground truncate">
-                  ₹{Number(p.price).toLocaleString()} · stock {p.stock} ·{" "}
-                  <span className="font-mono uppercase">{p.status}</span>
-                </p>
+            <div key={p.id} className="glass-strong rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+              <div className="flex items-center gap-3 min-w-0 flex-1">
+                <img referrerPolicy="no-referrer" src={p.images?.[0] ?? ""} alt="" className="size-14 rounded-xl object-cover bg-white/5 shrink-0" />
+                <div className="min-w-0">
+                  <p className="font-bold truncate">{p.title}</p>
+                  <p className="text-xs text-muted-foreground truncate">
+                    ₹{Number(p.price).toLocaleString()} · stock {p.stock} ·{" "}
+                    <span className="font-mono uppercase">{p.status}</span>
+                  </p>
+                </div>
               </div>
-              <button
-                disabled={p.status === "active" || statusMut.isPending}
-                onClick={() => statusMut.mutate({ id: p.id, status: "active" })}
-                className="px-3 py-1.5 rounded-full text-xs font-bold bg-aurora animate-aurora text-background inline-flex items-center gap-1 disabled:opacity-40"
-              >
-                <Check className="size-3" /> Approve
-              </button>
-              <button
-                disabled={p.status === "rejected" || statusMut.isPending}
-                onClick={() => statusMut.mutate({ id: p.id, status: "rejected" })}
-                className="px-3 py-1.5 rounded-full text-xs font-bold glass hover:glass-strong inline-flex items-center gap-1 disabled:opacity-40"
-              >
-                <Flag className="size-3 text-rose-400" /> Flag
-              </button>
-              <button
-                onClick={async () => { if (await confirm({ title: `Delete "${p.title}"?`, description: "This permanently removes the product from the catalog.", destructive: true, confirmText: "Delete" })) deleteMut.mutate(p.id); }}
-                className="px-3 py-1.5 rounded-full text-xs font-bold glass hover:glass-strong inline-flex items-center gap-1"
-              >
-                <Trash2 className="size-3 text-rose-400" /> Delete
-              </button>
+              <div className="flex flex-wrap gap-2 sm:justify-end shrink-0">
+                <button
+                  disabled={p.status === "active" || statusMut.isPending}
+                  onClick={() => statusMut.mutate({ id: p.id, status: "active" })}
+                  className="px-3 py-1.5 rounded-full text-xs font-bold bg-aurora animate-aurora text-background inline-flex items-center gap-1 disabled:opacity-40"
+                >
+                  <Check className="size-3" /> Approve
+                </button>
+                <button
+                  disabled={p.status === "rejected" || statusMut.isPending}
+                  onClick={() => statusMut.mutate({ id: p.id, status: "rejected" })}
+                  className="px-3 py-1.5 rounded-full text-xs font-bold glass hover:glass-strong inline-flex items-center gap-1 disabled:opacity-40"
+                >
+                  <Flag className="size-3 text-rose-400" /> Flag
+                </button>
+                <button
+                  onClick={async () => { if (await confirm({ title: `Delete "${p.title}"?`, description: "This permanently removes the product from the catalog.", destructive: true, confirmText: "Delete" })) deleteMut.mutate(p.id); }}
+                  className="px-3 py-1.5 rounded-full text-xs font-bold glass hover:glass-strong inline-flex items-center gap-1"
+                >
+                  <Trash2 className="size-3 text-rose-400" /> Delete
+                </button>
+              </div>
             </div>
           ))}
         </div>

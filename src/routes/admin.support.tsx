@@ -122,11 +122,16 @@ function Page() {
         <div className="space-y-3 mb-4">
           {thread.messages.map((m: any) => {
             const role = m.sender_role || (m.is_admin ? "admin" : "user");
-            const mine = role === "admin";
+            // Admin on right (filled), seller on right (muted), customer on left.
+            const align = role === "admin" || role === "seller" ? "justify-end" : "justify-start";
+            const bubble =
+              role === "admin" ? "bg-aurora text-background"
+              : role === "seller" ? "bg-cyan/15 ring-1 ring-cyan/30"
+              : "glass-strong";
             const label = role === "admin" ? "You (Admin)" : role === "seller" ? "Seller" : "Customer";
             return (
-              <div key={m.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
-                <div className={`max-w-[85%] rounded-2xl p-3 ${mine ? "bg-aurora text-background" : "glass-strong"}`}>
+              <div key={m.id} className={`flex ${align}`}>
+                <div className={`max-w-[85%] rounded-2xl p-3 ${bubble}`}>
                   <p className="text-[10px] uppercase font-mono opacity-70">{label}</p>
                   <p className="text-sm whitespace-pre-wrap mt-1 break-words">{m.body}</p>
                   <p className="text-[10px] opacity-60 mt-1">{new Date(m.created_at).toLocaleString()}</p>
