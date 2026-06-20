@@ -25,6 +25,13 @@ export function Navbar() {
   const navigate = useNavigate();
   const [catsOpen, setCatsOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  // Hydration guard: persisted Zustand stores (cart/wishlist) only have data
+  // on the client. Render the empty state on first paint to match SSR, then
+  // swap in the real counts after mount to avoid hydration mismatches.
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => { setHydrated(true); }, []);
+  const cartBadge = hydrated ? count : 0;
+  const wishBadge = hydrated ? wishCount : 0;
 
   // close mobile menu on route change + ESC
   useEffect(() => {
