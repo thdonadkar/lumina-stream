@@ -16,28 +16,43 @@ export function NotificationBell() {
   const { userId } = useAuth();
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState<Notif[]>([]);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const fetchList = useServerFn(listNotifications);
   const markOne = useServerFn(markNotificationRead);
   const markAll = useServerFn(markAllNotificationsRead);
 
-  async function refresh() {
+  async function refresh(opts: { silent?: boolean } = {}) {
     if (!userId) return;
     const { data } = await supabase.auth.getSession();
     if (!data.session?.access_token) return;
     try {
       setItems(await fetchList());
-    } catch {
-      /* ignore */
+    } catch (err) {
+      console.error("[NotificationBell] refresh failed:", err);
+      if (!opts.silent) toast.error("Couldn't load notifications");
     }
   }
 
   useEffect(() => {
-    refresh();
+    refresh({ silent: true });
     if (!userId) return;
-    const t = setInterval(refresh, 30000);
+    const t = setInterval(() => refresh({ silent: true }), 30000);
     return () => clearInterval(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
+
+  // ESC closes and restores focus to the trigger
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setOpen(false);
+        triggerRef.current?.focus();
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [open]);
 
   if (!userId) return null;
   const unread = items.filter((n) => !n.is_read).length;
