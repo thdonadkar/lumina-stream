@@ -53,7 +53,11 @@ export const useCart = create<CartState>()(
       total: () => get().items.reduce((acc, i) => acc + i.product.price * i.qty, 0),
       count: () => get().items.reduce((acc, i) => acc + i.qty, 0),
     }),
-    { name: "neural-cart" },
+    {
+      name: "neural-cart",
+      version: 1,
+      partialize: (state) => ({ items: state.items }),
+    },
   ),
 );
 
