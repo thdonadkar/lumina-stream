@@ -277,7 +277,7 @@ export function Navbar() {
                 ))}
                 <Link to="/search" className="block px-4 py-3 rounded-xl glass hover:glass-strong font-semibold">Search</Link>
                 <Link to="/wishlist" className="block px-4 py-3 rounded-xl glass hover:glass-strong font-semibold">
-                  Wishlist {wishCount > 0 && <span className="ml-1 text-xs text-rose-400">({wishCount})</span>}
+                  Wishlist {wishBadge > 0 && <span className="ml-1 text-xs text-rose-400">({wishBadge})</span>}
                 </Link>
                 <Link to="/dashboard" className="block px-4 py-3 rounded-xl glass hover:glass-strong font-semibold">Account</Link>
                 <Link to="/support" className="block px-4 py-3 rounded-xl glass hover:glass-strong font-semibold">Support</Link>
