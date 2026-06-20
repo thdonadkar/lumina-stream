@@ -348,11 +348,29 @@ export const updateOrderStatus = createServerFn({ method: "POST" })
     return order;
   });
 
+const RETURN_REASONS = new Set([
+  "damaged",
+  "wrong_item",
+  "not_as_described",
+  "defective",
+  "no_longer_needed",
+  "other",
+]);
+
 export const requestReturn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { id: string; reason: string }) => {
-    if (!d.reason?.trim() || d.reason.length > 500) throw new Error("Reason required (max 500 chars)");
-    return d;
+  .inputValidator((d: {
+    id: string;
+    reason: string;
+    description?: string;
+    order_item_id?: string | null;
+    photos?: string[];
+  }) => {
+    if (!d?.id) throw new Error("Missing order id");
+    if (!d.reason || !RETURN_REASONS.has(d.reason)) throw new Error("Pick a valid reason");
+    if (d.description && d.description.length > 1000) throw new Error("Description too long");
+    const photos = Array.isArray(d.photos) ? d.photos.slice(0, 6).filter((p) => typeof p === "string" && p.length < 500) : [];
+    return { ...d, photos };
   })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
@@ -361,11 +379,28 @@ export const requestReturn = createServerFn({ method: "POST" })
     if (!existing) throw new Error("Order not found");
     if (existing.user_id !== userId) throw new Error("Forbidden");
     if (existing.status !== "delivered") throw new Error("Only delivered orders can be returned");
+
+    // Write the structured return request (used by the new admin returns UI)…
+    const { error: rrErr } = await (supabase as any)
+      .from("return_requests")
+      .insert({
+        order_id: data.id,
+        order_item_id: data.order_item_id ?? null,
+        user_id: userId,
+        reason: data.reason,
+        description: data.description ?? null,
+        photos: data.photos ?? [],
+        status: "pending",
+      });
+    if (rrErr) throw rrErr;
+
+    // …and keep the existing order-level fields in sync for legacy screens.
+    const summary = `${data.reason}${data.description ? `: ${data.description}` : ""}`.slice(0, 500);
     const { data: order, error } = await (supabase as any)
       .from("orders")
       .update({
         status: "return_requested",
-        return_reason: data.reason,
+        return_reason: summary,
         refund_status: "pending",
       })
       .eq("id", data.id).select().single();
@@ -390,6 +425,7 @@ export const requestReturn = createServerFn({ method: "POST" })
     });
     return order;
   });
+
 
 
 export const cancelOrder = createServerFn({ method: "POST" })
