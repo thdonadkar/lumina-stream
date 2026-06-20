@@ -7,6 +7,8 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
  * to the private `support-attachments` bucket. RLS on storage.objects already
  * enforces that the uploader is a participant on the ticket.
  */
+const MAX_BYTES = 25 * 1024 * 1024;
+
 export const recordTicketAttachment = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: {
@@ -20,11 +22,26 @@ export const recordTicketAttachment = createServerFn({ method: "POST" })
     if (!d.ticketId) throw new UserError("Ticket required");
     if (!d.storagePath) throw new UserError("Path required");
     if (!d.fileName) throw new UserError("File name required");
-    if (d.sizeBytes && d.sizeBytes > 10 * 1024 * 1024) throw new UserError("Max file size is 10 MB");
+    if (d.sizeBytes && d.sizeBytes > MAX_BYTES) {
+      throw new UserError(`Max file size is ${MAX_BYTES / 1024 / 1024} MB`);
+    }
     return d;
   })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
+
+    // Verify the file actually exists in storage and is within the size cap.
+    // Client-supplied sizeBytes is untrusted — read the real size from the
+    // bucket. If oversized or missing, delete the orphan object and reject.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const dl = await supabaseAdmin.storage.from("support-attachments").download(data.storagePath);
+    if (dl.error || !dl.data) throw new UserError("Upload missing in storage");
+    const actualSize = dl.data.size;
+    if (actualSize > MAX_BYTES) {
+      await supabaseAdmin.storage.from("support-attachments").remove([data.storagePath]);
+      throw new UserError(`File exceeds ${MAX_BYTES / 1024 / 1024} MB limit`);
+    }
+
     const { data: row, error } = await supabase
       .from("support_ticket_attachments")
       .insert({
@@ -34,7 +51,7 @@ export const recordTicketAttachment = createServerFn({ method: "POST" })
         storage_path: data.storagePath,
         file_name: data.fileName,
         mime_type: data.mimeType ?? null,
-        size_bytes: data.sizeBytes ?? null,
+        size_bytes: actualSize,
       })
       .select()
       .single();

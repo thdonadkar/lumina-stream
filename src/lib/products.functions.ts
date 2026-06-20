@@ -62,6 +62,7 @@ export const listMyProducts = createServerFn({ method: "GET" })
       .from("products")
       .select("id,seller_id,category_id,slug,title,tagline,description,price,original_price,discount_percent,stock,images,rating,review_count,status,accent,badge,created_at,updated_at")
       .eq("seller_id", userId)
+      .neq("status", "archived")
       .order("created_at", { ascending: false });
     if (error) throw error;
     return data ?? [];
@@ -73,12 +74,48 @@ export const deleteMyProduct = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { data: existing } = await supabase
-      .from("products").select("seller_id").eq("id", data.id).maybeSingle();
+      .from("products").select("seller_id,status").eq("id", data.id).maybeSingle();
     if (!existing) throw new UserError("Product not found");
     if ((existing as any).seller_id !== userId) throw new UserError("Forbidden");
-    const { error } = await supabase.from("products").delete().eq("id", data.id);
-    if (error) throw error;
-    return { ok: true };
+
+    // Block delete/archive if any order_items reference this product with an
+    // active (not finalized) order status.
+    const { data: activeItems, error: oiErr } = await (supabase as any)
+      .from("order_items")
+      .select("id, order_id, orders!inner(status)")
+      .eq("product_id", data.id)
+      .not("orders.status", "in", "(delivered,cancelled,returned,refunded)")
+      .limit(1);
+    if (oiErr) throw oiErr;
+    const hasActive = (activeItems ?? []).length > 0;
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    if (hasActive) {
+      // Soft-delete: archive so historical orders can still resolve title/image,
+      // but the product disappears from the seller catalog and shop listings.
+      const { error: upErr } = await (supabase as any)
+        .from("products").update({ status: "archived" }).eq("id", data.id);
+      if (upErr) throw upErr;
+      await supabaseAdmin.from("audit_log").insert({
+        actor_id: userId, action: "product.archive",
+        target_table: "products", target_id: data.id,
+        metadata: { reason: "active_orders_present" },
+      });
+      return { ok: true, archived: true };
+    }
+
+    // No active orders — also archive (soft-delete) for audit consistency and
+    // to keep any historical references safe.
+    const { error: upErr } = await (supabase as any)
+      .from("products").update({ status: "archived" }).eq("id", data.id);
+    if (upErr) throw upErr;
+    await supabaseAdmin.from("audit_log").insert({
+      actor_id: userId, action: "product.archive",
+      target_table: "products", target_id: data.id,
+      metadata: { reason: "seller_delete" },
+    });
+    return { ok: true, archived: true };
   });
 
 export const getMyProduct = createServerFn({ method: "GET" })

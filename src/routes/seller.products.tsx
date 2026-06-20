@@ -4,9 +4,10 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Search, Trash2, Pencil } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { RoleGate } from "@/components/RoleGate";
 import { SellerNav } from "./seller.dashboard";
-import { supabase } from "@/integrations/supabase/client";
+import { listMyProducts, deleteMyProduct } from "@/lib/products.functions";
 import { toast } from "sonner";
 import { useConfirm } from "@/components/ConfirmDialog";
 
@@ -25,30 +26,18 @@ function Page() {
   const [q, setQ] = useState("");
   const qc = useQueryClient();
   const { confirm } = useConfirm();
+  const listFn = useServerFn(listMyProducts);
+  const deleteFn = useServerFn(deleteMyProduct);
 
   const { data = [], isLoading } = useQuery({
     queryKey: ["my-products"],
-    queryFn: async () => {
-      const { data: sess } = await supabase.auth.getSession();
-      const uid = sess.session?.user?.id;
-      if (!uid) return [];
-      const { data, error } = await supabase
-        .from("products")
-        .select("id,seller_id,category_id,slug,title,tagline,description,price,original_price,discount_percent,stock,images,rating,review_count,status,accent,badge,created_at,updated_at")
-        .eq("seller_id", uid)
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return data ?? [];
-    },
+    queryFn: () => listFn(),
     retry: false,
   });
 
   const deleteMut = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from("products").delete().eq("id", id);
-      if (error) throw error;
-    },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["my-products"] }); toast.success("Deleted"); },
+    mutationFn: (id: string) => deleteFn({ data: { id } }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["my-products"] }); toast.success("Archived"); },
     onError: (e: any) => toast.error(e.message ?? "Failed"),
   });
 
