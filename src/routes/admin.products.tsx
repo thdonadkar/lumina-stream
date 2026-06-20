@@ -54,6 +54,12 @@ function Page() {
       <h1 className="text-4xl font-extrabold tracking-tighter mb-6">Product moderation</h1>
       {isLoading ? (
         <p className="text-sm text-muted-foreground">Loading…</p>
+      ) : isError ? (
+        <div className="glass rounded-2xl p-6 text-sm">
+          <p className="font-bold text-rose-400 mb-2">Failed to load products</p>
+          <p className="text-muted-foreground mb-3">{(error as any)?.message ?? "Unknown error"}</p>
+          <button onClick={() => refetch()} className="px-3 py-1.5 rounded-full text-xs font-bold glass hover:glass-strong">Retry</button>
+        </div>
       ) : data.length === 0 ? (
         <p className="text-sm text-muted-foreground">No products in the catalog yet.</p>
       ) : (
