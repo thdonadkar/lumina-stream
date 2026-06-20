@@ -1,12 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { useServerFn } from "@tanstack/react-start";
+import { useCallback, useEffect, useState } from "react";
+import type { Session } from "@supabase/supabase-js";
 import { motion } from "framer-motion";
 import { Bell, CheckCheck, Package, Tag, Info, ChevronLeft } from "lucide-react";
 import { toast } from "sonner";
-import { useAuth } from "@/hooks/use-auth";
 import { useNotificationsRealtime } from "@/hooks/use-notifications-realtime";
-import { listNotifications, markNotificationRead, markAllNotificationsRead } from "@/lib/notifications.functions";
+import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 
 export const Route = createFileRoute("/notifications")({
   ssr: false,
@@ -15,41 +15,78 @@ export const Route = createFileRoute("/notifications")({
 });
 
 const ICON: Record<string, typeof Bell> = { order: Package, offer: Tag, system: Info };
+type NotificationRow = Database["public"]["Tables"]["notifications"]["Row"];
 
 function NotificationsPage() {
-  const { userId, loading } = useAuth();
-  const [items, setItems] = useState<any[]>([]);
+  const [session, setSession] = useState<Session | null>(null);
+  const [sessionLoading, setSessionLoading] = useState(true);
+  const [items, setItems] = useState<NotificationRow[] | null>(null);
   const [filter, setFilter] = useState<"all" | "unread">("all");
   const [error, setError] = useState(false);
-  const [fetching, setFetching] = useState(true);
-  const fetchList = useServerFn(listNotifications);
-  const markOne = useServerFn(markNotificationRead);
-  const markAll = useServerFn(markAllNotificationsRead);
+  const [fetching, setFetching] = useState(false);
 
-  async function refresh() {
+  useEffect(() => {
+    let active = true;
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      if (!active) return;
+      console.log("SESSION:", nextSession);
+      setSession(nextSession);
+      setSessionLoading(false);
+    });
+
+    supabase.auth.getSession().then(({ data }) => {
+      if (!active) return;
+      console.log("SESSION:", data.session);
+      setSession(data.session);
+      setSessionLoading(false);
+    }).catch((err) => {
+      console.error("Session restore error:", err);
+      if (!active) return;
+      setSession(null);
+      setSessionLoading(false);
+    });
+
+    return () => {
+      active = false;
+      authListener.subscription.unsubscribe();
+    };
+  }, []);
+
+  const refresh = useCallback(async () => {
+    if (!session?.user.id) return;
+    setFetching(true);
     setError(false);
     try {
-      const data = await fetchList();
-      setItems(data);
+      const { data, error: fetchError } = await supabase
+        .from("notifications")
+        .select("*")
+        .eq("user_id", session.user.id)
+        .order("created_at", { ascending: false });
+
+      if (fetchError) throw fetchError;
+
+      console.log("NOTIFICATIONS:", data);
+      setItems(Array.isArray(data) ? data : []);
     } catch (err) {
-      console.error("[notifications] fetch failed:", err);
+      console.error("Notification fetch error:", err);
       setError(true);
+      setItems([]);
     } finally {
       setFetching(false);
     }
-  }
-  useEffect(() => {
-    if (loading) return;
-    if (!userId) { setFetching(false); return; }
-    refresh();
-    // eslint-disable-next-line
-  }, [userId, loading]);
-  useNotificationsRealtime(userId ?? null, () => refresh());
+  }, [session?.user.id]);
 
-  if (loading || (userId && fetching && items.length === 0 && !error)) {
+  useEffect(() => {
+    if (sessionLoading) return;
+    if (!session) { setItems(null); return; }
+    refresh();
+  }, [session, sessionLoading, refresh]);
+  useNotificationsRealtime(session?.user.id ?? null, refresh);
+
+  if (sessionLoading || (session && fetching && !items && !error)) {
     return <div className="p-20 text-center text-muted-foreground">Loading…</div>;
   }
-  if (!userId) {
+  if (!session) {
     return (
       <div className="p-20 text-center">
         <h1 className="text-3xl font-bold">Sign in to view notifications</h1>
@@ -57,6 +94,7 @@ function NotificationsPage() {
       </div>
     );
   }
+
   if (error) {
     return (
       <div className="px-4 sm:px-6 max-w-3xl mx-auto pt-20 pb-24 text-center">
@@ -64,7 +102,7 @@ function NotificationsPage() {
           <Bell className="size-12 mx-auto text-muted-foreground opacity-50 mb-3" />
           <p className="font-bold">Unable to load notifications.</p>
           <p className="text-sm text-muted-foreground mt-1">Please try again.</p>
-          <button onClick={() => { setFetching(true); refresh(); }} className="mt-5 px-5 py-2 rounded-full bg-aurora text-background font-bold text-sm">
+          <button onClick={refresh} className="mt-5 px-5 py-2 rounded-full bg-aurora text-background font-bold text-sm">
             Retry
           </button>
         </div>
@@ -72,18 +110,32 @@ function NotificationsPage() {
     );
   }
 
+  if (!items) {
+    return <div className="p-20 text-center text-muted-foreground">Loading…</div>;
+  }
+
   const filtered = filter === "unread" ? items.filter((n) => !n.is_read) : items;
   const unread = items.filter((n) => !n.is_read).length;
 
   async function onMarkOne(id: string) {
     try {
-      await markOne({ data: { id } });
+      const { error: updateError } = await supabase
+        .from("notifications")
+        .update({ is_read: true })
+        .eq("id", id)
+        .eq("user_id", session.user.id);
+      if (updateError) throw updateError;
       setItems((xs) => xs.map((x) => (x.id === id ? { ...x, is_read: true } : x)));
     } catch { toast.error("Couldn't mark as read"); }
   }
   async function onMarkAll() {
     try {
-      await markAll();
+      const { error: updateError } = await supabase
+        .from("notifications")
+        .update({ is_read: true })
+        .eq("user_id", session.user.id)
+        .eq("is_read", false);
+      if (updateError) throw updateError;
       setItems((xs) => xs.map((x) => ({ ...x, is_read: true })));
       toast.success("All notifications marked as read");
     } catch { toast.error("Couldn't mark all as read"); }
