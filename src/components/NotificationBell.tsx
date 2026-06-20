@@ -117,6 +117,7 @@ export function NotificationBell() {
           <>
             <div aria-hidden="true" className="fixed inset-0 z-40 bg-background/40 backdrop-blur-sm sm:bg-transparent sm:backdrop-blur-0" onClick={() => setOpen(false)} />
             <motion.div
+              ref={popupRef}
               initial={{ opacity: 0, y: -8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
