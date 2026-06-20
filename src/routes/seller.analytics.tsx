@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { requireRole } from "@/lib/route-guards";
 import { useMemo } from "react";
 import {
   Bar, BarChart, CartesianGrid, Cell, Line, LineChart,
@@ -13,6 +14,8 @@ import { listSellerOrders } from "@/lib/orders.functions";
 import { listMyProducts } from "@/lib/products.functions";
 
 export const Route = createFileRoute("/seller/analytics")({
+  ssr: false,
+  beforeLoad: () => requireRole("seller"),
   head: () => ({ meta: [{ title: "Analytics — Seller" }] }),
   component: () => (
     <RoleGate role="seller">

@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { requireRole } from "@/lib/route-guards";
 import { Ban, CheckCircle2 } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -8,6 +9,8 @@ import { listUsersAdmin, setUserBlocked, setUserRole } from "@/lib/admin.functio
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin/users")({
+  ssr: false,
+  beforeLoad: () => requireRole("admin"),
   head: () => ({ meta: [{ title: "Users — Admin" }] }),
   component: () => (
     <RoleGate role="admin">

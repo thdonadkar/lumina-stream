@@ -23,6 +23,9 @@ export function CartDrawer() {
             className="fixed inset-0 z-[60] bg-background/60 backdrop-blur-md"
           />
           <motion.aside
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="cart-drawer-title"
             initial={{ x: "100%" }}
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
@@ -34,13 +37,14 @@ export function CartDrawer() {
                 <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
                   Your Cart
                 </p>
-                <h2 className="text-xl font-bold">{items.length} items</h2>
+                <h2 id="cart-drawer-title" className="text-xl font-bold">{items.length} items</h2>
               </div>
               <button
                 onClick={closeCart}
+                aria-label="Close cart"
                 className="size-9 grid place-items-center rounded-full glass hover:glass-strong"
               >
-                <X className="size-4" />
+                <X className="size-4" aria-hidden="true" />
               </button>
             </div>
 
@@ -81,23 +85,26 @@ export function CartDrawer() {
                       <div className="mt-2 flex items-center gap-2">
                         <button
                           onClick={() => setQty(i.product.id, i.qty - 1)}
+                          aria-label={`Decrease quantity of ${i.product.name}`}
                           className="size-6 grid place-items-center rounded-md glass hover:glass-strong"
                         >
-                          <Minus className="size-3" />
+                          <Minus className="size-3" aria-hidden="true" />
                         </button>
                         <motion.span
                           key={i.qty}
                           initial={{ scale: 0.8 }}
                           animate={{ scale: 1 }}
+                          aria-live="polite"
                           className="text-sm font-mono w-6 text-center"
                         >
                           {i.qty}
                         </motion.span>
                         <button
                           onClick={() => setQty(i.product.id, i.qty + 1)}
+                          aria-label={`Increase quantity of ${i.product.name}`}
                           className="size-6 grid place-items-center rounded-md glass hover:glass-strong"
                         >
-                          <Plus className="size-3" />
+                          <Plus className="size-3" aria-hidden="true" />
                         </button>
                       </div>
                     </div>
@@ -112,9 +119,10 @@ export function CartDrawer() {
                       </motion.p>
                       <button
                         onClick={() => remove(i.product.id)}
+                        aria-label={`Remove ${i.product.name} from cart`}
                         className="mt-1 text-muted-foreground hover:text-destructive"
                       >
-                        <Trash2 className="size-3.5" />
+                        <Trash2 className="size-3.5" aria-hidden="true" />
                       </button>
                     </div>
                   </motion.div>

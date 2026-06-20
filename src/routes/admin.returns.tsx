@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { requireRole } from "@/lib/route-guards";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { CheckCircle2, XCircle, RefreshCw, RotateCcw } from "lucide-react";
@@ -10,6 +11,8 @@ import { formatPrice } from "@/lib/cart-store";
 import { useConfirm } from "@/components/ConfirmDialog";
 
 export const Route = createFileRoute("/admin/returns")({
+  ssr: false,
+  beforeLoad: () => requireRole("admin"),
   head: () => ({ meta: [{ title: "Returns — Admin" }] }),
   component: () => (
     <RoleGate role="admin">

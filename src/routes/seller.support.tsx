@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { requireRole } from "@/lib/route-guards";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { motion } from "framer-motion";
@@ -9,6 +10,8 @@ import { SellerNav } from "./seller.dashboard";
 import { listSellerTickets, getTicketThread, replyToTicket, setTicketStatus } from "@/lib/support.functions";
 
 export const Route = createFileRoute("/seller/support")({
+  ssr: false,
+  beforeLoad: () => requireRole("seller"),
   head: () => ({ meta: [{ title: "Support — Seller" }] }),
   component: () => (
     <RoleGate role="seller">

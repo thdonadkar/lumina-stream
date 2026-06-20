@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { requireRole } from "@/lib/route-guards";
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import {
@@ -19,6 +20,8 @@ import {
 } from "@/lib/analytics-mock";
 
 export const Route = createFileRoute("/admin/dashboard")({
+  ssr: false,
+  beforeLoad: () => requireRole("admin"),
   head: () => ({ meta: [{ title: "Admin — Neural" }] }),
   component: () => (
     <RoleGate role="admin">

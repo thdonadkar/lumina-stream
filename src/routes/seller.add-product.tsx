@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { requireRole } from "@/lib/route-guards";
 import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Upload, Save, FileText, X } from "lucide-react";
@@ -10,6 +11,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { createProduct } from "@/lib/products.functions";
 
 export const Route = createFileRoute("/seller/add-product")({
+  ssr: false,
+  beforeLoad: () => requireRole("seller"),
   head: () => ({ meta: [{ title: "Add product — Seller" }] }),
   component: () => (
     <RoleGate role="seller">
