@@ -255,7 +255,7 @@ function OrderDetail() {
           )}
 
           {!helpOpen ? (
-            <button onClick={() => setHelpOpen(true)} className="w-full rounded-2xl glass-strong hover:glass transition-all p-3 text-sm font-bold inline-flex items-center justify-center gap-2">
+            <button onClick={openHelp} className="w-full rounded-2xl glass-strong hover:glass transition-all p-3 text-sm font-bold inline-flex items-center justify-center gap-2">
               <LifeBuoy className="size-4" /> Need help with this order?
             </button>
           ) : (
