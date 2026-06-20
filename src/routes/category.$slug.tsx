@@ -39,7 +39,19 @@ export const Route = createFileRoute("/category/$slug")({
 function CategoryPage() {
   const { slug } = Route.useParams();
   const cat = getCategory(slug)!;
-  const items = productsByCategorySlug(slug);
+  const listFn = useServerFn(listActiveProducts);
+  const { data: dbProducts } = useQuery<Product[]>({
+    queryKey: ["catalog", "active"],
+    queryFn: () => listFn(),
+    staleTime: 60_000,
+    refetchOnWindowFocus: false,
+  });
+  const items = useMemo<Product[]>(() => {
+    const bySlug = new Map<string, Product>();
+    for (const p of productsByCategorySlug(slug)) bySlug.set(p.id, p);
+    for (const p of dbProducts ?? []) if (p.categorySlug === slug) bySlug.set(p.id, p);
+    return Array.from(bySlug.values());
+  }, [slug, dbProducts]);
   const Icon = cat.icon;
 
   return (
