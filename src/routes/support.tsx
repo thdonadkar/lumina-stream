@@ -8,6 +8,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useTicketRealtime } from "@/hooks/use-ticket-realtime";
 import { relativeTimeShort, senderLabel } from "@/lib/support-format";
 import { createTicket, listMyTickets, getTicketThread, replyToTicket, markTicketRead } from "@/lib/support.functions";
+import { TicketAttachments } from "@/components/TicketAttachments";
 
 export const Route = createFileRoute("/support")({
   head: () => ({ meta: [{ title: "Support — Neural" }] }),
@@ -137,6 +138,9 @@ function Support() {
               </div>
             );
           })}
+        </div>
+        <div className="mb-4">
+          <TicketAttachments ticketId={t.id} />
         </div>
         {closed ? (
           <p className="text-xs text-muted-foreground text-center py-4">This ticket is {t.status.replace("_", " ")}. Open a new one if you need more help.</p>
