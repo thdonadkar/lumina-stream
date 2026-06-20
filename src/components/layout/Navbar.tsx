@@ -159,8 +159,9 @@ export function Navbar() {
           <button
             onClick={openCart}
             className="relative grid place-items-center size-9 rounded-full glass hover:glass-strong transition-all"
-            aria-label="Open cart"
+            aria-label={`Open cart${cartBadge > 0 ? `, ${cartBadge} item${cartBadge === 1 ? "" : "s"}` : ""}`}
           >
+
             <ShoppingBag className="size-4" />
             {cartBadge > 0 && (
               <motion.span
