@@ -246,7 +246,7 @@ export function LocationPickerDialog({ open, onClose, onConfirm }: Props) {
   function pickResult(r: any) {
     const lat = parseFloat(r.lat);
     const lng = parseFloat(r.lon);
-    mapRef.current?.setView([lat, lng], 16);
+    mapRef.current?.flyTo([lat, lng], 16, { duration: 1.5 });
     markerRef.current?.setLatLng([lat, lng]);
     const p = toPicked(lat, lng, r);
     setPicked(p);
