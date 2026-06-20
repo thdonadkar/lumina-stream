@@ -22,7 +22,6 @@ async function userIsSellerOfOrder(orderId: string, userId: string): Promise<boo
     .from("order_items")
     .select("product_id, products:product_id(seller_id)")
     .eq("order_id", orderId);
-  // @ts-expect-error embedded select
   return (data ?? []).some((row: any) => row?.products?.seller_id === userId);
 }
 
