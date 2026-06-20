@@ -37,11 +37,11 @@ function Page() {
   const feed = useMemo(() => activityFeed(), []);
 
   const kpis = [
-    { label: "Total revenue", value: `₹${t.revenue.toLocaleString("en-IN")}`, delta: "+18.4%", icon: TrendingUp, tone: "cyan" },
-    { label: "Total orders", value: t.orders.toLocaleString(), delta: "+12.1%", icon: ShoppingBag, tone: "purple" },
-    { label: "Active users", value: t.users.toLocaleString(), delta: "+8.3%", icon: Users, tone: "rose" },
-    { label: "Total sellers", value: "238", delta: "+6 new", icon: Store, tone: "cyan" },
-    { label: "Conversion rate", value: "3.42%", delta: "+0.4pt", icon: Activity, tone: "purple" },
+    { label: "Total revenue", value: `₹${t.revenue.toLocaleString("en-IN")}`, delta: "+18.4%", icon: TrendingUp, glow: "bg-cyan/30", text: "text-cyan", ring: "ring-cyan/30" },
+    { label: "Total orders", value: t.orders.toLocaleString(), delta: "+12.1%", icon: ShoppingBag, glow: "bg-purple-500/30", text: "text-purple-400", ring: "ring-purple-500/30" },
+    { label: "Active users", value: t.users.toLocaleString(), delta: "+8.3%", icon: Users, glow: "bg-rose-500/30", text: "text-rose-400", ring: "ring-rose-500/30" },
+    { label: "Total sellers", value: "238", delta: "+6 new", icon: Store, glow: "bg-cyan/30", text: "text-cyan", ring: "ring-cyan/30" },
+    { label: "Conversion rate", value: "3.42%", delta: "+0.4pt", icon: Activity, glow: "bg-purple-500/30", text: "text-purple-400", ring: "ring-purple-500/30" },
   ];
 
   return (

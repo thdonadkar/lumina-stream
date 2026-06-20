@@ -1,10 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Search, Edit3, Trash2 } from "lucide-react";
+import { Search, Trash2 } from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { RoleGate } from "@/components/RoleGate";
 import { SellerNav } from "./seller.dashboard";
-import { products } from "@/lib/products";
+import { listMyProducts, deleteMyProduct } from "@/lib/products.functions";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/seller/products")({
@@ -18,14 +20,29 @@ export const Route = createFileRoute("/seller/products")({
 
 function Page() {
   const [q, setQ] = useState("");
-  const list = products.filter((p) => p.name.toLowerCase().includes(q.toLowerCase()));
+  const qc = useQueryClient();
+  const list = useServerFn(listMyProducts);
+  const del = useServerFn(deleteMyProduct);
+
+  const { data = [], isLoading } = useQuery({
+    queryKey: ["my-products"],
+    queryFn: () => list(),
+  });
+
+  const deleteMut = useMutation({
+    mutationFn: (id: string) => del({ data: { id } }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["my-products"] }); toast.success("Deleted"); },
+    onError: (e: any) => toast.error(e.message ?? "Failed"),
+  });
+
+  const filtered = (data as any[]).filter((p) =>
+    p.title.toLowerCase().includes(q.toLowerCase()),
+  );
 
   return (
     <div className="px-4 pt-28 pb-24 max-w-6xl mx-auto">
       <h1 className="text-4xl font-extrabold tracking-tighter mb-2">Products</h1>
-      <p className="text-sm text-muted-foreground mb-6">
-        Manage your active catalog. Demo data shown.
-      </p>
+      <p className="text-sm text-muted-foreground mb-6">Manage your active catalog.</p>
 
       <div className="glass rounded-2xl p-3 flex items-center gap-2 mb-4">
         <Search className="size-4 text-muted-foreground ml-2" />
@@ -48,7 +65,6 @@ function Page() {
           <thead className="text-xs uppercase tracking-widest text-muted-foreground">
             <tr className="border-b border-white/5">
               <th className="text-left p-4">Product</th>
-              <th className="text-left p-4 hidden sm:table-cell">Category</th>
               <th className="text-right p-4">Price</th>
               <th className="text-right p-4 hidden md:table-cell">Stock</th>
               <th className="text-right p-4">Status</th>
@@ -56,7 +72,11 @@ function Page() {
             </tr>
           </thead>
           <tbody>
-            {list.map((p) => (
+            {isLoading ? (
+              <tr><td colSpan={5} className="p-4 text-muted-foreground">Loading…</td></tr>
+            ) : filtered.length === 0 ? (
+              <tr><td colSpan={5} className="p-6 text-center text-muted-foreground">No products yet. Add your first one!</td></tr>
+            ) : filtered.map((p: any) => (
               <motion.tr
                 key={p.id}
                 initial={{ opacity: 0 }}
@@ -64,27 +84,29 @@ function Page() {
                 className="border-b border-white/5 hover:bg-white/[0.02]"
               >
                 <td className="p-4 flex items-center gap-3">
-                  <img src={p.image} alt="" className="size-10 rounded-lg object-cover" />
+                  <img src={p.images?.[0] ?? ""} alt="" className="size-10 rounded-lg object-cover bg-white/5" />
                   <div className="min-w-0">
-                    <p className="font-medium truncate">{p.name}</p>
+                    <p className="font-medium truncate">{p.title}</p>
                     <p className="text-xs text-muted-foreground truncate">{p.tagline}</p>
                   </div>
                 </td>
-                <td className="p-4 hidden sm:table-cell text-muted-foreground">{p.category}</td>
-                <td className="p-4 text-right font-mono">${p.price.toLocaleString()}</td>
+                <td className="p-4 text-right font-mono">₹{Number(p.price).toLocaleString()}</td>
                 <td className="p-4 text-right hidden md:table-cell font-mono">{p.stock ?? 0}</td>
                 <td className="p-4 text-right">
                   <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono uppercase ring-1 ${
-                    p.inStock ? "text-cyan ring-cyan/30" : "text-rose-400 ring-rose-400/30"
+                    p.status === "active" ? "text-cyan ring-cyan/30"
+                    : p.status === "rejected" ? "text-rose-400 ring-rose-400/30"
+                    : "text-muted-foreground ring-white/10"
                   }`}>
-                    {p.inStock ? "active" : "out"}
+                    {p.status}
                   </span>
                 </td>
                 <td className="p-4 text-right whitespace-nowrap">
-                  <button onClick={() => toast("Editor opens next phase")} className="size-8 rounded-full glass grid place-items-center mr-1">
-                    <Edit3 className="size-3.5" />
-                  </button>
-                  <button onClick={() => toast.error("Delete (demo)")} className="size-8 rounded-full glass grid place-items-center">
+                  <button
+                    aria-label="Delete product"
+                    onClick={() => { if (confirm(`Delete "${p.title}"?`)) deleteMut.mutate(p.id); }}
+                    className="size-8 rounded-full glass grid place-items-center"
+                  >
                     <Trash2 className="size-3.5 text-rose-400" />
                   </button>
                 </td>
