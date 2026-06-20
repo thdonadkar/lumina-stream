@@ -50,9 +50,24 @@ function SearchPage() {
             </button>
           )}
           <button
+            type="button"
+            onClick={() => {
+              const SR: any = (window as any).SpeechRecognition ?? (window as any).webkitSpeechRecognition;
+              if (!SR) {
+                import("sonner").then((m) => m.toast.error("Voice search not supported in this browser"));
+                return;
+              }
+              const rec = new SR();
+              rec.lang = navigator.language || "en-US";
+              rec.interimResults = false;
+              rec.maxAlternatives = 1;
+              rec.onresult = (e: any) => setQ(e.results[0][0].transcript);
+              rec.onerror = () => {/* ignore */};
+              rec.start();
+            }}
             className="grid place-items-center size-8 rounded-full bg-aurora animate-aurora text-background"
             aria-label="Voice search"
-            title="Voice search (demo)"
+            title="Voice search"
           >
             <Mic className="size-4" />
           </button>

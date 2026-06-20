@@ -181,10 +181,32 @@ function ProductPage() {
               <ShoppingBag className="size-5" />
               Add to cart
             </motion.button>
-            <button className="size-14 grid place-items-center rounded-2xl glass-strong hover:bg-glass-strong">
-              <Heart className="size-5" />
+            <button
+              onClick={() => {
+                useWishlist.getState().toggle(product);
+                toast.success(useWishlist.getState().has(product.id) ? "Added to wishlist" : "Removed from wishlist");
+              }}
+              aria-label="Toggle wishlist"
+              aria-pressed={useWishlist((s) => s.has(product.id))}
+              className="size-14 grid place-items-center rounded-2xl glass-strong hover:bg-glass-strong"
+            >
+              <Heart className={`size-5 ${useWishlist((s) => s.has(product.id)) ? "fill-rose-400 text-rose-400" : ""}`} />
             </button>
-            <button className="size-14 grid place-items-center rounded-2xl glass-strong hover:bg-glass-strong">
+            <button
+              onClick={async () => {
+                const url = window.location.href;
+                try {
+                  if (navigator.share) {
+                    await navigator.share({ url, title: product.name, text: product.tagline ?? "" });
+                  } else {
+                    await navigator.clipboard.writeText(url);
+                    toast.success("Link copied to clipboard");
+                  }
+                } catch {/* user cancelled */}
+              }}
+              aria-label="Share product"
+              className="size-14 grid place-items-center rounded-2xl glass-strong hover:bg-glass-strong"
+            >
               <Share2 className="size-5" />
             </button>
           </div>

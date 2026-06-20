@@ -22,7 +22,7 @@ function Page() {
         {ROLES.map((r) => (
           <a
             key={r.title}
-            href="#"
+            href={`mailto:careers@neural.app?subject=${encodeURIComponent("Application: " + r.title)}`}
             className="glass hover:glass-strong rounded-2xl p-5 flex items-center justify-between gap-4 transition-all"
           >
             <div>
