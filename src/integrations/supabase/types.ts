@@ -243,6 +243,42 @@ export type Database = {
         }
         Relationships: []
       }
+      email_log: {
+        Row: {
+          created_at: string
+          error: string | null
+          id: string
+          recipient: string
+          related_id: string | null
+          status: string
+          subject: string | null
+          template: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          error?: string | null
+          id?: string
+          recipient: string
+          related_id?: string | null
+          status?: string
+          subject?: string | null
+          template: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          error?: string | null
+          id?: string
+          recipient?: string
+          related_id?: string | null
+          status?: string
+          subject?: string | null
+          template?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           body: string | null
@@ -395,6 +431,103 @@ export type Database = {
           },
         ]
       }
+      payments: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          id: string
+          method: string | null
+          order_id: string
+          provider: string
+          provider_order_id: string | null
+          provider_payment_id: string | null
+          raw_response: Json | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency?: string
+          id?: string
+          method?: string | null
+          order_id: string
+          provider: string
+          provider_order_id?: string | null
+          provider_payment_id?: string | null
+          raw_response?: Json | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          method?: string | null
+          order_id?: string
+          provider?: string
+          provider_order_id?: string | null
+          provider_payment_id?: string | null
+          raw_response?: Json | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_variants: {
+        Row: {
+          attributes: Json
+          created_at: string
+          id: string
+          name: string
+          price_delta: number
+          product_id: string
+          sku: string
+          stock: number
+          updated_at: string
+        }
+        Insert: {
+          attributes?: Json
+          created_at?: string
+          id?: string
+          name: string
+          price_delta?: number
+          product_id: string
+          sku: string
+          stock?: number
+          updated_at?: string
+        }
+        Update: {
+          attributes?: Json
+          created_at?: string
+          id?: string
+          name?: string
+          price_delta?: number
+          product_id?: string
+          sku?: string
+          stock?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_variants_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       products: {
         Row: {
           accent: string | null
@@ -409,6 +542,7 @@ export type Database = {
           price: number
           rating: number | null
           review_count: number
+          search_tsv: unknown
           seller_id: string | null
           slug: string
           status: Database["public"]["Enums"]["product_status"]
@@ -430,6 +564,7 @@ export type Database = {
           price: number
           rating?: number | null
           review_count?: number
+          search_tsv?: unknown
           seller_id?: string | null
           slug: string
           status?: Database["public"]["Enums"]["product_status"]
@@ -451,6 +586,7 @@ export type Database = {
           price?: number
           rating?: number | null
           review_count?: number
+          search_tsv?: unknown
           seller_id?: string | null
           slug?: string
           status?: Database["public"]["Enums"]["product_status"]
@@ -498,6 +634,63 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      return_requests: {
+        Row: {
+          admin_notes: string | null
+          created_at: string
+          description: string | null
+          id: string
+          order_id: string
+          order_item_id: string | null
+          photos: string[]
+          reason: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          order_id: string
+          order_item_id?: string | null
+          photos?: string[]
+          reason: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_notes?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          order_id?: string
+          order_item_id?: string | null
+          photos?: string[]
+          reason?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "return_requests_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "return_requests_order_item_id_fkey"
+            columns: ["order_item_id"]
+            isOneToOne: false
+            referencedRelation: "order_items"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       reviews: {
         Row: {
@@ -674,12 +867,20 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      decrement_stock: {
+        Args: { p_product_id: string; p_qty: number }
+        Returns: undefined
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
         Returns: boolean
+      }
+      increment_stock: {
+        Args: { p_product_id: string; p_qty: number }
+        Returns: undefined
       }
       is_order_owner: {
         Args: { _order_id: string; _user_id: string }
@@ -689,6 +890,8 @@ export type Database = {
         Args: { _order_id: string; _user_id: string }
         Returns: boolean
       }
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { "": string }; Returns: string[] }
     }
     Enums: {
       app_role: "user" | "seller" | "admin"

@@ -59,7 +59,7 @@ export const listMyProducts = createServerFn({ method: "GET" })
     const { supabase, userId } = context;
     const { data, error } = await supabase
       .from("products")
-      .select("*")
+      .select("id,seller_id,category_id,slug,title,tagline,description,price,original_price,discount_percent,stock,images,rating,review_count,status,accent,badge,created_at,updated_at")
       .eq("seller_id", userId)
       .order("created_at", { ascending: false });
     if (error) throw error;

@@ -217,6 +217,22 @@ export const placeOrder = createServerFn({ method: "POST" })
     );
     if (itemsErr) throw itemsErr;
 
+    // Atomically decrement stock for every real product line. If any single
+    // decrement fails (race / oversold), roll back the order and surface the error.
+    for (const i of safeItems) {
+      if (!i.product_id) continue;
+      const { error: stockErr } = await (supabase as any).rpc("decrement_stock", {
+        p_product_id: i.product_id,
+        p_qty: i.qty,
+      });
+      if (stockErr) {
+        // Compensating cleanup so we don't leave a ghost order with unfunded stock.
+        await supabase.from("order_items").delete().eq("order_id", order.id);
+        await supabase.from("orders").delete().eq("id", order.id);
+        throw new Error(`Could not reserve stock: ${stockErr.message}`);
+      }
+    }
+
     if (couponId) {
       await supabase.from("coupon_redemptions").insert({
         coupon_id: couponId,
@@ -383,6 +399,13 @@ export const cancelOrder = createServerFn({ method: "POST" })
     const { data: order, error } = await supabase
       .from("orders").update({ status: "cancelled" as never }).eq("id", data.id).select().single();
     if (error) throw error;
+    // Return reserved stock to inventory (best-effort; do not fail the cancel).
+    const { data: items } = await supabase
+      .from("order_items").select("product_id, qty").eq("order_id", data.id);
+    for (const it of (items ?? []) as any[]) {
+      if (!it.product_id) continue;
+      await (supabase as any).rpc("increment_stock", { p_product_id: it.product_id, p_qty: it.qty });
+    }
     await supabase.from("notifications").insert({
       user_id: order.user_id, type: "order",
       title: "Order cancelled",
