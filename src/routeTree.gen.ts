@@ -15,7 +15,6 @@ import { Route as SupportRouteImport } from './routes/support'
 import { Route as ShopRouteImport } from './routes/shop'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
-import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as FaqRouteImport } from './routes/faq'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as ContactRouteImport } from './routes/contact'
@@ -75,11 +74,6 @@ const SearchRoute = SearchRouteImport.update({
 const PrivacyPolicyRoute = PrivacyPolicyRouteImport.update({
   id: '/privacy-policy',
   path: '/privacy-policy',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const NotificationsRoute = NotificationsRouteImport.update({
-  id: '/notifications',
-  path: '/notifications',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FaqRoute = FaqRouteImport.update({
@@ -245,7 +239,6 @@ export interface FileRoutesByFullPath {
   '/contact': typeof ContactRoute
   '/dashboard': typeof DashboardRoute
   '/faq': typeof FaqRoute
-  '/notifications': typeof NotificationsRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/search': typeof SearchRoute
   '/shop': typeof ShopRoute
@@ -284,7 +277,6 @@ export interface FileRoutesByTo {
   '/contact': typeof ContactRoute
   '/dashboard': typeof DashboardRoute
   '/faq': typeof FaqRoute
-  '/notifications': typeof NotificationsRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/search': typeof SearchRoute
   '/shop': typeof ShopRoute
@@ -324,7 +316,6 @@ export interface FileRoutesById {
   '/contact': typeof ContactRoute
   '/dashboard': typeof DashboardRoute
   '/faq': typeof FaqRoute
-  '/notifications': typeof NotificationsRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/search': typeof SearchRoute
   '/shop': typeof ShopRoute
@@ -365,7 +356,6 @@ export interface FileRouteTypes {
     | '/contact'
     | '/dashboard'
     | '/faq'
-    | '/notifications'
     | '/privacy-policy'
     | '/search'
     | '/shop'
@@ -404,7 +394,6 @@ export interface FileRouteTypes {
     | '/contact'
     | '/dashboard'
     | '/faq'
-    | '/notifications'
     | '/privacy-policy'
     | '/search'
     | '/shop'
@@ -443,7 +432,6 @@ export interface FileRouteTypes {
     | '/contact'
     | '/dashboard'
     | '/faq'
-    | '/notifications'
     | '/privacy-policy'
     | '/search'
     | '/shop'
@@ -483,7 +471,6 @@ export interface RootRouteChildren {
   ContactRoute: typeof ContactRoute
   DashboardRoute: typeof DashboardRoute
   FaqRoute: typeof FaqRoute
-  NotificationsRoute: typeof NotificationsRoute
   PrivacyPolicyRoute: typeof PrivacyPolicyRoute
   SearchRoute: typeof SearchRoute
   ShopRoute: typeof ShopRoute
@@ -554,13 +541,6 @@ declare module '@tanstack/react-router' {
       path: '/privacy-policy'
       fullPath: '/privacy-policy'
       preLoaderRoute: typeof PrivacyPolicyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/notifications': {
-      id: '/notifications'
-      path: '/notifications'
-      fullPath: '/notifications'
-      preLoaderRoute: typeof NotificationsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/faq': {
@@ -787,7 +767,6 @@ const rootRouteChildren: RootRouteChildren = {
   ContactRoute: ContactRoute,
   DashboardRoute: DashboardRoute,
   FaqRoute: FaqRoute,
-  NotificationsRoute: NotificationsRoute,
   PrivacyPolicyRoute: PrivacyPolicyRoute,
   SearchRoute: SearchRoute,
   ShopRoute: ShopRoute,
