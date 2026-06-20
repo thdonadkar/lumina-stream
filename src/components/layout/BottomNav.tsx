@@ -48,9 +48,10 @@ export function BottomNav() {
           <ShoppingBag className="size-5" aria-hidden="true" />
           <span className="text-[10px] font-medium">Cart</span>
           {count > 0 && (
-            <span aria-hidden="true" className="absolute top-1 right-2 min-w-[16px] h-[16px] px-1 rounded-full bg-aurora text-[9px] font-bold grid place-items-center text-background">
-              {count}
+            <span aria-hidden="true" className="absolute top-1 right-2 min-w-[16px] h-[16px] px-1 rounded-full bg-aurora text-[9px] font-bold grid place-items-center text-background tabular-nums">
+              {count > 99 ? "99+" : count}
             </span>
+
           )}
         </button>
       </div>
