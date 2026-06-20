@@ -153,28 +153,79 @@ function Checkout() {
     }
     setPlacing(true);
     try {
-      const res = await placeOrderFn({
+      // Note: items use product_id from the catalog where available so the
+      // server can re-fetch true price and reserve stock atomically.
+      const cartItems = items.map((i) => ({
+        product_id: (i.product as any).id?.length === 36 ? (i.product as any).id : null,
+        title: i.product.name,
+        image: i.product.image,
+        unit_price: i.product.price,
+        qty: i.qty,
+      }));
+
+      const placed = await placeOrderFn({
         data: {
-          items: items.map((i) => ({
-            product_id: null,
-            title: i.product.name,
-            image: i.product.image,
-            unit_price: i.product.price,
-            qty: i.qty,
-          })),
+          items: cartItems,
           address_id: selectedAddr,
           shipping: shippingBase,
           coupon_code: coupon?.code ?? null,
+          payment_method: paymentMethod,
         },
       });
-      clear();
-      setDone(res);
+
+      if (paymentMethod === "cod") {
+        clear();
+        setDone(placed);
+        return;
+      }
+
+      // Razorpay flow: create RZP order on server, then open Checkout.
+      const ok = await loadRazorpayScript();
+      if (!ok) throw new Error("Could not load payment gateway");
+      const rzp = await createRzpFn({ data: { order_id: placed.id } });
+
+      await new Promise<void>((resolve, reject) => {
+        const checkout = new (window as any).Razorpay({
+          key: rzp.key_id,
+          amount: rzp.amount,
+          currency: rzp.currency,
+          order_id: rzp.razorpay_order_id,
+          name: "Neural",
+          description: `Order #${placed.id.slice(0, 8)}`,
+          handler: async (resp: any) => {
+            try {
+              await verifyRzpFn({
+                data: {
+                  order_id: placed.id,
+                  razorpay_order_id: resp.razorpay_order_id,
+                  razorpay_payment_id: resp.razorpay_payment_id,
+                  razorpay_signature: resp.razorpay_signature,
+                },
+              });
+              clear();
+              setDone(placed);
+              resolve();
+            } catch (e: any) {
+              reject(e);
+            }
+          },
+          modal: {
+            ondismiss: () => reject(new Error("Payment cancelled")),
+          },
+          theme: { color: "#06b6d4" },
+        });
+        checkout.on("payment.failed", (resp: any) => {
+          reject(new Error(resp?.error?.description ?? "Payment failed"));
+        });
+        checkout.open();
+      });
     } catch (e: any) {
       toast.error(e.message ?? "Order failed");
     } finally {
       setPlacing(false);
     }
   }
+
 
   return (
     <div className="px-4 sm:px-6 max-w-6xl mx-auto">
