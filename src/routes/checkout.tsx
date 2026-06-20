@@ -132,17 +132,24 @@ function Checkout() {
   }
 
   async function applyCoupon() {
-    if (!couponInput.trim()) return;
+    setCouponError(null);
+    if (!couponInput.trim()) {
+      setCouponError("Enter a code");
+      return;
+    }
     try {
       const res = await validateCouponFn({ data: { code: couponInput, subtotal } });
       if (!res.ok) {
+        setCouponError(res.reason);
         toast.error(res.reason);
         return;
       }
       setCoupon({ code: res.code, discount: res.discount, freeShipping: res.freeShipping });
       toast.success(`Coupon ${res.code} applied`);
     } catch (e: any) {
-      toast.error(e.message ?? "Failed");
+      const msg = e?.message ?? "Couldn't apply coupon";
+      setCouponError(msg);
+      toast.error(msg);
     }
   }
 
