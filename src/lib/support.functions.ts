@@ -294,7 +294,7 @@ export const replyToTicket = createServerFn({ method: "POST" })
         const link = isAdminRecipient ? "/admin/support" : isSellerRecipient ? "/seller/support" : "/support";
         return {
           user_id: uid,
-          type: "system",
+          type: "system" as const,
           title: `${senderLabel} replied`,
           body: `New message on ticket "${ticket.subject}".`,
           link,
