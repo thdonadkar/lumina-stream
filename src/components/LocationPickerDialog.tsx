@@ -105,7 +105,7 @@ export function LocationPickerDialog({ open, onClose, onConfirm }: Props) {
         (window as any).__locDebug = {
           mapCenter: mapRef.current?.getCenter?.(),
           marker: { lat, lng },
-          permission: permState,
+          permission: (window as any).__locDebug?.permission ?? permState,
         };
         try {
           const j = await reverseGeocode(lat, lng);
