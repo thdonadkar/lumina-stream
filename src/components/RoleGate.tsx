@@ -1,3 +1,14 @@
+// SECURITY: <RoleGate> is a UI affordance ONLY. It hides admin/seller
+// surfaces from the wrong role, but it is trivially bypassable. EVERY
+// privileged server function MUST independently re-check the caller's role
+// before returning or mutating data, e.g.:
+//
+//   const { data: ok } = await context.supabase.rpc("has_role", {
+//     _user_id: context.userId, _role: "admin",
+//   });
+//   if (!ok) throw new Error("Forbidden");
+//
+// The DB-side `has_role` RPC + RLS policies are the real boundary.
 import { Link } from "@tanstack/react-router";
 import { ShieldAlert, LogIn } from "lucide-react";
 import { useAuth, type AppRole } from "@/hooks/use-auth";

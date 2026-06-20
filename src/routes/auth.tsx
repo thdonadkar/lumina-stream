@@ -243,6 +243,14 @@ function Auth() {
                   ))}
                 </div>
               )}
+              {mode === "signup" && pw.length > 0 && (
+                <p className="mt-1.5 text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
+                  10+ chars · upper · lower · digit
+                </p>
+              )}
+              {fieldError && (
+                <p role="alert" className="mt-2 text-xs text-destructive">{fieldError}</p>
+              )}
             </div>
 
             <button
