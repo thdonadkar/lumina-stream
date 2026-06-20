@@ -37,13 +37,15 @@ function OrderDetail() {
   }
   useEffect(refresh, [id, fetchOrder]);
 
-  async function submitReturn(e: React.FormEvent) {
-    e.preventDefault();
+  async function submitReturn(payload: { reason: string; description: string; order_item_id: string | null; photos: string[] }) {
     try {
-      await doReturn({ data: { id, reason } });
+      await doReturn({ data: { id, ...payload } });
       toast.success("Return requested");
-      setReturnOpen(false); setReason(""); refresh();
-    } catch (err: any) { toast.error(err.message); }
+      setReturnOpen(false);
+      refresh();
+    } catch (err: any) {
+      toast.error(err.message);
+    }
   }
   async function handleCancel() {
     if (!(await confirm({ title: "Cancel this order?", description: "This action cannot be undone.", destructive: true, confirmText: "Cancel order", cancelText: "Keep order" }))) return;
