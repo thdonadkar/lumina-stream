@@ -70,7 +70,7 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
                 description: "View your cart to checkout",
               });
             }}
-            className="absolute bottom-3 right-3 size-10 grid place-items-center rounded-full bg-foreground text-background opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all shadow-glow-cyan hover:scale-110"
+            className="absolute bottom-3 right-3 size-10 grid place-items-center rounded-full bg-foreground text-background opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 [@media(hover:none)]:opacity-100 [@media(hover:none)]:translate-y-0 transition-all shadow-glow-cyan hover:scale-110"
             aria-label="Add to cart"
           >
             <Plus className="size-4" />
