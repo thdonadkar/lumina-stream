@@ -92,14 +92,18 @@ export function Navbar() {
 
           {/* Categories trigger */}
           <button
-            onMouseEnter={() => setCatsOpen(true)}
             onClick={() => setCatsOpen((v) => !v)}
+
+            onFocus={() => setCatsOpen(true)}
+            aria-expanded={catsOpen}
+            aria-haspopup="true"
             className={`px-4 py-1.5 text-sm font-medium rounded-full transition-colors flex items-center gap-1 ${
               pathname.startsWith("/category") ? "text-foreground" : "text-muted-foreground hover:text-foreground"
             }`}
           >
             Categories <ChevronDown className={`size-3.5 transition-transform ${catsOpen ? "rotate-180" : ""}`} />
           </button>
+
 
           <Link to="/dashboard" className="px-4 py-1.5 text-sm font-medium rounded-full text-muted-foreground hover:text-foreground">
             Account
@@ -155,8 +159,9 @@ export function Navbar() {
           <button
             onClick={openCart}
             className="relative grid place-items-center size-9 rounded-full glass hover:glass-strong transition-all"
-            aria-label="Open cart"
+            aria-label={`Open cart${cartBadge > 0 ? `, ${cartBadge} item${cartBadge === 1 ? "" : "s"}` : ""}`}
           >
+
             <ShoppingBag className="size-4" />
             {cartBadge > 0 && (
               <motion.span

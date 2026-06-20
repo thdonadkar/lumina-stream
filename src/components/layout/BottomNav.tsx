@@ -1,6 +1,8 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { Home, Search, ShoppingBag, User } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useCart } from "@/lib/cart-store";
+
 
 const items = [
   { to: "/", icon: Home, label: "Home" },
@@ -11,7 +13,11 @@ const items = [
 export function BottomNav() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const openCart = useCart((s) => s.openCart);
-  const count = useCart((s) => s.count());
+  const rawCount = useCart((s) => s.count());
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => { setHydrated(true); }, []);
+  const count = hydrated ? rawCount : 0;
+
 
   return (
     <nav aria-label="Primary mobile navigation" className="md:hidden fixed bottom-3 left-1/2 -translate-x-1/2 z-50 w-[92%] max-w-md">
@@ -42,9 +48,10 @@ export function BottomNav() {
           <ShoppingBag className="size-5" aria-hidden="true" />
           <span className="text-[10px] font-medium">Cart</span>
           {count > 0 && (
-            <span aria-hidden="true" className="absolute top-1 right-2 min-w-[16px] h-[16px] px-1 rounded-full bg-aurora text-[9px] font-bold grid place-items-center text-background">
-              {count}
+            <span aria-hidden="true" className="absolute top-1 right-2 min-w-[16px] h-[16px] px-1 rounded-full bg-aurora text-[9px] font-bold grid place-items-center text-background tabular-nums">
+              {count > 99 ? "99+" : count}
             </span>
+
           )}
         </button>
       </div>
