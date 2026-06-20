@@ -44,7 +44,7 @@ type CartLine = {
   product_id: string | null;
   title: string;
   image: string | null;
-  unit_price: number;
+  unit_price: number; // client hint only — server overrides from DB
   qty: number;
 };
 
@@ -58,9 +58,19 @@ type PlaceOrderInput = {
 
 function validateOrderInput(d: PlaceOrderInput): PlaceOrderInput {
   if (!Array.isArray(d.items) || d.items.length === 0) throw new Error("Cart is empty");
+  if (d.items.length > 50) throw new Error("Too many items");
+  if (typeof d.shipping !== "number" || !Number.isFinite(d.shipping) || d.shipping < 0)
+    throw new Error("Invalid shipping");
   for (const it of d.items) {
-    if (!it.title || typeof it.unit_price !== "number" || it.qty < 1)
-      throw new Error("Invalid cart item");
+    if (!it.title || typeof it.title !== "string" || it.title.length > 200)
+      throw new Error("Invalid cart item title");
+    if (!Number.isInteger(it.qty) || it.qty < 1 || it.qty > 100)
+      throw new Error("Invalid quantity");
+    // unit_price is a hint; server re-fetches the true price below.
+    if (typeof it.unit_price !== "number" || !Number.isFinite(it.unit_price) || it.unit_price < 0)
+      throw new Error("Invalid unit price");
+    if (it.product_id !== null && typeof it.product_id !== "string")
+      throw new Error("Invalid product id");
   }
   return d;
 }
@@ -117,11 +127,47 @@ export const placeOrder = createServerFn({ method: "POST" })
   .inputValidator(validateOrderInput)
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    const subtotal = data.items.reduce((s, i) => s + i.unit_price * i.qty, 0);
+
+    // SECURITY: never trust client unit_price. Re-fetch from DB and rebuild line items.
+    const productIds = data.items
+      .map((i) => i.product_id)
+      .filter((v): v is string => typeof v === "string" && v.length > 0);
+
+    type ProductRow = { id: string; price: number; status: string; stock: number; title: string; images: string[] | null };
+    const productMap = new Map<string, ProductRow>();
+    if (productIds.length > 0) {
+      const { data: products, error: pErr } = await supabase
+        .from("products")
+        .select("id, price, status, stock, title, images")
+        .in("id", productIds);
+      if (pErr) throw pErr;
+      for (const p of (products ?? []) as any[]) productMap.set(p.id, p as ProductRow);
+    }
+
+    const safeItems = data.items.map((i) => {
+      if (!i.product_id) {
+        // Allow free-form items (e.g. legacy demo cart) but cap unit_price defensively.
+        const price = Math.max(0, Math.min(10_000_000, Math.round(Number(i.unit_price))));
+        return { product_id: null as string | null, title: i.title, image: i.image, unit_price: price, qty: i.qty };
+      }
+      const p = productMap.get(i.product_id);
+      if (!p) throw new Error(`Product unavailable: ${i.product_id}`);
+      if (p.status !== "active") throw new Error(`Product not available for purchase: ${p.title}`);
+      if ((p.stock ?? 0) < i.qty) throw new Error(`Insufficient stock for ${p.title}`);
+      return {
+        product_id: p.id,
+        title: p.title,
+        image: p.images?.[0] ?? i.image,
+        unit_price: Math.max(0, Math.round(Number(p.price))), // SERVER TRUTH
+        qty: i.qty,
+      };
+    });
+
+    const subtotal = safeItems.reduce((s, i) => s + i.unit_price * i.qty, 0);
 
     let discount = 0;
     let couponId: string | null = null;
-    let shipping = data.shipping;
+    let shipping = Math.max(0, Math.round(data.shipping));
     if (data.coupon_code) {
       const { data: c } = await supabase
         .from("coupons")
@@ -137,6 +183,7 @@ export const placeOrder = createServerFn({ method: "POST" })
       }
     }
 
+    discount = Math.max(0, Math.min(discount, subtotal));
     const tax = Math.round((subtotal - discount) * 0.18);
     const total = Math.max(0, subtotal - discount) + shipping + tax;
 
@@ -159,9 +206,9 @@ export const placeOrder = createServerFn({ method: "POST" })
     if (orderErr) throw orderErr;
 
     const { error: itemsErr } = await supabase.from("order_items").insert(
-      data.items.map((i) => ({
+      safeItems.map((i) => ({
         order_id: order.id,
-        product_id: null,
+        product_id: i.product_id,
         title: i.title,
         image: i.image,
         unit_price: i.unit_price,

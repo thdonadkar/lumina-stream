@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { ensureDemoAccounts } from "@/lib/demo-accounts.functions";
+import { z } from "zod";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({ meta: [{ title: "Sign in — Neural" }] }),
@@ -19,6 +20,31 @@ const DEMO_BTNS = [
   { email: "user@demo.com", password: "User123", label: "User", icon: UserRound, tone: "text-purple" },
 ] as const;
 
+const signupSchema = z.object({
+  email: z.string().trim().email("Enter a valid email").max(120),
+  password: z
+    .string()
+    .min(10, "At least 10 characters")
+    .max(72, "Too long")
+    .regex(/[A-Z]/, "Add an uppercase letter")
+    .regex(/[a-z]/, "Add a lowercase letter")
+    .regex(/[0-9]/, "Add a digit"),
+  name: z.string().trim().min(1, "Name required").max(80).optional(),
+});
+const signinSchema = z.object({
+  email: z.string().trim().email("Enter a valid email").max(120),
+  password: z.string().min(1, "Password required").max(72),
+});
+
+function scorePassword(pw: string): number {
+  let s = 0;
+  if (pw.length >= 10) s++;
+  if (/[A-Z]/.test(pw) && /[a-z]/.test(pw)) s++;
+  if (/[0-9]/.test(pw)) s++;
+  if (/[^A-Za-z0-9]/.test(pw) || pw.length >= 14) s++;
+  return s; // 0..4
+}
+
 function Auth() {
   const navigate = useNavigate();
   const ensureDemo = useServerFn(ensureDemoAccounts);
@@ -28,8 +54,9 @@ function Auth() {
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
   const [demoBusy, setDemoBusy] = useState<string | null>(null);
+  const [fieldError, setFieldError] = useState<string | null>(null);
 
-  const strength = Math.min(4, Math.floor(pw.length / 3));
+  const strength = scorePassword(pw);
 
   async function loginDemo(d: (typeof DEMO_BTNS)[number]) {
     setDemoBusy(d.email);
@@ -53,6 +80,15 @@ function Auth() {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
+    setFieldError(null);
+    const schema = mode === "signup" ? signupSchema : signinSchema;
+    const parsed = schema.safeParse({ email, password: pw, name });
+    if (!parsed.success) {
+      const msg = parsed.error.issues[0]?.message ?? "Invalid input";
+      setFieldError(msg);
+      toast.error(msg);
+      return;
+    }
     setBusy(true);
     try {
       if (mode === "signup") {
@@ -206,6 +242,14 @@ function Auth() {
                     />
                   ))}
                 </div>
+              )}
+              {mode === "signup" && pw.length > 0 && (
+                <p className="mt-1.5 text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
+                  10+ chars · upper · lower · digit
+                </p>
+              )}
+              {fieldError && (
+                <p role="alert" className="mt-2 text-xs text-destructive">{fieldError}</p>
               )}
             </div>
 
