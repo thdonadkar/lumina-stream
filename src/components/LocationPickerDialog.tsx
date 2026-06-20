@@ -42,16 +42,19 @@ async function searchPlace(q: string) {
 
 function toPicked(lat: number, lng: number, j: any): PickedLocation {
   const a = j?.address ?? {};
+  const road = a.road || a.pedestrian || a.footway || a.cycleway || a.path || "";
+  const area = a.suburb || a.neighbourhood || a.hamlet || a.quarter || "";
+  const houseNum = a.house_number ? `${a.house_number} ` : "";
   const line1 =
-    [a.house_number, a.road || a.pedestrian || a.neighbourhood].filter(Boolean).join(" ") ||
+    [`${houseNum}${road}`.trim(), area].filter(Boolean).join(", ") ||
     j?.display_name?.split(",").slice(0, 2).join(", ") ||
     "";
   return {
     lat,
     lng,
     line1,
-    city: a.city || a.town || a.village || a.suburb || "",
-    state: a.state || "",
+    city: a.city || a.town || a.village || a.municipality || a.county || "",
+    state: a.state || a.region || "",
     postal_code: a.postcode || "",
     country: (a.country_code || "in").toUpperCase(),
   };
@@ -187,7 +190,7 @@ export function LocationPickerDialog({ open, onClose, onConfirm }: Props) {
         const { latitude, longitude } = pos.coords;
         console.log("LOCATION:", latitude, longitude);
         try {
-          mapRef.current?.setView([latitude, longitude], 16, { animate: true, duration: 1.5 });
+          mapRef.current?.flyTo([latitude, longitude], 16, { duration: 1.8, easeLinearity: 0.25 });
           markerRef.current?.setLatLng([latitude, longitude]);
           setTimeout(() => {
             const c = mapRef.current?.getCenter?.();
@@ -204,10 +207,16 @@ export function LocationPickerDialog({ open, onClose, onConfirm }: Props) {
         console.error("geolocation error", err.code, err.message);
         if (err.code === 1) {
           setPermState("denied");
-          setLocationMessage("Enable location from browser settings");
+          setLocationMessage("Please allow location access from browser settings.");
           toast.error("Location blocked. Enable it for this site in your browser settings.", { duration: 8000 });
+        } else if (err.code === 2) {
+          setLocationMessage("GPS is OFF. Please enable location services on your device.");
+          toast.error("GPS unavailable. Enable location services and try again.");
+        } else if (err.code === 3) {
+          setLocationMessage("Location request timed out. Try again.");
+          toast.error("Timed out getting your location. Try again.");
         } else {
-          setLocationMessage("GPS failed. Drag the pin, tap the map, or search manually.");
+          setLocationMessage("Unable to fetch location. Drag the pin or search manually.");
           toast.error("Couldn't get your location. Drag the pin or search manually.");
         }
       },
@@ -237,7 +246,7 @@ export function LocationPickerDialog({ open, onClose, onConfirm }: Props) {
   function pickResult(r: any) {
     const lat = parseFloat(r.lat);
     const lng = parseFloat(r.lon);
-    mapRef.current?.setView([lat, lng], 16);
+    mapRef.current?.flyTo([lat, lng], 16, { duration: 1.5 });
     markerRef.current?.setLatLng([lat, lng]);
     const p = toPicked(lat, lng, r);
     setPicked(p);

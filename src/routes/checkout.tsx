@@ -518,6 +518,8 @@ function AddressForm({ onSave }: { onSave: (d: any) => Promise<void> }) {
     postal_code: "",
     country: "IN",
     is_default: true,
+    latitude: null as number | null,
+    longitude: null as number | null,
   });
   const [saving, setSaving] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -544,11 +546,20 @@ function AddressForm({ onSave }: { onSave: (d: any) => Promise<void> }) {
             state: p.state || prev.state,
             postal_code: p.postal_code || prev.postal_code,
             country: p.country || prev.country,
+            latitude: p.lat,
+            longitude: p.lng,
           }));
           setPickerOpen(false);
           toast.success("Address filled from map — verify before saving");
         }}
       />
+
+      {d.latitude != null && d.longitude != null && (
+        <p className="text-[10px] font-mono text-cyan/80">
+          📍 {d.latitude.toFixed(5)}, {d.longitude.toFixed(5)}
+        </p>
+      )}
+
 
       <div className="grid sm:grid-cols-2 gap-3">
         <Field label="Full name" value={d.recipient} onChange={(e) => set("recipient", e.target.value)} />
