@@ -75,7 +75,7 @@ function CartPage() {
               </div>
               <div className="flex items-center gap-1 glass rounded-full px-2 py-1">
                 <button
-                  onClick={() => dec(i.product.id)}
+                  onClick={() => setQty(i.product.id, i.qty - 1)}
                   aria-label={`Decrease quantity of ${i.product.name}`}
                   className="size-7 grid place-items-center rounded-full hover:bg-white/5"
                 >
@@ -83,7 +83,7 @@ function CartPage() {
                 </button>
                 <span className="min-w-[24px] text-center text-sm font-mono tabular-nums">{i.qty}</span>
                 <button
-                  onClick={() => inc(i.product)}
+                  onClick={() => setQty(i.product.id, i.qty + 1)}
                   aria-label={`Increase quantity of ${i.product.name}`}
                   className="size-7 grid place-items-center rounded-full hover:bg-white/5"
                 >
