@@ -58,17 +58,28 @@ export function NotificationBell() {
   const unread = items.filter((n) => !n.is_read).length;
 
   async function onMarkOne(id: string) {
-    await markOne({ data: { id } });
-    setItems((xs) => xs.map((x) => (x.id === id ? { ...x, is_read: true } : x)));
+    try {
+      await markOne({ data: { id } });
+      setItems((xs) => xs.map((x) => (x.id === id ? { ...x, is_read: true } : x)));
+    } catch (err) {
+      console.error(err);
+      toast.error("Couldn't mark notification as read");
+    }
   }
   async function onMarkAll() {
-    await markAll();
-    setItems((xs) => xs.map((x) => ({ ...x, is_read: true })));
+    try {
+      await markAll();
+      setItems((xs) => xs.map((x) => ({ ...x, is_read: true })));
+    } catch (err) {
+      console.error(err);
+      toast.error("Couldn't mark notifications as read");
+    }
   }
 
   return (
     <div className="relative">
       <button
+        ref={triggerRef}
         onClick={() => setOpen((v) => !v)}
         aria-label={unread > 0 ? `Notifications, ${unread} unread` : "Notifications"}
         aria-haspopup="dialog"
