@@ -11,8 +11,8 @@ async function resolveSellerForOrder(orderId: string): Promise<string | null> {
     .eq("order_id", orderId)
     .limit(1)
     .maybeSingle();
-  // @ts-expect-error embedded select
-  return data?.products?.seller_id ?? null;
+  const products = (data as any)?.products;
+  return products?.seller_id ?? null;
 }
 
 /** Returns true if `userId` owns any product in the given order. */
