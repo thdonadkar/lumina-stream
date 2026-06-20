@@ -832,6 +832,57 @@ export type Database = {
           },
         ]
       }
+      support_ticket_attachments: {
+        Row: {
+          created_at: string
+          file_name: string
+          id: string
+          message_id: string | null
+          mime_type: string | null
+          size_bytes: number | null
+          storage_path: string
+          ticket_id: string
+          uploader_id: string
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          id?: string
+          message_id?: string | null
+          mime_type?: string | null
+          size_bytes?: number | null
+          storage_path: string
+          ticket_id: string
+          uploader_id: string
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          id?: string
+          message_id?: string | null
+          mime_type?: string | null
+          size_bytes?: number | null
+          storage_path?: string
+          ticket_id?: string
+          uploader_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_ticket_attachments_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "support_ticket_messages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "support_ticket_attachments_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "support_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       support_ticket_messages: {
         Row: {
           body: string
