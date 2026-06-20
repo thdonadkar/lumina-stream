@@ -67,14 +67,14 @@ function Page() {
 
       <div className="glass-strong rounded-2xl overflow-hidden">
         <div className="overflow-x-auto">
-        <table className="w-full text-sm min-w-[640px]">
+        <table className="w-full text-sm min-w-[720px] table-fixed">
           <thead className="text-xs uppercase tracking-widest text-muted-foreground">
             <tr className="border-b border-white/5">
-              <th className="text-left p-4">Product</th>
-              <th className="text-right p-4">Price</th>
-              <th className="text-right p-4 hidden md:table-cell">Stock</th>
-              <th className="text-right p-4">Status</th>
-              <th className="p-4" />
+              <th className="text-left p-4 w-[42%]">Product</th>
+              <th className="text-right p-4 w-[18%]">Price</th>
+              <th className="text-right p-4 w-[14%] hidden md:table-cell">Stock</th>
+              <th className="text-right p-4 w-[14%]">Status</th>
+              <th className="text-right p-4 w-[96px]">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -89,16 +89,18 @@ function Page() {
                 animate={{ opacity: 1 }}
                 className="border-b border-white/5 hover:bg-white/[0.02]"
               >
-                <td className="p-4 flex items-center gap-3">
-                  <img referrerPolicy="no-referrer" src={p.images?.[0] ?? ""} alt="" className="size-10 rounded-lg object-cover bg-white/5" />
-                  <div className="min-w-0">
-                    <p className="font-medium truncate">{p.title}</p>
-                    <p className="text-xs text-muted-foreground truncate">{p.tagline}</p>
+                <td className="p-4 align-middle">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <img referrerPolicy="no-referrer" src={p.images?.[0] ?? ""} alt="" className="size-10 rounded-lg object-cover bg-white/5 shrink-0" />
+                    <div className="min-w-0">
+                      <p className="font-medium truncate">{p.title}</p>
+                      <p className="text-xs text-muted-foreground truncate">{p.tagline}</p>
+                    </div>
                   </div>
                 </td>
-                <td className="p-4 text-right font-mono">₹{Number(p.price).toLocaleString()}</td>
-                <td className="p-4 text-right hidden md:table-cell font-mono">{p.stock ?? 0}</td>
-                <td className="p-4 text-right">
+                <td className="p-4 text-right align-middle font-mono">₹{Number(p.price).toLocaleString()}</td>
+                <td className="p-4 text-right align-middle hidden md:table-cell font-mono">{p.stock ?? 0}</td>
+                <td className="p-4 text-right align-middle">
                   <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono uppercase ring-1 ${
                     p.status === "active" ? "text-cyan ring-cyan/30"
                     : p.status === "rejected" ? "text-rose-400 ring-rose-400/30"
@@ -107,8 +109,8 @@ function Page() {
                     {p.status}
                   </span>
                 </td>
-                <td className="p-4 whitespace-nowrap">
-                  <div className="flex items-center justify-end gap-2">
+                <td className="p-4 whitespace-nowrap text-right align-middle">
+                  <div className="inline-flex items-center justify-end gap-2 align-middle">
                     <Link
                       to="/seller/edit-product/$id"
                       params={{ id: p.id }}
