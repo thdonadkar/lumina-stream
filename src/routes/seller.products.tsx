@@ -128,6 +128,7 @@ function Page() {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
 
       <SellerNav />
