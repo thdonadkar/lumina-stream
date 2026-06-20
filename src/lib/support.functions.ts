@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { UserError } from "@/lib/user-error";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 async function resolveSellerForOrder(supabase: any, orderId: string): Promise<string | null> {
@@ -14,8 +15,8 @@ async function resolveSellerForOrder(supabase: any, orderId: string): Promise<st
 export const createTicket = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { subject: string; message: string; orderId?: string | null }) => {
-    if (!d.subject?.trim() || d.subject.length > 200) throw new Error("Subject required (max 200 chars)");
-    if (!d.message?.trim() || d.message.length > 4000) throw new Error("Message required (max 4000 chars)");
+    if (!d.subject?.trim() || d.subject.length > 200) throw new UserError("Subject required (max 200 chars)");
+    if (!d.message?.trim() || d.message.length > 4000) throw new UserError("Message required (max 4000 chars)");
     return { subject: d.subject.trim(), message: d.message.trim(), orderId: d.orderId || null };
   })
   .handler(async ({ data, context }) => {
@@ -110,7 +111,7 @@ export const listAllTickets = createServerFn({ method: "GET" })
       _user_id: context.userId,
       _role: "admin",
     });
-    if (!isAdmin) throw new Error("Forbidden");
+    if (!isAdmin) throw new UserError("Forbidden");
     const { data, error } = await context.supabase
       .from("support_tickets")
       .select("*")
@@ -153,7 +154,7 @@ export const getTicketThread = createServerFn({ method: "POST" })
 export const replyToTicket = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { id: string; body: string }) => {
-    if (!d.body?.trim() || d.body.length > 4000) throw new Error("Message required");
+    if (!d.body?.trim() || d.body.length > 4000) throw new UserError("Message required");
     return { id: d.id, body: d.body.trim() };
   })
   .handler(async ({ data, context }) => {
@@ -165,13 +166,13 @@ export const replyToTicket = createServerFn({ method: "POST" })
       .eq("id", data.id)
       .maybeSingle();
     if (tErr) throw tErr;
-    if (!ticket) throw new Error("Ticket not found");
+    if (!ticket) throw new UserError("Ticket not found");
 
     let role: "user" | "seller" | "admin" = "user";
     if (isAdmin) role = "admin";
     else if (ticket.seller_id === userId) role = "seller";
     else if (ticket.user_id === userId) role = "user";
-    else throw new Error("Forbidden");
+    else throw new UserError("Forbidden");
 
     await supabase.from("support_ticket_messages").insert({
       ticket_id: data.id,
@@ -215,9 +216,9 @@ export const setTicketStatus = createServerFn({ method: "POST" })
       .select("user_id, seller_id, subject")
       .eq("id", data.id)
       .maybeSingle();
-    if (!existing) throw new Error("Ticket not found");
+    if (!existing) throw new UserError("Ticket not found");
     const isSeller = existing.seller_id === userId;
-    if (!isAdmin && !isSeller) throw new Error("Forbidden");
+    if (!isAdmin && !isSeller) throw new UserError("Forbidden");
 
     const { data: ticket, error } = await supabase
       .from("support_tickets")

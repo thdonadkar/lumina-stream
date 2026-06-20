@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { UserError } from "@/lib/user-error";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 // Fan-out notifications to all sellers whose products appear in an order.
@@ -58,22 +59,22 @@ type PlaceOrderInput = {
 };
 
 function validateOrderInput(d: PlaceOrderInput): PlaceOrderInput {
-  if (!Array.isArray(d.items) || d.items.length === 0) throw new Error("Cart is empty");
-  if (d.items.length > 50) throw new Error("Too many items");
+  if (!Array.isArray(d.items) || d.items.length === 0) throw new UserError("Cart is empty");
+  if (d.items.length > 50) throw new UserError("Too many items");
   if (typeof d.shipping !== "number" || !Number.isFinite(d.shipping) || d.shipping < 0)
-    throw new Error("Invalid shipping");
+    throw new UserError("Invalid shipping");
   for (const it of d.items) {
     if (!it.title || typeof it.title !== "string" || it.title.length > 200)
-      throw new Error("Invalid cart item title");
+      throw new UserError("Invalid cart item title");
     if (!Number.isInteger(it.qty) || it.qty < 1 || it.qty > 100)
-      throw new Error("Invalid quantity");
+      throw new UserError("Invalid quantity");
     if (typeof it.unit_price !== "number" || !Number.isFinite(it.unit_price) || it.unit_price < 0)
-      throw new Error("Invalid unit price");
+      throw new UserError("Invalid unit price");
     if (it.product_id !== null && typeof it.product_id !== "string")
-      throw new Error("Invalid product id");
+      throw new UserError("Invalid product id");
   }
   if (d.payment_method && d.payment_method !== "razorpay" && d.payment_method !== "cod")
-    throw new Error("Invalid payment method");
+    throw new UserError("Invalid payment method");
   return d;
 }
 
@@ -81,7 +82,7 @@ function validateOrderInput(d: PlaceOrderInput): PlaceOrderInput {
 export const validateCoupon = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { code: string; subtotal: number }) => {
-    if (!d.code || typeof d.subtotal !== "number") throw new Error("Invalid input");
+    if (!d.code || typeof d.subtotal !== "number") throw new UserError("Invalid input");
     return { code: d.code.trim().toUpperCase(), subtotal: d.subtotal };
   })
   .handler(async ({ data, context }) => {
@@ -154,9 +155,9 @@ export const placeOrder = createServerFn({ method: "POST" })
         return { product_id: null as string | null, title: i.title, image: i.image, unit_price: price, qty: i.qty };
       }
       const p = productMap.get(i.product_id);
-      if (!p) throw new Error(`Product unavailable: ${i.product_id}`);
-      if (p.status !== "active") throw new Error(`Product not available for purchase: ${p.title}`);
-      if ((p.stock ?? 0) < i.qty) throw new Error(`Insufficient stock for ${p.title}`);
+      if (!p) throw new UserError(`Product unavailable: ${i.product_id}`);
+      if (p.status !== "active") throw new UserError(`Product not available for purchase: ${p.title}`);
+      if ((p.stock ?? 0) < i.qty) throw new UserError(`Insufficient stock for ${p.title}`);
       return {
         product_id: p.id,
         title: p.title,
@@ -303,7 +304,7 @@ export const listAllOrders = createServerFn({ method: "GET" })
       _user_id: userId,
       _role: "admin",
     });
-    if (!isAdmin) throw new Error("Forbidden");
+    if (!isAdmin) throw new UserError("Forbidden");
     const { data, error } = await supabase
       .from("orders")
       .select("*, order_items(*)")
@@ -366,9 +367,9 @@ export const requestReturn = createServerFn({ method: "POST" })
     order_item_id?: string | null;
     photos?: string[];
   }) => {
-    if (!d?.id) throw new Error("Missing order id");
-    if (!d.reason || !RETURN_REASONS.has(d.reason)) throw new Error("Pick a valid reason");
-    if (d.description && d.description.length > 1000) throw new Error("Description too long");
+    if (!d?.id) throw new UserError("Missing order id");
+    if (!d.reason || !RETURN_REASONS.has(d.reason)) throw new UserError("Pick a valid reason");
+    if (d.description && d.description.length > 1000) throw new UserError("Description too long");
     const photos = Array.isArray(d.photos) ? d.photos.slice(0, 6).filter((p) => typeof p === "string" && p.length < 500) : [];
     return { ...d, photos };
   })
@@ -376,9 +377,9 @@ export const requestReturn = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     const { data: existing } = await supabase
       .from("orders").select("status, user_id").eq("id", data.id).maybeSingle();
-    if (!existing) throw new Error("Order not found");
-    if (existing.user_id !== userId) throw new Error("Forbidden");
-    if (existing.status !== "delivered") throw new Error("Only delivered orders can be returned");
+    if (!existing) throw new UserError("Order not found");
+    if (existing.user_id !== userId) throw new UserError("Forbidden");
+    if (existing.status !== "delivered") throw new UserError("Only delivered orders can be returned");
 
     // Write the structured return request (used by the new admin returns UI)…
     const { error: rrErr } = await (supabase as any)
@@ -435,10 +436,10 @@ export const cancelOrder = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     const { data: existing } = await supabase
       .from("orders").select("status, user_id").eq("id", data.id).maybeSingle();
-    if (!existing) throw new Error("Order not found");
-    if (existing.user_id !== userId) throw new Error("Forbidden");
+    if (!existing) throw new UserError("Order not found");
+    if (existing.user_id !== userId) throw new UserError("Forbidden");
     if (!["pending", "confirmed"].includes(existing.status))
-      throw new Error("This order can no longer be cancelled");
+      throw new UserError("This order can no longer be cancelled");
     const { data: order, error } = await supabase
       .from("orders").update({ status: "cancelled" as never }).eq("id", data.id).select().single();
     if (error) throw error;
@@ -462,7 +463,7 @@ async function assertAdmin(ctx: any) {
   const { data: isAdmin } = await ctx.supabase.rpc("has_role", {
     _user_id: ctx.userId, _role: "admin",
   });
-  if (!isAdmin) throw new Error("Forbidden");
+  if (!isAdmin) throw new UserError("Forbidden");
 }
 
 export const listReturnRequests = createServerFn({ method: "GET" })
@@ -547,7 +548,7 @@ export const markRefunded = createServerFn({ method: "POST" })
         if (!res.ok) {
           const body = await res.text().catch(() => "");
           console.error("[razorpay] refund failed", res.status, body);
-          throw new Error("Refund failed at payment gateway");
+          throw new UserError("Refund failed at payment gateway");
         }
       }
     }

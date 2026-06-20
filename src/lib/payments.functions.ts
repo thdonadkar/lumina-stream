@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { UserError } from "@/lib/user-error";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 // Razorpay REST helpers. We talk to Razorpay over HTTPS — no SDK needed,
@@ -43,7 +44,7 @@ function timingSafeEqualHex(a: string, b: string): boolean {
 export const createRazorpayOrder = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { order_id: string }) => {
-    if (!d?.order_id || typeof d.order_id !== "string") throw new Error("Invalid order_id");
+    if (!d?.order_id || typeof d.order_id !== "string") throw new UserError("Invalid order_id");
     return d;
   })
   .handler(async ({ data, context }) => {
@@ -56,9 +57,9 @@ export const createRazorpayOrder = createServerFn({ method: "POST" })
       .eq("id", data.order_id)
       .maybeSingle();
     if (oErr) throw oErr;
-    if (!order) throw new Error("Order not found");
-    if (order.user_id !== userId) throw new Error("Forbidden");
-    if (order.payment_status === "paid") throw new Error("Order already paid");
+    if (!order) throw new UserError("Order not found");
+    if (order.user_id !== userId) throw new UserError("Forbidden");
+    if (order.payment_status === "paid") throw new UserError("Order already paid");
 
     // Reuse an existing pending payment to keep this idempotent across retries.
     const { data: existing } = await supabase
@@ -88,7 +89,7 @@ export const createRazorpayOrder = createServerFn({ method: "POST" })
       if (!res.ok) {
         const body = await res.text().catch(() => "");
         console.error("[razorpay] create order failed", res.status, body);
-        throw new Error("Could not initiate payment. Please try again.");
+        throw new UserError("Could not initiate payment. Please try again.");
       }
       const json = (await res.json()) as { id: string; amount: number; currency: string };
       rzpOrderId = json.id;
@@ -127,7 +128,7 @@ export const verifyRazorpayPayment = createServerFn({ method: "POST" })
     razorpay_signature: string;
   }) => {
     for (const k of ["order_id", "razorpay_order_id", "razorpay_payment_id", "razorpay_signature"] as const) {
-      if (!d?.[k] || typeof d[k] !== "string") throw new Error("Invalid payload");
+      if (!d?.[k] || typeof d[k] !== "string") throw new UserError("Invalid payload");
     }
     return d;
   })
@@ -139,8 +140,8 @@ export const verifyRazorpayPayment = createServerFn({ method: "POST" })
       .select("id, user_id, total, payment_status")
       .eq("id", data.order_id)
       .maybeSingle();
-    if (!order) throw new Error("Order not found");
-    if (order.user_id !== userId) throw new Error("Forbidden");
+    if (!order) throw new UserError("Order not found");
+    if (order.user_id !== userId) throw new UserError("Forbidden");
 
     const expected = await hmacHex(
       process.env.RAZORPAY_KEY_SECRET!,
@@ -148,7 +149,7 @@ export const verifyRazorpayPayment = createServerFn({ method: "POST" })
     );
     if (!timingSafeEqualHex(expected, data.razorpay_signature)) {
       console.error("[razorpay] signature mismatch", { order_id: order.id });
-      throw new Error("Payment verification failed");
+      throw new UserError("Payment verification failed");
     }
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");

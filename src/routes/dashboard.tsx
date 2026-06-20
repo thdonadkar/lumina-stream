@@ -9,6 +9,7 @@ import { listMyOrders } from "@/lib/orders.functions";
 import { listAddresses, saveAddress, deleteAddress } from "@/lib/addresses.functions";
 import { formatPrice } from "@/lib/cart-store";
 import { supabase } from "@/integrations/supabase/client";
+import { OrderListSkeleton } from "@/components/skeletons";
 
 export const Route = createFileRoute("/dashboard")({
   head: () => ({ meta: [{ title: "Account — Neural" }] }),
@@ -166,7 +167,7 @@ function Dashboard() {
       {tab === "orders" && (
         <div className="glass-strong rounded-3xl p-6">
           {loadingOrders ? (
-            <p className="text-muted-foreground text-sm">Loading orders…</p>
+            <OrderListSkeleton count={4} />
           ) : orders.length === 0 ? (
             <div className="text-center py-12">
               <Package className="size-12 mx-auto text-muted-foreground opacity-50 mb-3" />

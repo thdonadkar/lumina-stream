@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Link } from "@tanstack/react-router";
 import { motion, AnimatePresence } from "framer-motion";
 import { Bell, CheckCheck, Package, Tag, Info } from "lucide-react";
+import { toast } from "sonner";
 import { listNotifications, markNotificationRead, markAllNotificationsRead } from "@/lib/notifications.functions";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,44 +16,70 @@ export function NotificationBell() {
   const { userId } = useAuth();
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState<Notif[]>([]);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const fetchList = useServerFn(listNotifications);
   const markOne = useServerFn(markNotificationRead);
   const markAll = useServerFn(markAllNotificationsRead);
 
-  async function refresh() {
+  async function refresh(opts: { silent?: boolean } = {}) {
     if (!userId) return;
     const { data } = await supabase.auth.getSession();
     if (!data.session?.access_token) return;
     try {
       setItems(await fetchList());
-    } catch {
-      /* ignore */
+    } catch (err) {
+      console.error("[NotificationBell] refresh failed:", err);
+      if (!opts.silent) toast.error("Couldn't load notifications");
     }
   }
 
   useEffect(() => {
-    refresh();
+    refresh({ silent: true });
     if (!userId) return;
-    const t = setInterval(refresh, 30000);
+    const t = setInterval(() => refresh({ silent: true }), 30000);
     return () => clearInterval(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
+
+  // ESC closes and restores focus to the trigger
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setOpen(false);
+        triggerRef.current?.focus();
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [open]);
 
   if (!userId) return null;
   const unread = items.filter((n) => !n.is_read).length;
 
   async function onMarkOne(id: string) {
-    await markOne({ data: { id } });
-    setItems((xs) => xs.map((x) => (x.id === id ? { ...x, is_read: true } : x)));
+    try {
+      await markOne({ data: { id } });
+      setItems((xs) => xs.map((x) => (x.id === id ? { ...x, is_read: true } : x)));
+    } catch (err) {
+      console.error(err);
+      toast.error("Couldn't mark notification as read");
+    }
   }
   async function onMarkAll() {
-    await markAll();
-    setItems((xs) => xs.map((x) => ({ ...x, is_read: true })));
+    try {
+      await markAll();
+      setItems((xs) => xs.map((x) => ({ ...x, is_read: true })));
+    } catch (err) {
+      console.error(err);
+      toast.error("Couldn't mark notifications as read");
+    }
   }
 
   return (
     <div className="relative">
       <button
+        ref={triggerRef}
         onClick={() => setOpen((v) => !v)}
         aria-label={unread > 0 ? `Notifications, ${unread} unread` : "Notifications"}
         aria-haspopup="dialog"

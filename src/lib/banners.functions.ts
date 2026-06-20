@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { UserError } from "@/lib/user-error";
 import { createClient } from "@supabase/supabase-js";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { Database } from "@/integrations/supabase/types";
@@ -36,7 +37,7 @@ export const listAllBanners = createServerFn({ method: "GET" })
   });
 
 function validate(d: BannerInput): BannerInput {
-  if (!d.title?.trim() || d.title.length > 200) throw new Error("Title required (max 200 chars)");
+  if (!d.title?.trim() || d.title.length > 200) throw new UserError("Title required (max 200 chars)");
   return d;
 }
 
@@ -47,7 +48,7 @@ export const saveBanner = createServerFn({ method: "POST" })
     const { data: isAdmin } = await context.supabase.rpc("has_role", {
       _user_id: context.userId, _role: "admin",
     });
-    if (!isAdmin) throw new Error("Forbidden");
+    if (!isAdmin) throw new UserError("Forbidden");
     const payload = {
       title: data.title,
       subtitle: data.subtitle ?? null,
@@ -74,7 +75,7 @@ export const deleteBanner = createServerFn({ method: "POST" })
     const { data: isAdmin } = await context.supabase.rpc("has_role", {
       _user_id: context.userId, _role: "admin",
     });
-    if (!isAdmin) throw new Error("Forbidden");
+    if (!isAdmin) throw new UserError("Forbidden");
     const { error } = await (context.supabase as any).from("banners").delete().eq("id", data.id);
     if (error) throw error; return { ok: true };
   });
