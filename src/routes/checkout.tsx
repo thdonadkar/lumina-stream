@@ -403,13 +403,16 @@ function Checkout() {
               onClick={() => {
                 if (step === 0 && !selectedAddr) {
                   toast.error("Select a shipping address");
+                  document.getElementById("address-list")?.scrollIntoView({ behavior: "smooth", block: "center" });
                   return;
                 }
                 if (step < 2) setStep(step + 1);
                 else submitOrder();
               }}
-              disabled={placing}
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-aurora animate-aurora font-bold text-background shadow-glow-cyan hover:scale-[1.02] active:scale-95 transition-transform disabled:opacity-60"
+              disabled={placing || (step === 0 && !selectedAddr)}
+              aria-disabled={placing || (step === 0 && !selectedAddr)}
+              title={step === 0 && !selectedAddr ? "Select an address to continue" : undefined}
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-aurora animate-aurora font-bold text-background shadow-glow-cyan hover:scale-[1.02] active:scale-95 transition-transform disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
             >
               {step === 2 ? (placing ? "Placing…" : "Place order") : "Continue"}
               <ChevronRight className="size-4" />
