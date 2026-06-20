@@ -96,26 +96,38 @@ function Page() {
                 </div>
               </div>
               <div className="flex flex-wrap gap-2 sm:justify-end shrink-0">
-                <button
-                  disabled={p.status === "active" || statusMut.isPending}
-                  onClick={() => statusMut.mutate({ id: p.id, status: "active" })}
-                  className="px-3 py-1.5 rounded-full text-xs font-bold bg-aurora animate-aurora text-background inline-flex items-center gap-1 disabled:opacity-40"
-                >
-                  <Check className="size-3" /> Approve
-                </button>
-                <button
-                  disabled={p.status === "rejected" || statusMut.isPending}
-                  onClick={() => statusMut.mutate({ id: p.id, status: "rejected" })}
-                  className="px-3 py-1.5 rounded-full text-xs font-bold glass hover:glass-strong inline-flex items-center gap-1 disabled:opacity-40"
-                >
-                  <Flag className="size-3 text-rose-400" /> Flag
-                </button>
-                <button
-                  onClick={async () => { if (await confirm({ title: `Delete "${p.title}"?`, description: "This permanently removes the product from the catalog.", destructive: true, confirmText: "Delete" })) deleteMut.mutate(p.id); }}
-                  className="px-3 py-1.5 rounded-full text-xs font-bold glass hover:glass-strong inline-flex items-center gap-1"
-                >
-                  <Trash2 className="size-3 text-rose-400" /> Delete
-                </button>
+                {p.status === "archived" ? (
+                  <button
+                    disabled={statusMut.isPending}
+                    onClick={() => statusMut.mutate({ id: p.id, status: "active" })}
+                    className="px-3 py-1.5 rounded-full text-xs font-bold bg-aurora animate-aurora text-background inline-flex items-center gap-1 disabled:opacity-40"
+                  >
+                    <RotateCcw className="size-3" /> Restore
+                  </button>
+                ) : (
+                  <>
+                    <button
+                      disabled={p.status === "active" || statusMut.isPending}
+                      onClick={() => statusMut.mutate({ id: p.id, status: "active" })}
+                      className="px-3 py-1.5 rounded-full text-xs font-bold bg-aurora animate-aurora text-background inline-flex items-center gap-1 disabled:opacity-40"
+                    >
+                      <Check className="size-3" /> Approve
+                    </button>
+                    <button
+                      disabled={p.status === "rejected" || statusMut.isPending}
+                      onClick={() => statusMut.mutate({ id: p.id, status: "rejected" })}
+                      className="px-3 py-1.5 rounded-full text-xs font-bold glass hover:glass-strong inline-flex items-center gap-1 disabled:opacity-40"
+                    >
+                      <Flag className="size-3 text-rose-400" /> Flag
+                    </button>
+                    <button
+                      onClick={async () => { if (await confirm({ title: `Archive "${p.title}"?`, description: "This hides the product from the catalog but preserves order history. You can restore it later.", destructive: true, confirmText: "Archive" })) deleteMut.mutate(p.id); }}
+                      className="px-3 py-1.5 rounded-full text-xs font-bold glass hover:glass-strong inline-flex items-center gap-1"
+                    >
+                      <Trash2 className="size-3 text-rose-400" /> Archive
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           ))}
