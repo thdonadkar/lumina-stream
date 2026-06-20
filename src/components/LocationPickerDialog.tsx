@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { MapPin, Search, X, Crosshair, Loader2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
@@ -61,7 +62,10 @@ export function LocationPickerDialog({ open, onClose, onConfirm }: Props) {
   const mapDivRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<any>(null);
   const markerRef = useRef<any>(null);
+  const updateLocationRef = useRef<((lat: number, lng: number) => Promise<void>) | null>(null);
   const [permState, setPermState] = useState<"unknown" | "granted" | "denied" | "prompt">("unknown");
+  const [secureState, setSecureState] = useState<"unknown" | "secure" | "insecure">("unknown");
+  const [locationMessage, setLocationMessage] = useState("Click 📍 Use my current location to allow location access");
   const [address, setAddress] = useState<string>("Drag the pin or search to set delivery location");
   const [picked, setPicked] = useState<PickedLocation | null>(null);
   const [busy, setBusy] = useState(false);
@@ -72,6 +76,18 @@ export function LocationPickerDialog({ open, onClose, onConfirm }: Props) {
   useEffect(() => {
     if (!open || !mapDivRef.current) return;
     let cancelled = false;
+    setSecureState(window.isSecureContext ? "secure" : "insecure");
+    navigator.permissions?.query({ name: "geolocation" as PermissionName }).then((status) => {
+      if (cancelled) return;
+      console.log("[geolocation] permission state", status.state);
+      setPermState(status.state as any);
+      setLocationMessage(status.state === "denied" ? "Enable location from browser settings" : "Click 📍 Use my current location to allow location access");
+      status.onchange = () => {
+        console.log("[geolocation] permission state", status.state);
+        setPermState(status.state as any);
+        setLocationMessage(status.state === "denied" ? "Enable location from browser settings" : "Click 📍 Use my current location to allow location access");
+      };
+    }).catch(() => undefined);
     (async () => {
       const L = (await import("leaflet")).default;
       // Fix marker icon URLs (Leaflet's default points to a path that doesn't exist after bundling)
@@ -98,6 +114,11 @@ export function LocationPickerDialog({ open, onClose, onConfirm }: Props) {
 
       const update = async (lat: number, lng: number) => {
         setBusy(true);
+        (window as any).__locDebug = {
+          mapCenter: mapRef.current?.getCenter?.(),
+          marker: { lat, lng },
+          permission: (window as any).__locDebug?.permission ?? permState,
+        };
         try {
           const j = await reverseGeocode(lat, lng);
           const p = toPicked(lat, lng, j);
@@ -110,6 +131,7 @@ export function LocationPickerDialog({ open, onClose, onConfirm }: Props) {
           setBusy(false);
         }
       };
+      updateLocationRef.current = update;
 
       marker.on("dragend", () => {
         const { lat, lng } = marker.getLatLng();
@@ -123,16 +145,7 @@ export function LocationPickerDialog({ open, onClose, onConfirm }: Props) {
       // Fix sizing inside dialog
       setTimeout(() => map.invalidateSize(), 50);
 
-      // Only check permission state — DO NOT auto-request location.
-      // Geolocation must be triggered by a user gesture (Crosshair button).
-      try {
-        // @ts-ignore
-        const status = await navigator.permissions?.query({ name: "geolocation" as PermissionName });
-        if (status) {
-          setPermState(status.state as any);
-          status.onchange = () => setPermState(status.state as any);
-        }
-      } catch { /* ignore */ }
+      // No auto-request here — geolocation is triggered only by the button click.
     })();
 
     return () => {
@@ -147,41 +160,61 @@ export function LocationPickerDialog({ open, onClose, onConfirm }: Props) {
       mapRef.current.remove();
       mapRef.current = null;
       markerRef.current = null;
+      updateLocationRef.current = null;
     }
     setPicked(null);
     setAddress("Drag the pin or search to set delivery location");
+    setLocationMessage("Click 📍 Use my current location to allow location access");
     setQ("");
     setResults([]);
   }, [open]);
 
-  async function recenterToMe() {
-    try {
-      // @ts-ignore
-      const status = await navigator.permissions?.query({ name: "geolocation" as PermissionName });
-      if (status?.state === "denied") {
-        setPermState("denied");
-        toast.error("Location is blocked. Tap the lock icon in your address bar → Site settings → Location → Allow, then retry.", { duration: 8000 });
-        return;
-      }
-    } catch { /* ignore */ }
+  function recenterToMe() {
+    if (permState === "denied") {
+      setLocationMessage("Enable location from browser settings");
+      toast.error("Enable Location for this site in your browser settings, then retry.", { duration: 8000 });
+      return;
+    }
+    if (!navigator.geolocation) {
+      setLocationMessage("Geolocation is not supported. Drag the pin or search manually.");
+      toast.error("Geolocation is not supported on this device.");
+      return;
+    }
+    setLocationMessage("Waiting for browser location permission…");
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const { latitude, longitude } = pos.coords;
-        mapRef.current?.setView([latitude, longitude], 16);
+        mapRef.current?.setView([latitude, longitude], 15);
         markerRef.current?.setLatLng([latitude, longitude]);
-        markerRef.current?.fire("dragend");
+        (window as any).__locDebug = {
+          mapCenter: mapRef.current?.getCenter?.(),
+          marker: { lat: latitude, lng: longitude },
+          permission: "granted",
+        };
+        updateLocationRef.current?.(latitude, longitude);
         setPermState("granted");
+        setLocationMessage(`GPS location found: ${latitude.toFixed(5)}, ${longitude.toFixed(5)}`);
       },
       (err) => {
         if (err.code === 1) {
           setPermState("denied");
-          toast.error("Permission denied. Enable Location for this site in your browser settings.", { duration: 8000 });
+          setLocationMessage("Enable location from browser settings");
+          toast.error("Enable Location for this site in your browser settings.", { duration: 8000 });
         } else {
-          toast.error("Couldn't get your location.");
+          setLocationMessage("GPS failed. Drag the pin, tap the map, or search manually.");
+          toast.error("Couldn't get your location. Drag the pin or search manually.");
         }
       },
-      { enableHighAccuracy: true, timeout: 10000 }
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
+  }
+
+  function usePinManually() {
+    const point = markerRef.current?.getLatLng?.();
+    if (!point) return;
+    mapRef.current?.setView([point.lat, point.lng], Math.max(mapRef.current?.getZoom?.() ?? 15, 15));
+    updateLocationRef.current?.(point.lat, point.lng);
+    setLocationMessage("Using the selected map pin manually.");
   }
 
   async function runSearch(e: React.FormEvent) {
@@ -207,14 +240,16 @@ export function LocationPickerDialog({ open, onClose, onConfirm }: Props) {
     setQ("");
   }
 
-  return (
+  if (typeof document === "undefined") return null;
+
+  return createPortal(
     <AnimatePresence>
       {open && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[100] bg-background/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4"
+          className="fixed inset-0 z-[9999] bg-background/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4"
           onClick={onClose}
         >
           <motion.div
@@ -264,28 +299,40 @@ export function LocationPickerDialog({ open, onClose, onConfirm }: Props) {
               </div>
             )}
 
-            {permState === "denied" && (
-              <div className="px-4 py-2 bg-amber-300/10 text-amber-200 text-xs flex items-start gap-2 border-b border-white/10">
-                <AlertCircle className="size-4 mt-0.5 shrink-0" />
-                <span>
-                  Location is blocked for this site. To use GPS, tap the lock icon in your address bar → Site settings → Location → Allow. You can still drag the pin or search manually below.
+            <div className="px-4 py-2 bg-cyan/10 text-cyan text-xs flex items-start gap-2 border-b border-white/10">
+              <AlertCircle className="size-4 mt-0.5 shrink-0" />
+              <span>
+                {locationMessage}
+                <span className="block mt-1 font-mono text-[10px] text-muted-foreground">
+                  Debug: permission={permState}; context={secureState}
                 </span>
-              </div>
-            )}
+              </span>
+            </div>
 
-            <div className="relative flex-1">
-              <div ref={mapDivRef} className="absolute inset-0" />
+            <div className="px-4 py-3 border-b border-white/10 bg-background/70">
               <button
                 type="button"
                 onClick={recenterToMe}
                 aria-label="Use my current location"
-                className="absolute bottom-4 right-4 z-[400] size-11 rounded-full bg-background border border-white/20 grid place-items-center shadow-lg hover:bg-white/5"
+                className="w-full h-11 rounded-xl bg-aurora text-background inline-flex items-center justify-center gap-2 text-sm font-bold shadow-glow-cyan"
               >
-                <Crosshair className="size-5 text-cyan" />
+                <Crosshair className="size-5" />
+                Use my current location
               </button>
             </div>
 
+            <div className="relative flex-1">
+              <div ref={mapDivRef} className="absolute inset-0" />
+            </div>
+
             <div className="p-4 border-t border-white/10 space-y-3">
+              <button
+                type="button"
+                onClick={usePinManually}
+                className="w-full h-10 rounded-xl glass-strong hover:bg-cyan/10 text-xs font-bold inline-flex items-center justify-center gap-2"
+              >
+                Use map pin manually
+              </button>
               <div className="flex items-start gap-2">
                 <MapPin className="size-4 text-cyan mt-0.5 shrink-0" />
                 <div className="min-w-0 flex-1">
@@ -307,6 +354,7 @@ export function LocationPickerDialog({ open, onClose, onConfirm }: Props) {
           </motion.div>
         </motion.div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }
