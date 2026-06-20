@@ -54,12 +54,14 @@ export function NotificationBell() {
     <div className="relative">
       <button
         onClick={() => setOpen((v) => !v)}
-        aria-label="Notifications"
+        aria-label={unread > 0 ? `Notifications, ${unread} unread` : "Notifications"}
+        aria-haspopup="dialog"
+        aria-expanded={open}
         className="relative grid place-items-center size-9 rounded-full glass hover:glass-strong transition-all"
       >
-        <Bell className="size-4" />
+        <Bell className="size-4" aria-hidden="true" />
         {unread > 0 && (
-          <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-aurora animate-aurora text-[10px] font-bold grid place-items-center text-background">
+          <span aria-hidden="true" className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-aurora animate-aurora text-[10px] font-bold grid place-items-center text-background">
             {unread}
           </span>
         )}
@@ -68,7 +70,7 @@ export function NotificationBell() {
       <AnimatePresence>
         {open && (
           <>
-            <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+            <div aria-hidden="true" className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
             <motion.div
               initial={{ opacity: 0, y: -8 }}
               animate={{ opacity: 1, y: 0 }}
