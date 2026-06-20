@@ -62,22 +62,22 @@ export function downloadInvoice(order: InvoiceOrder) {
   // ─── Brand header ────────────────────────────────────────────────
   doc.setFont("helvetica", "bold");
   doc.setFontSize(24);
-  doc.setTextColor(20);
+  doc.setTextColor(20, 20, 20);
   doc.text("NEURAL", M, y);
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
-  doc.setTextColor(110);
+  doc.setTextColor(110, 110, 110);
   doc.text("Neural Commerce Pvt Ltd", M, y + 14);
   doc.text("Bengaluru, Karnataka, India", M, y + 26);
   doc.text("support@neural.shop", M, y + 38);
 
   doc.setFont("helvetica", "bold");
   doc.setFontSize(16);
-  doc.setTextColor(20);
+  doc.setTextColor(20, 20, 20);
   doc.text("TAX INVOICE", W - M, y, { align: "right" });
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
-  doc.setTextColor(110);
+  doc.setTextColor(110, 110, 110);
   doc.text("Original for Recipient", W - M, y + 14, { align: "right" });
 
   y += 58;
@@ -87,7 +87,7 @@ export function downloadInvoice(order: InvoiceOrder) {
   y += 20;
 
   // ─── Invoice meta (two columns) ──────────────────────────────────
-  doc.setTextColor(20);
+  doc.setTextColor(20, 20, 20);
   doc.setFontSize(9);
   const invoiceNo = `INV-${order.id.slice(0, 8).toUpperCase()}`;
   const orderNo = `#${order.id.slice(0, 8).toUpperCase()}`;
@@ -127,7 +127,7 @@ export function downloadInvoice(order: InvoiceOrder) {
     doc.rect(M, y, W - 2 * M, 18, "F");
     doc.setFont("helvetica", "bold");
     doc.setFontSize(10);
-    doc.setTextColor(20);
+    doc.setTextColor(20, 20, 20);
     doc.text("BILL TO / SHIP TO", M + 8, y + 12);
     y += 26;
 
@@ -138,7 +138,7 @@ export function downloadInvoice(order: InvoiceOrder) {
 
     doc.setFont("helvetica", "normal");
     doc.setFontSize(9);
-    doc.setTextColor(60);
+    doc.setTextColor(60, 60, 60);
     const street = [a.line1, a.line2].filter(Boolean).join(", ");
     const cityLine = `${a.city ?? ""}${a.state ? ", " + a.state : ""}${a.postal_code ? " - " + a.postal_code : ""}`;
     const lines = [
@@ -165,7 +165,7 @@ export function downloadInvoice(order: InvoiceOrder) {
   doc.rect(M, y, W - 2 * M, 22, "F");
   doc.setFont("helvetica", "bold");
   doc.setFontSize(9);
-  doc.setTextColor(255);
+  doc.setTextColor(255, 255, 255);
   doc.text("ITEM DESCRIPTION", colItemX, y + 14);
   doc.text("QTY", colQtyX, y + 14, { align: "right" });
   doc.text("UNIT PRICE", colUnitX, y + 14, { align: "right" });
@@ -173,7 +173,7 @@ export function downloadInvoice(order: InvoiceOrder) {
   y += 22;
 
   doc.setFont("helvetica", "normal");
-  doc.setTextColor(20);
+  doc.setTextColor(20, 20, 20);
   doc.setFontSize(9);
 
   (order.order_items ?? []).forEach((it, idx) => {
@@ -205,7 +205,7 @@ export function downloadInvoice(order: InvoiceOrder) {
   const valueX = W - M - 8;
   const totalRow = (label: string, value: string, opts: { bold?: boolean; muted?: boolean } = {}) => {
     doc.setFont("helvetica", opts.bold ? "bold" : "normal");
-    doc.setTextColor(opts.muted ? 110 : 20);
+    doc.setTextColor(opts.muted ? 110 : 20, opts.muted ? 110 : 20, opts.muted ? 110 : 20);
     doc.text(label, labelX, y);
     doc.text(value, valueX, y, { align: "right" });
     y += 14;
@@ -233,14 +233,14 @@ export function downloadInvoice(order: InvoiceOrder) {
   doc.rect(labelX - 8, y, valueX - labelX + 16, 26, "F");
   doc.setFont("helvetica", "bold");
   doc.setFontSize(12);
-  doc.setTextColor(255);
+  doc.setTextColor(255, 255, 255);
   doc.text("GRAND TOTAL", labelX, y + 17);
   doc.text(money(total), valueX, y + 17, { align: "right" });
   y += 40;
 
   // ─── Payment reference ──────────────────────────────────────────
   doc.setFontSize(9);
-  doc.setTextColor(60);
+  doc.setTextColor(60, 60, 60);
   doc.setFont("helvetica", "normal");
   if (order.payment_ref) {
     doc.text(`Payment Reference: ${order.payment_ref}`, M, y);
@@ -251,7 +251,7 @@ export function downloadInvoice(order: InvoiceOrder) {
   // ─── Footer ──────────────────────────────────────────────────────
   doc.setDrawColor(220);
   doc.line(M, H - 50, W - M, H - 50);
-  doc.setTextColor(140);
+  doc.setTextColor(140, 140, 140);
   doc.setFontSize(8);
   doc.text(
     "Thank you for shopping with Neural. This is a computer-generated invoice and does not require a signature.",
