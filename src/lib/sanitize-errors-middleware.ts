@@ -16,7 +16,7 @@ import { createMiddleware } from "@tanstack/react-start";
  *   - Generic "Something went wrong. Please try again." returned to the client
  */
 export const sanitizeServerErrors = createMiddleware({ type: "function" }).server(
-  async ({ next, functionId }) => {
+  async ({ next }) => {
     try {
       return await next();
     } catch (err: unknown) {
