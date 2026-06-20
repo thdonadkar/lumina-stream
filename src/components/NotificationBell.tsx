@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Link } from "@tanstack/react-router";
 import { motion, AnimatePresence } from "framer-motion";
 import { Bell, CheckCheck, Package, Tag, Info } from "lucide-react";
+import { toast } from "sonner";
 import { listNotifications, markNotificationRead, markAllNotificationsRead } from "@/lib/notifications.functions";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
