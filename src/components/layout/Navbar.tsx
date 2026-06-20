@@ -255,7 +255,7 @@ export function Navbar() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setMobileOpen(false)}
-              className="fixed inset-0 z-[80] bg-background/70 backdrop-blur-md md:hidden"
+              className="fixed inset-0 z-[80] bg-black/60 backdrop-blur-sm md:hidden"
               aria-hidden="true"
             />
             <motion.div
@@ -267,7 +267,7 @@ export function Navbar() {
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", stiffness: 320, damping: 34 }}
-              className="fixed top-0 right-0 bottom-0 z-[90] w-[85%] max-w-sm glass-strong border-l border-white/10 flex flex-col md:hidden"
+              className="fixed top-0 right-0 bottom-0 z-[90] w-[92%] max-w-sm glass-strong border-l border-white/10 flex flex-col md:hidden"
             >
               <div className="flex items-center justify-between p-4 border-b border-white/5">
                 <span className="font-extrabold tracking-tighter text-lg">NEURAL.</span>
