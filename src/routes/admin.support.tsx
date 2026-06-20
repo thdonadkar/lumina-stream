@@ -40,14 +40,29 @@ function Page() {
   const fetchThread = useServerFn(getTicketThread);
   const send = useServerFn(replyToTicket);
   const setStatus = useServerFn(setTicketStatus);
+  const markRead = useServerFn(markTicketRead);
 
   async function refreshList() {
     try { setTickets(await fetchList()); } catch (e: any) { toast.error(e.message); }
   }
   async function openTicket(id: string) {
     setActiveId(id); setThread(null);
-    try { setThread(await fetchThread({ data: { id } })); } catch { /* */ }
+    try {
+      const t = await fetchThread({ data: { id } });
+      setThread(t);
+      await markRead({ data: { id } });
+      refreshList();
+    } catch { /* */ }
   }
+  const onRealtimeInsert = useCallback((row: any) => {
+    setThread((prev: any) => {
+      if (!prev || prev.ticket.id !== row.ticket_id) return prev;
+      if (prev.messages.some((m: any) => m.id === row.id)) return prev;
+      return { ...prev, messages: [...prev.messages, row] };
+    });
+    if (activeId) markRead({ data: { id: activeId } }).catch(() => {});
+  }, [activeId, markRead]);
+  useTicketRealtime(activeId, onRealtimeInsert);
 
   useEffect(() => { refreshList(); /* eslint-disable-next-line */ }, []);
 
