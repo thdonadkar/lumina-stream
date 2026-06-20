@@ -123,25 +123,14 @@ export function LocationPickerDialog({ open, onClose, onConfirm }: Props) {
       // Fix sizing inside dialog
       setTimeout(() => map.invalidateSize(), 50);
 
-      // Try geolocation
+      // Only check permission state — DO NOT auto-request location.
+      // Geolocation must be triggered by a user gesture (Crosshair button).
       try {
         // @ts-ignore
         const status = await navigator.permissions?.query({ name: "geolocation" as PermissionName });
-        if (status) setPermState(status.state as any);
-        if (!status || status.state !== "denied") {
-          navigator.geolocation.getCurrentPosition(
-            (pos) => {
-              const { latitude, longitude } = pos.coords;
-              map.setView([latitude, longitude], 16);
-              marker.setLatLng([latitude, longitude]);
-              update(latitude, longitude);
-              setPermState("granted");
-            },
-            (err) => {
-              if (err.code === 1) setPermState("denied");
-            },
-            { enableHighAccuracy: true, timeout: 10000 }
-          );
+        if (status) {
+          setPermState(status.state as any);
+          status.onchange = () => setPermState(status.state as any);
         }
       } catch { /* ignore */ }
     })();
