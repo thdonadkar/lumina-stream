@@ -161,7 +161,7 @@ export function downloadInvoice(order: InvoiceOrder) {
   const colTotalX = W - M - 8;
 
   // Header row
-  doc.setFillColor(20);
+  doc.setFillColor(20, 20, 20);
   doc.rect(M, y, W - 2 * M, 22, "F");
   doc.setFont("helvetica", "bold");
   doc.setFontSize(9);
@@ -229,7 +229,7 @@ export function downloadInvoice(order: InvoiceOrder) {
   doc.line(labelX, y - 6, valueX, y - 6);
 
   // Highlighted total bar
-  doc.setFillColor(20);
+  doc.setFillColor(20, 20, 20);
   doc.rect(labelX - 8, y, valueX - labelX + 16, 26, "F");
   doc.setFont("helvetica", "bold");
   doc.setFontSize(12);
