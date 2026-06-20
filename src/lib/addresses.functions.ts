@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { UserError } from "@/lib/user-error";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 export type AddressInput = {
@@ -16,10 +17,10 @@ export type AddressInput = {
 };
 
 function validate(d: AddressInput): AddressInput {
-  if (!d.recipient?.trim()) throw new Error("Recipient required");
-  if (!d.line1?.trim()) throw new Error("Address line required");
-  if (!d.city?.trim()) throw new Error("City required");
-  if (!d.postal_code?.trim()) throw new Error("Postal code required");
+  if (!d.recipient?.trim()) throw new UserError("Recipient required");
+  if (!d.line1?.trim()) throw new UserError("Address line required");
+  if (!d.city?.trim()) throw new UserError("City required");
+  if (!d.postal_code?.trim()) throw new UserError("Postal code required");
   return d;
 }
 

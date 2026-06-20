@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { UserError } from "@/lib/user-error";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 async function assertAdmin(ctx: any) {
@@ -6,7 +7,7 @@ async function assertAdmin(ctx: any) {
     _user_id: ctx.userId,
     _role: "admin",
   });
-  if (!isAdmin) throw new Error("Forbidden");
+  if (!isAdmin) throw new UserError("Forbidden");
 }
 
 async function admin() {
@@ -65,7 +66,7 @@ export const createCategory = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { name: string; slug?: string }) => {
     const name = d.name?.trim();
-    if (!name) throw new Error("Name required");
+    if (!name) throw new UserError("Name required");
     return { name, slug: d.slug?.trim() || name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") };
   })
   .handler(async ({ data, context }) => {
@@ -140,7 +141,7 @@ export const setUserBlocked = createServerFn({ method: "POST" })
   .inputValidator((d: { id: string; blocked: boolean }) => d)
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    if (data.id === context.userId) throw new Error("You cannot block yourself");
+    if (data.id === context.userId) throw new UserError("You cannot block yourself");
     const db = await admin();
     const { error } = await db.from("profiles").update({ is_blocked: data.blocked }).eq("id", data.id);
     if (error) throw error;
@@ -161,7 +162,7 @@ export const setUserRole = createServerFn({ method: "POST" })
       if (error) throw error;
     } else {
       if (data.role === "admin" && data.id === context.userId) {
-        throw new Error("You cannot revoke your own admin role");
+        throw new UserError("You cannot revoke your own admin role");
       }
       const { error } = await db.from("user_roles").delete().eq("user_id", data.id).eq("role", data.role);
       if (error) throw error;
