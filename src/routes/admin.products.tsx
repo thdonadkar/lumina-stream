@@ -38,7 +38,7 @@ function Page() {
   const invalidate = () => qc.invalidateQueries({ queryKey: ["admin-products"] });
 
   const statusMut = useMutation({
-    mutationFn: async (p: { id: string; status: "active" | "rejected" | "archived"; force?: boolean; title: string }) => {
+    mutationFn: async (p: { id: string; status: "active" | "rejected" | "archived"; force?: boolean }) => {
       const res: any = await setStatus({ data: { id: p.id, status: p.status, force: p.force } });
       if (res?.warn) {
         const ok = await confirm({
