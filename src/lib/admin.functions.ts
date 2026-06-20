@@ -23,7 +23,7 @@ export const listAllProducts = createServerFn({ method: "GET" })
     const db = await admin();
     const { data, error } = await db
       .from("products")
-      .select("*")
+      .select("id,seller_id,category_id,slug,title,tagline,description,price,original_price,discount_percent,stock,images,rating,review_count,status,accent,badge,created_at,updated_at")
       .order("created_at", { ascending: false })
       .limit(200);
     if (error) throw error;
