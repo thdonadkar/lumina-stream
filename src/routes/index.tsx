@@ -3,7 +3,8 @@ import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { ArrowRight, Sparkles, Zap, Cpu, Headphones, Flame } from "lucide-react";
-import { products, categories } from "@/lib/products";
+import { products } from "@/lib/products";
+import { CATEGORIES } from "@/lib/categories";
 import { ProductCard } from "@/components/ProductCard";
 import { listActiveBanners } from "@/lib/banners.functions";
 
@@ -17,15 +18,6 @@ export const Route = createFileRoute("/")({
   component: Home,
 });
 
-const categoryIcons: Record<string, any> = {
-  Headsets: Sparkles,
-  Controllers: Zap,
-  Computing: Cpu,
-  Audio: Headphones,
-  Tablets: Cpu,
-  Wearables: Zap,
-  Ambient: Sparkles,
-};
 
 function Home() {
   const hero = products[0];
@@ -227,24 +219,25 @@ function Home() {
         </motion.div>
 
         <div className="flex gap-3 overflow-x-auto pb-4 -mx-4 px-4 sm:mx-0 sm:px-0 sm:flex-wrap">
-          {categories.map((c, i) => {
-            const Icon = categoryIcons[c] || Sparkles;
+          {CATEGORIES.map((c, i) => {
+            const Icon = c.icon;
             return (
               <motion.div
-                key={c}
+                key={c.slug}
                 initial={{ opacity: 0, y: 12 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.05 }}
               >
                 <Link
-                  to="/shop"
+                  to="/category/$slug"
+                  params={{ slug: c.slug }}
                   className="shrink-0 inline-flex items-center gap-2 glass rounded-full pl-3 pr-5 py-2.5 hover:glass-strong hover:scale-105 transition-all"
                 >
                   <div className="size-7 rounded-full bg-aurora animate-aurora grid place-items-center">
                     <Icon className="size-3.5 text-background" />
                   </div>
-                  <span className="font-medium text-sm whitespace-nowrap">{c}</span>
+                  <span className="font-medium text-sm whitespace-nowrap">{c.name}</span>
                 </Link>
               </motion.div>
             );

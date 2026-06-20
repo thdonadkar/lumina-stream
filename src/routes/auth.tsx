@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Mail, Lock, User, ArrowRight, ShieldAlert, Store, UserRound } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { lovable } from "@/integrations/lovable";
 import { ensureDemoAccounts } from "@/lib/demo-accounts.functions";
 
 export const Route = createFileRoute("/auth")({
@@ -127,14 +128,28 @@ function Auth() {
 
 
           <div className="grid grid-cols-2 gap-2 mb-6">
-            <button className="flex items-center justify-center gap-2 py-2.5 rounded-xl glass hover:glass-strong text-sm font-medium transition-all">
+            <button
+              type="button"
+              onClick={async () => {
+                const r = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
+                if (r.error) toast.error(r.error.message ?? "Google sign-in failed");
+              }}
+              className="flex items-center justify-center gap-2 py-2.5 rounded-xl glass hover:glass-strong text-sm font-medium transition-all"
+            >
               <svg viewBox="0 0 24 24" className="size-4">
                 <path fill="currentColor" d="M22.5 12.27c0-.79-.07-1.55-.2-2.27H12v4.3h5.92a5.06 5.06 0 0 1-2.2 3.32v2.76h3.56c2.08-1.92 3.28-4.74 3.28-8.11z"/>
                 <path fill="currentColor" opacity=".7" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.56-2.76c-.99.66-2.25 1.06-3.72 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0 0 12 23z"/>
               </svg>
               Google
             </button>
-            <button className="flex items-center justify-center gap-2 py-2.5 rounded-xl glass hover:glass-strong text-sm font-medium transition-all">
+            <button
+              type="button"
+              onClick={async () => {
+                const r = await lovable.auth.signInWithOAuth("apple", { redirect_uri: window.location.origin });
+                if (r.error) toast.error(r.error.message ?? "Apple sign-in failed");
+              }}
+              className="flex items-center justify-center gap-2 py-2.5 rounded-xl glass hover:glass-strong text-sm font-medium transition-all"
+            >
               <svg viewBox="0 0 24 24" className="size-4" fill="currentColor">
                 <path d="M16.5 0c.1 1.2-.4 2.4-1.1 3.3-.8.9-2 1.6-3.2 1.5-.1-1.2.4-2.4 1.1-3.2.8-.9 2.1-1.5 3.2-1.6zm3.7 17.3c-.6 1.4-.9 2-1.7 3.2-1.1 1.7-2.7 3.9-4.7 3.9-1.8 0-2.2-1.2-4.6-1.2-2.4 0-2.9 1.2-4.7 1.2-2 0-3.5-2-4.7-3.7-3.2-4.7-3.6-10.2-1.6-13.2C.5 5.5 2.7 4.2 4.8 4.2c2 0 3.3 1.1 4.9 1.1 1.6 0 2.6-1.1 5-1.1 1.8 0 3.8 1 5.1 2.7-4.5 2.5-3.8 9 .4 10.4z"/>
               </svg>
