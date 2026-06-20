@@ -485,9 +485,40 @@ export const markRefunded = createServerFn({ method: "POST" })
   .inputValidator((d: { id: string; amount?: number }) => d)
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
+
+    // If there's a captured Razorpay payment, issue an actual refund.
+    const { data: payment } = await (context.supabase as any)
+      .from("payments")
+      .select("provider, provider_payment_id, amount, status")
+      .eq("order_id", data.id)
+      .eq("provider", "razorpay")
+      .eq("status", "captured")
+      .maybeSingle();
+
+    if (payment?.provider_payment_id) {
+      const key = process.env.RAZORPAY_KEY_ID;
+      const secret = process.env.RAZORPAY_KEY_SECRET;
+      if (key && secret) {
+        const refundAmount = Math.round(Number(data.amount ?? payment.amount) * 100);
+        const res = await fetch(`https://api.razorpay.com/v1/payments/${payment.provider_payment_id}/refund`, {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            authorization: "Basic " + btoa(`${key}:${secret}`),
+          },
+          body: JSON.stringify({ amount: refundAmount, speed: "normal" }),
+        });
+        if (!res.ok) {
+          const body = await res.text().catch(() => "");
+          console.error("[razorpay] refund failed", res.status, body);
+          throw new Error("Refund failed at payment gateway");
+        }
+      }
+    }
+
     const { data: order, error } = await (context.supabase as any)
       .from("orders")
-      .update({ refund_status: "refunded", refund_amount: data.amount ?? null })
+      .update({ refund_status: "refunded", refund_amount: data.amount ?? null, payment_status: "refunded" })
       .eq("id", data.id).select().single();
     if (error) throw error;
     await context.supabase.from("notifications").insert({
