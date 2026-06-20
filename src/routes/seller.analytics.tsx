@@ -44,14 +44,14 @@ function Page() {
 
   // Revenue per day (last 30 days)
   const series = useMemo(() => {
-    const days: { date: string; revenue: number; orders: number }[] = [];
-    const map: Record<string, { revenue: number; orders: number }> = {};
+    const map: Record<string, { date: string; revenue: number; orders: number }> = {};
+    const order: string[] = [];
     const now = new Date();
     for (let i = 29; i >= 0; i--) {
       const d = new Date(now); d.setDate(now.getDate() - i);
       const key = d.toISOString().slice(0, 10);
-      map[key] = { revenue: 0, orders: 0 };
-      days.push({ date: key.slice(5), revenue: 0, orders: 0 });
+      map[key] = { date: key.slice(5), revenue: 0, orders: 0 };
+      order.push(key);
     }
     for (const o of orders as Order[]) {
       const key = new Date(o.created_at).toISOString().slice(0, 10);
@@ -60,12 +60,7 @@ function Page() {
         map[key].orders += 1;
       }
     }
-    return days.map((d) => {
-      const k = "2026-" + d.date.replace("/", "-"); // not used; fall through
-      const full = Object.keys(map).find((x) => x.endsWith(d.date.replace("-", "-"))) ?? "";
-      const entry = map[full] ?? { revenue: 0, orders: 0 };
-      return { ...d, revenue: entry.revenue, orders: entry.orders };
-    });
+    return order.map((k) => map[k]);
   }, [orders]);
 
   // Top products: aggregate units from order_items
