@@ -527,6 +527,19 @@ function AddressForm({ onSave }: { onSave: (d: any) => Promise<void> }) {
       toast.error("Geolocation not supported on this device");
       return;
     }
+    // Proactively check permission so we can give clear guidance when it's blocked
+    try {
+      // @ts-ignore - permissions API not in all TS lib versions
+      const status = await navigator.permissions?.query({ name: "geolocation" as PermissionName });
+      if (status?.state === "denied") {
+        toast.error(
+          "Location is blocked for this site. Tap the lock/info icon in your browser's address bar → Site settings → allow Location, then try again.",
+          { duration: 8000 }
+        );
+        return;
+      }
+    } catch { /* permissions API unavailable — fall through and let the prompt happen */ }
+
     setLocating(true);
     try {
       const pos = await new Promise<GeolocationPosition>((resolve, reject) =>
@@ -551,7 +564,16 @@ function AddressForm({ onSave }: { onSave: (d: any) => Promise<void> }) {
       }));
       toast.success("Address filled from your location — verify before saving");
     } catch (err: any) {
-      toast.error(err?.code === 1 ? "Location permission denied" : "Couldn't get your location");
+      if (err?.code === 1) {
+        toast.error(
+          "Location permission denied. Enable it from the lock icon in your browser's address bar → Site settings → Location → Allow, then try again.",
+          { duration: 8000 }
+        );
+      } else if (err?.code === 3) {
+        toast.error("Location request timed out. Try again outdoors or with Wi-Fi on.");
+      } else {
+        toast.error("Couldn't get your location. Please enter it manually.");
+      }
     } finally {
       setLocating(false);
     }
