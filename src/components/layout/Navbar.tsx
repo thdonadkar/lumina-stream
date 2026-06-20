@@ -159,7 +159,7 @@ export function Navbar() {
             )}
           </Link>
 
-          <div className="hidden md:block shrink-0">
+          <div className="shrink-0">
             <NotificationBell />
           </div>
 

@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { LayoutGrid, List, SlidersHorizontal, Star } from "lucide-react";
+import { LayoutGrid, List, SlidersHorizontal, Star, Search, ArrowUpDown, X } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { categories as STATIC_CATEGORIES, type Product } from "@/lib/products";
@@ -29,6 +29,7 @@ function Shop() {
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 4000]);
   const [sort, setSort] = useState<SortKey>("featured");
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [query, setQuery] = useState("");
 
   const listFn = useServerFn(listActiveProducts);
   const { data: dbProducts, isLoading: dbLoading } = useQuery<Product[]>({
@@ -49,18 +50,24 @@ function Shop() {
   }, [products]);
 
   const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
     let list = products.filter(
       (p) =>
         (!category || p.category === category) &&
         p.rating >= minRating &&
         p.price >= priceRange[0] &&
-        p.price <= priceRange[1],
+        p.price <= priceRange[1] &&
+        (!q ||
+          p.name.toLowerCase().includes(q) ||
+          (p.tagline ?? "").toLowerCase().includes(q) ||
+          (p.description ?? "").toLowerCase().includes(q) ||
+          (p.category ?? "").toLowerCase().includes(q)),
     );
     if (sort === "price-asc") list = [...list].sort((a, b) => a.price - b.price);
     if (sort === "price-desc") list = [...list].sort((a, b) => b.price - a.price);
     if (sort === "rating") list = [...list].sort((a, b) => b.rating - a.rating);
     return list;
-  }, [products, category, minRating, priceRange, sort]);
+  }, [products, category, minRating, priceRange, sort, query]);
 
   return (
     <div className="px-4 sm:px-6 max-w-7xl mx-auto">
@@ -75,42 +82,74 @@ function Shop() {
 
       {/* Toolbar */}
       <div className="sticky top-20 z-30 glass-strong rounded-2xl p-3 mb-6 flex items-center gap-3 flex-wrap">
-        <button
-          onClick={() => setFiltersOpen((v) => !v)}
-          className="inline-flex items-center gap-2 px-3 py-2 rounded-xl glass hover:glass-strong text-sm font-medium"
-        >
-          <SlidersHorizontal className="size-4" />
-          Filters
-        </button>
+      {/* Toolbar */}
+      <div className="sticky top-20 z-30 glass-strong rounded-2xl p-3 mb-6 flex flex-col gap-3">
+        <div className="flex items-center gap-2 glass rounded-xl px-3 py-2">
+          <Search className="size-4 text-cyan shrink-0" aria-hidden="true" />
+          <input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search by name, category, or keyword…"
+            className="flex-1 bg-transparent outline-none text-sm placeholder:text-muted-foreground min-w-0"
+            aria-label="Search products"
+          />
+          {query && (
+            <button
+              onClick={() => setQuery("")}
+              aria-label="Clear search"
+              className="grid place-items-center size-6 rounded-full glass hover:glass-strong text-muted-foreground"
+            >
+              <X className="size-3" />
+            </button>
+          )}
+        </div>
 
-        <select
-          value={sort}
-          onChange={(e) => setSort(e.target.value as SortKey)}
-          className="px-3 py-2 rounded-xl glass text-sm font-medium bg-transparent border-0 outline-none cursor-pointer"
-        >
-          <option value="featured">Featured</option>
-          <option value="price-asc">Price: low to high</option>
-          <option value="price-desc">Price: high to low</option>
-          <option value="rating">Top rated</option>
-        </select>
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            onClick={() => setFiltersOpen((v) => !v)}
+            className="inline-flex items-center gap-2 px-3 py-2 rounded-xl glass hover:glass-strong text-sm font-medium"
+          >
+            <SlidersHorizontal className="size-4" />
+            Filters
+          </button>
 
-        <div className="ml-auto flex items-center gap-1 glass rounded-xl p-1">
-          <button
-            onClick={() => setView("grid")}
-            className={`size-8 grid place-items-center rounded-lg transition-colors ${
-              view === "grid" ? "bg-glass-strong text-cyan" : "text-muted-foreground"
-            }`}
-          >
-            <LayoutGrid className="size-4" />
-          </button>
-          <button
-            onClick={() => setView("list")}
-            className={`size-8 grid place-items-center rounded-lg transition-colors ${
-              view === "list" ? "bg-glass-strong text-cyan" : "text-muted-foreground"
-            }`}
-          >
-            <List className="size-4" />
-          </button>
+          <label className="inline-flex items-center gap-2 px-3 py-2 rounded-xl glass hover:glass-strong text-sm font-medium cursor-pointer">
+            <ArrowUpDown className="size-4 text-cyan" />
+            <span className="text-muted-foreground text-xs hidden sm:inline">Sort</span>
+            <select
+              value={sort}
+              onChange={(e) => setSort(e.target.value as SortKey)}
+              className="bg-transparent border-0 outline-none cursor-pointer font-medium text-foreground"
+              aria-label="Sort products"
+            >
+              <option className="bg-background text-foreground" value="featured">Featured</option>
+              <option className="bg-background text-foreground" value="price-asc">Price: low to high</option>
+              <option className="bg-background text-foreground" value="price-desc">Price: high to low</option>
+              <option className="bg-background text-foreground" value="rating">Top rated</option>
+            </select>
+          </label>
+
+          <div className="ml-auto flex items-center gap-1 glass rounded-xl p-1">
+            <button
+              onClick={() => setView("grid")}
+              aria-label="Grid view"
+              className={`size-8 grid place-items-center rounded-lg transition-colors ${
+                view === "grid" ? "bg-glass-strong text-cyan" : "text-muted-foreground"
+              }`}
+            >
+              <LayoutGrid className="size-4" />
+            </button>
+            <button
+              onClick={() => setView("list")}
+              aria-label="List view"
+              className={`size-8 grid place-items-center rounded-lg transition-colors ${
+                view === "list" ? "bg-glass-strong text-cyan" : "text-muted-foreground"
+              }`}
+            >
+              <List className="size-4" />
+            </button>
+          </div>
         </div>
       </div>
 
