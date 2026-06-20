@@ -13,7 +13,11 @@ const items = [
 export function BottomNav() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const openCart = useCart((s) => s.openCart);
-  const count = useCart((s) => s.count());
+  const rawCount = useCart((s) => s.count());
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => { setHydrated(true); }, []);
+  const count = hydrated ? rawCount : 0;
+
 
   return (
     <nav aria-label="Primary mobile navigation" className="md:hidden fixed bottom-3 left-1/2 -translate-x-1/2 z-50 w-[92%] max-w-md">
