@@ -199,18 +199,11 @@ function OrderDetail() {
             </button>
           )}
           {returnOpen && (
-            <form onSubmit={submitReturn} className="glass-strong rounded-2xl p-4 space-y-2">
-              <p className="text-sm font-bold">Return reason</p>
-              <textarea
-                value={reason} onChange={(e) => setReason(e.target.value)} required maxLength={500} rows={3}
-                placeholder="Tell us what went wrong…"
-                className="w-full glass rounded-xl px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-cyan resize-y"
-              />
-              <div className="flex justify-end gap-2">
-                <button type="button" onClick={() => setReturnOpen(false)} className="rounded-full px-3 py-1.5 text-xs glass">Cancel</button>
-                <button className="rounded-full px-4 py-1.5 text-xs font-bold bg-aurora text-background">Submit return</button>
-              </div>
-            </form>
+            <ReturnForm
+              items={items.map((i: any) => ({ id: i.id, title: i.title, image: i.image }))}
+              onCancel={() => setReturnOpen(false)}
+              onSubmit={submitReturn}
+            />
           )}
 
           {!helpOpen ? (
