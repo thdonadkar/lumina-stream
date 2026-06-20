@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Star, ShoppingBag, Heart, Share2, Shield, Truck, RotateCcw } from "lucide-react";
 import { getProduct, products } from "@/lib/products";
 import { useCart, formatPrice } from "@/lib/cart-store";
+import { useWishlist } from "@/lib/wishlist-store";
 import { ProductCard } from "@/components/ProductCard";
 import { toast } from "sonner";
 
