@@ -51,7 +51,7 @@ function Home() {
               >
                 <div className="relative w-2/5 sm:w-1/2 shrink-0 overflow-hidden">
                   {b.image_url ? (
-                    <img src={b.image_url} alt="" className="absolute inset-0 size-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                    <img referrerPolicy="no-referrer" src={b.image_url} alt="" className="absolute inset-0 size-full object-cover group-hover:scale-110 transition-transform duration-700" />
                   ) : (
                     <div className="absolute inset-0 bg-aurora animate-aurora opacity-70" />
                   )}
@@ -307,7 +307,7 @@ function Home() {
                 transition={{ delay: i * 0.1 }}
                 className="glass rounded-2xl p-2 aspect-square overflow-hidden relative"
               >
-                <img src={p.image} alt={p.name} className="size-full object-cover rounded-xl" />
+                <img referrerPolicy="no-referrer" src={p.image} alt={p.name} className="size-full object-cover rounded-xl" />
                 <div className="absolute bottom-3 left-3 right-3 glass-strong rounded-lg px-2 py-1">
                   <p className="text-xs font-semibold truncate">{p.name}</p>
                 </div>

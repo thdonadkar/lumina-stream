@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { requireRole } from "@/lib/route-guards";
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Search, Trash2 } from "lucide-react";
+import { Search, Trash2, Pencil } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { RoleGate } from "@/components/RoleGate";
@@ -89,7 +89,7 @@ function Page() {
                 className="border-b border-white/5 hover:bg-white/[0.02]"
               >
                 <td className="p-4 flex items-center gap-3">
-                  <img src={p.images?.[0] ?? ""} alt="" className="size-10 rounded-lg object-cover bg-white/5" />
+                  <img referrerPolicy="no-referrer" src={p.images?.[0] ?? ""} alt="" className="size-10 rounded-lg object-cover bg-white/5" />
                   <div className="min-w-0">
                     <p className="font-medium truncate">{p.title}</p>
                     <p className="text-xs text-muted-foreground truncate">{p.tagline}</p>
@@ -107,6 +107,14 @@ function Page() {
                   </span>
                 </td>
                 <td className="p-4 text-right whitespace-nowrap">
+                  <Link
+                    to="/seller/edit-product/$id"
+                    params={{ id: p.id }}
+                    aria-label="Edit product"
+                    className="size-8 rounded-full glass grid place-items-center inline-flex mr-2"
+                  >
+                    <Pencil className="size-3.5 text-cyan" />
+                  </Link>
                   <button
                     aria-label="Delete product"
                     onClick={async () => { if (await confirm({ title: `Delete "${p.title}"?`, description: "This permanently removes the product from your catalog.", destructive: true, confirmText: "Delete" })) deleteMut.mutate(p.id); }}

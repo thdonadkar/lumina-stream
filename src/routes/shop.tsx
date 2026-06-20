@@ -189,7 +189,7 @@ function Shop() {
               className="glass rounded-2xl p-3 flex items-center gap-4 hover:glass-strong transition-all"
             >
               <div className="size-20 sm:size-24 rounded-xl bg-secondary overflow-hidden shrink-0">
-                <img src={p.image} alt={p.name} className="size-full object-cover" loading="lazy" />
+                <img referrerPolicy="no-referrer" src={p.image} alt={p.name} className="size-full object-cover" loading="lazy" />
               </div>
               <div className="flex-1 min-w-0">
                 <h3 className="font-bold truncate">{p.name}</h3>

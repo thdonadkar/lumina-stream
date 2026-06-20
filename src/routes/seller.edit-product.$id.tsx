@@ -1,19 +1,20 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { requireRole } from "@/lib/route-guards";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Upload, Save, FileText, X } from "lucide-react";
 import { RoleGate } from "@/components/RoleGate";
 import { SellerNav } from "./seller.dashboard";
 import { CATEGORIES } from "@/lib/categories";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { createProduct } from "@/lib/products.functions";
+import { getMyProduct, updateProduct } from "@/lib/products.functions";
 
-export const Route = createFileRoute("/seller/add-product")({
+export const Route = createFileRoute("/seller/edit-product/$id")({
   ssr: false,
   beforeLoad: () => requireRole("seller"),
-  head: () => ({ meta: [{ title: "Add product — Seller" }] }),
+  head: () => ({ meta: [{ title: "Edit product — Seller" }] }),
   component: () => (
     <RoleGate role="seller">
       <Page />
@@ -22,7 +23,19 @@ export const Route = createFileRoute("/seller/add-product")({
 });
 
 function Page() {
+  const { id } = Route.useParams();
   const nav = useNavigate();
+  const qc = useQueryClient();
+  const getFn = useServerFn(getMyProduct);
+  const updateFn = useServerFn(updateProduct);
+
+  const { data: product, isLoading, isError, error } = useQuery({
+    queryKey: ["my-product", id],
+    queryFn: () => getFn({ data: { id } }),
+    retry: false,
+    refetchOnWindowFocus: false,
+  });
+
   const [status, setStatus] = useState<"draft" | "active">("active");
   const [busy, setBusy] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -31,7 +44,23 @@ function Page() {
     title: "", tagline: "", description: "", price: "", discount_percent: "0",
     stock: "1", category_slug: "", badge: "",
   });
-  const createFn = useServerFn(createProduct);
+
+  useEffect(() => {
+    if (!product) return;
+    const p: any = product;
+    setForm({
+      title: p.title ?? "",
+      tagline: p.tagline ?? "",
+      description: p.description ?? "",
+      price: String(p.price ?? ""),
+      discount_percent: String(p.discount_percent ?? 0),
+      stock: String(p.stock ?? 0),
+      category_slug: p.categories?.slug ?? "",
+      badge: p.badge ?? "",
+    });
+    setImages(Array.isArray(p.images) ? p.images : []);
+    if (p.status === "draft" || p.status === "active") setStatus(p.status);
+  }, [product]);
 
   function setF<K extends keyof typeof form>(k: K, v: string) { setForm((p) => ({ ...p, [k]: v })); }
 
@@ -43,8 +72,8 @@ function Page() {
       for (const f of files) {
         if (f.size > 5 * 1024 * 1024) { toast.error(`${f.name} > 5MB skipped`); continue; }
         const path = `products/${Date.now()}-${Math.random().toString(36).slice(2, 7)}-${f.name.replace(/[^a-zA-Z0-9.]/g, "_")}`;
-        const { error } = await supabase.storage.from("product-images").upload(path, f);
-        if (error) throw error;
+        const { error: upErr } = await supabase.storage.from("product-images").upload(path, f);
+        if (upErr) throw upErr;
         const { data } = await supabase.storage.from("product-images").createSignedUrl(path, 60 * 60 * 24 * 365 * 5);
         if (data?.signedUrl) urls.push(data.signedUrl);
       }
@@ -57,8 +86,9 @@ function Page() {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault(); setBusy(true);
     try {
-      const row = await createFn({
+      await updateFn({
         data: {
+          id,
           title: form.title,
           tagline: form.tagline || null,
           description: form.description || null,
@@ -71,23 +101,38 @@ function Page() {
           status,
         },
       });
-      toast.success(`Product saved as ${status}`, { description: row?.title });
+      qc.invalidateQueries({ queryKey: ["my-products"] });
+      qc.invalidateQueries({ queryKey: ["my-product", id] });
+      toast.success("Saved");
       nav({ to: "/seller/products" });
     } catch (err: any) { toast.error(err.message); }
     finally { setBusy(false); }
   }
 
+  if (isLoading) {
+    return <div className="px-4 pt-28 pb-24 max-w-3xl mx-auto"><p className="text-sm text-muted-foreground">Loading…</p><SellerNav /></div>;
+  }
+  if (isError) {
+    return (
+      <div className="px-4 pt-28 pb-24 max-w-3xl mx-auto">
+        <p className="font-bold text-rose-400">Couldn't load product</p>
+        <p className="text-sm text-muted-foreground mt-1">{(error as any)?.message ?? "Unknown error"}</p>
+        <SellerNav />
+      </div>
+    );
+  }
+
   return (
     <div className="px-4 pt-28 pb-24 max-w-3xl mx-auto">
-      <h1 className="text-4xl font-extrabold tracking-tighter mb-6">New product</h1>
+      <h1 className="text-4xl font-extrabold tracking-tighter mb-6">Edit product</h1>
 
       <form onSubmit={onSubmit} className="glass-strong rounded-3xl p-6 sm:p-8 space-y-5">
-        <Field label="Title" required><input value={form.title} onChange={(e) => setF("title", e.target.value)} className="input" required placeholder="Aurora Drape Dress" /></Field>
-        <Field label="Tagline"><input value={form.tagline} onChange={(e) => setF("tagline", e.target.value)} className="input" placeholder="Liquid satin, asymmetric cut" /></Field>
-        <Field label="Description"><textarea value={form.description} onChange={(e) => setF("description", e.target.value)} rows={5} className="input resize-none" placeholder="Tell the story…" /></Field>
+        <Field label="Title" required><input value={form.title} onChange={(e) => setF("title", e.target.value)} className="input" required /></Field>
+        <Field label="Tagline"><input value={form.tagline} onChange={(e) => setF("tagline", e.target.value)} className="input" /></Field>
+        <Field label="Description"><textarea value={form.description} onChange={(e) => setF("description", e.target.value)} rows={5} className="input resize-none" /></Field>
         <div className="grid grid-cols-2 gap-3">
           <Field label="Price (₹)" required><input value={form.price} onChange={(e) => setF("price", e.target.value)} type="number" className="input" required min={0} step="0.01" /></Field>
-          <Field label="Discount %"><input value={form.discount_percent} onChange={(e) => setF("discount_percent", e.target.value)} type="number" className="input" min={0} max={90} placeholder="0" /></Field>
+          <Field label="Discount %"><input value={form.discount_percent} onChange={(e) => setF("discount_percent", e.target.value)} type="number" className="input" min={0} max={90} /></Field>
         </div>
         <div className="grid grid-cols-2 gap-3">
           <Field label="Category" required>
@@ -98,9 +143,9 @@ function Page() {
           </Field>
           <Field label="Stock" required><input value={form.stock} onChange={(e) => setF("stock", e.target.value)} type="number" className="input" required min={0} /></Field>
         </div>
-        <Field label="Promotion badge (optional)"><input value={form.badge} onChange={(e) => setF("badge", e.target.value)} className="input" placeholder="e.g. New · Bestseller · 30% off" /></Field>
+        <Field label="Promotion badge (optional)"><input value={form.badge} onChange={(e) => setF("badge", e.target.value)} className="input" /></Field>
 
-        <Field label="Images (real upload — stored in Cloud)">
+        <Field label="Images">
           <label className="glass rounded-2xl px-4 py-8 grid place-items-center cursor-pointer hover:glass-strong transition-all border-2 border-dashed border-white/10">
             <Upload className="size-5 text-muted-foreground mb-2" />
             <span className="text-xs text-muted-foreground">{uploading ? "Uploading…" : "Drop files or click to upload (max 5MB each)"}</span>
@@ -131,7 +176,7 @@ function Page() {
           </div>
           <button type="submit" disabled={busy || uploading} className="inline-flex items-center gap-2 rounded-full px-5 py-2 text-sm font-bold bg-aurora animate-aurora text-background disabled:opacity-50">
             {status === "draft" ? <FileText className="size-4" /> : <Save className="size-4" />}
-            {busy ? "Saving…" : `Save ${status}`}
+            {busy ? "Saving…" : "Save changes"}
           </button>
         </div>
       </form>

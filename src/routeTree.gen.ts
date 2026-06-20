@@ -42,6 +42,7 @@ import { Route as AdminOrdersRouteImport } from './routes/admin.orders'
 import { Route as AdminDashboardRouteImport } from './routes/admin.dashboard'
 import { Route as AdminCategoriesRouteImport } from './routes/admin.categories'
 import { Route as AdminBannersRouteImport } from './routes/admin.banners'
+import { Route as SellerEditProductIdRouteImport } from './routes/seller.edit-product.$id'
 import { Route as ApiPublicRazorpayWebhookRouteImport } from './routes/api/public/razorpay-webhook'
 
 const WishlistRoute = WishlistRouteImport.update({
@@ -209,6 +210,11 @@ const AdminBannersRoute = AdminBannersRouteImport.update({
   path: '/admin/banners',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SellerEditProductIdRoute = SellerEditProductIdRouteImport.update({
+  id: '/seller/edit-product/$id',
+  path: '/seller/edit-product/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicRazorpayWebhookRoute =
   ApiPublicRazorpayWebhookRouteImport.update({
     id: '/api/public/razorpay-webhook',
@@ -251,6 +257,7 @@ export interface FileRoutesByFullPath {
   '/seller/products': typeof SellerProductsRoute
   '/seller/support': typeof SellerSupportRoute
   '/api/public/razorpay-webhook': typeof ApiPublicRazorpayWebhookRoute
+  '/seller/edit-product/$id': typeof SellerEditProductIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -287,6 +294,7 @@ export interface FileRoutesByTo {
   '/seller/products': typeof SellerProductsRoute
   '/seller/support': typeof SellerSupportRoute
   '/api/public/razorpay-webhook': typeof ApiPublicRazorpayWebhookRoute
+  '/seller/edit-product/$id': typeof SellerEditProductIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -324,6 +332,7 @@ export interface FileRoutesById {
   '/seller/products': typeof SellerProductsRoute
   '/seller/support': typeof SellerSupportRoute
   '/api/public/razorpay-webhook': typeof ApiPublicRazorpayWebhookRoute
+  '/seller/edit-product/$id': typeof SellerEditProductIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -362,6 +371,7 @@ export interface FileRouteTypes {
     | '/seller/products'
     | '/seller/support'
     | '/api/public/razorpay-webhook'
+    | '/seller/edit-product/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -398,6 +408,7 @@ export interface FileRouteTypes {
     | '/seller/products'
     | '/seller/support'
     | '/api/public/razorpay-webhook'
+    | '/seller/edit-product/$id'
   id:
     | '__root__'
     | '/'
@@ -434,6 +445,7 @@ export interface FileRouteTypes {
     | '/seller/products'
     | '/seller/support'
     | '/api/public/razorpay-webhook'
+    | '/seller/edit-product/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -471,6 +483,7 @@ export interface RootRouteChildren {
   SellerProductsRoute: typeof SellerProductsRoute
   SellerSupportRoute: typeof SellerSupportRoute
   ApiPublicRazorpayWebhookRoute: typeof ApiPublicRazorpayWebhookRoute
+  SellerEditProductIdRoute: typeof SellerEditProductIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -706,6 +719,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminBannersRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/seller/edit-product/$id': {
+      id: '/seller/edit-product/$id'
+      path: '/seller/edit-product/$id'
+      fullPath: '/seller/edit-product/$id'
+      preLoaderRoute: typeof SellerEditProductIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/razorpay-webhook': {
       id: '/api/public/razorpay-webhook'
       path: '/api/public/razorpay-webhook'
@@ -751,6 +771,7 @@ const rootRouteChildren: RootRouteChildren = {
   SellerProductsRoute: SellerProductsRoute,
   SellerSupportRoute: SellerSupportRoute,
   ApiPublicRazorpayWebhookRoute: ApiPublicRazorpayWebhookRoute,
+  SellerEditProductIdRoute: SellerEditProductIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

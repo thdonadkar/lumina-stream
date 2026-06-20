@@ -426,7 +426,7 @@ function Checkout() {
             {items.map((i) => (
               <div key={i.product.id} className="flex gap-3 items-center">
                 <div className="size-12 rounded-lg bg-secondary overflow-hidden shrink-0">
-                  <img src={i.product.image} alt="" className="size-full object-cover" />
+                  <img referrerPolicy="no-referrer" src={i.product.image} alt="" className="size-full object-cover" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold truncate">{i.product.name}</p>

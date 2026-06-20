@@ -27,9 +27,12 @@ function Page() {
   const setStatus = useServerFn(setProductStatus);
   const del = useServerFn(deleteProductAdmin);
 
-  const { data = [], isLoading } = useQuery({
+  const { data = [], isLoading, isError, error, refetch } = useQuery({
     queryKey: ["admin-products"],
     queryFn: () => list(),
+    retry: false,
+    refetchOnWindowFocus: false,
+    staleTime: 10_000,
   });
 
   const invalidate = () => qc.invalidateQueries({ queryKey: ["admin-products"] });
@@ -51,13 +54,19 @@ function Page() {
       <h1 className="text-4xl font-extrabold tracking-tighter mb-6">Product moderation</h1>
       {isLoading ? (
         <p className="text-sm text-muted-foreground">Loading…</p>
+      ) : isError ? (
+        <div className="glass rounded-2xl p-6 text-sm">
+          <p className="font-bold text-rose-400 mb-2">Failed to load products</p>
+          <p className="text-muted-foreground mb-3">{(error as any)?.message ?? "Unknown error"}</p>
+          <button onClick={() => refetch()} className="px-3 py-1.5 rounded-full text-xs font-bold glass hover:glass-strong">Retry</button>
+        </div>
       ) : data.length === 0 ? (
         <p className="text-sm text-muted-foreground">No products in the catalog yet.</p>
       ) : (
         <div className="grid gap-3">
           {data.map((p: any) => (
             <div key={p.id} className="glass-strong rounded-2xl p-4 flex items-center gap-4 flex-wrap">
-              <img src={p.images?.[0] ?? ""} alt="" className="size-14 rounded-xl object-cover bg-white/5" />
+              <img referrerPolicy="no-referrer" src={p.images?.[0] ?? ""} alt="" className="size-14 rounded-xl object-cover bg-white/5" />
               <div className="flex-1 min-w-0">
                 <p className="font-bold truncate">{p.title}</p>
                 <p className="text-xs text-muted-foreground truncate">

@@ -183,7 +183,7 @@ function Dashboard() {
                   <motion.div key={o.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.04 }}>
                     <Link to="/orders/$id" params={{ id: o.id }} className="glass rounded-2xl p-4 flex items-center gap-4 hover:glass-strong transition-all">
                       <div className="size-14 rounded-xl bg-secondary overflow-hidden shrink-0">
-                        {first?.image && <img src={first.image} alt="" className="size-full object-cover" />}
+                        {first?.image && <img referrerPolicy="no-referrer" src={first.image} alt="" className="size-full object-cover" />}
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="font-bold truncate">
