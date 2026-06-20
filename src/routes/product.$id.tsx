@@ -1,11 +1,13 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Star, ShoppingBag, Heart, Share2, Shield, Truck, RotateCcw } from "lucide-react";
 import { getProduct, products } from "@/lib/products";
 import { useCart, formatPrice } from "@/lib/cart-store";
 import { useWishlist } from "@/lib/wishlist-store";
+import { useRecentlyViewed } from "@/lib/recently-viewed-store";
 import { ProductCard } from "@/components/ProductCard";
+import { RecentlyViewed } from "@/components/RecentlyViewed";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/product/$id")({
@@ -83,6 +85,10 @@ function ProductPage() {
   const [imgIdx, setImgIdx] = useState(0);
   const [zoom, setZoom] = useState({ x: 50, y: 50, active: false });
   const [particles, setParticles] = useState<Particle[]>([]);
+  const pushRecent = useRecentlyViewed((s) => s.push);
+
+  // Record this product as "recently viewed" once per mount. Persists to localStorage.
+  useEffect(() => { pushRecent(product); }, [product, pushRecent]);
 
   const related = products.filter((p) => p.id !== product.id && p.category === product.category).slice(0, 3);
   const others = products.filter((p) => p.id !== product.id).slice(0, 3);
@@ -325,6 +331,9 @@ function ProductPage() {
           ))}
         </div>
       </section>
+
+      <RecentlyViewed excludeId={product.id} />
+
 
       {/* Particle burst */}
       <div className="fixed inset-0 pointer-events-none z-[80]">

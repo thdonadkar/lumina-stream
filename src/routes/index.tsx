@@ -6,6 +6,7 @@ import { ArrowRight, Sparkles, Zap, Cpu, Headphones, Flame } from "lucide-react"
 import { products } from "@/lib/products";
 import { CATEGORIES } from "@/lib/categories";
 import { ProductCard } from "@/components/ProductCard";
+import { RecentlyViewed } from "@/components/RecentlyViewed";
 import { listActiveBanners } from "@/lib/banners.functions";
 
 export const Route = createFileRoute("/")({
@@ -314,6 +315,10 @@ function Home() {
             ))}
           </div>
         </div>
+      </section>
+
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-24">
+        <RecentlyViewed />
       </section>
     </div>
   );
