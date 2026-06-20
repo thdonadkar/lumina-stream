@@ -23,8 +23,7 @@ function CartPage() {
   useEffect(() => { setHydrated(true); }, []);
   const items = useCart((s) => s.items);
   const total = useCart((s) => s.total());
-  const inc = useCart((s) => s.add);
-  const dec = useCart((s) => s.decrement);
+  const setQty = useCart((s) => s.setQty);
   const remove = useCart((s) => s.remove);
 
   if (!hydrated) {
