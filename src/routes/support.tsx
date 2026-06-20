@@ -213,12 +213,28 @@ function Support() {
             >
               <MessageCircle className="size-5 text-cyan shrink-0" />
               <div className="flex-1 min-w-0">
-                <p className="font-bold truncate">{t.subject}</p>
-                <p className="text-xs text-muted-foreground font-mono">#{t.id.slice(0, 8)} · {new Date(t.updated_at).toLocaleDateString()}</p>
+                <div className="flex items-center gap-2">
+                  <p className="font-bold truncate">{t.subject}</p>
+                  {t.unread && <span aria-label="Unread reply" className="size-2 rounded-full bg-cyan shrink-0" />}
+                </div>
+                {t.last_message ? (
+                  <p className="text-xs text-muted-foreground truncate">
+                    <span className="font-mono">{senderLabel(t.last_message.sender_role)}:</span>{" "}
+                    {t.last_message.body}
+                  </p>
+                ) : null}
+                <p className="text-[10px] text-muted-foreground font-mono mt-0.5">
+                  #{t.id.slice(0, 8)} · {relativeTimeShort(t.updated_at)}
+                </p>
               </div>
-              <span className={`px-2 py-0.5 rounded-full text-[10px] uppercase font-mono ${STATUS_TONE[t.status]}`}>
-                {t.status.replace("_", " ")}
-              </span>
+              <div className="flex flex-col items-end gap-1 shrink-0">
+                <span className={`px-2 py-0.5 rounded-full text-[10px] uppercase font-mono ${STATUS_TONE[t.status]}`}>
+                  {t.status.replace("_", " ")}
+                </span>
+                {t.unread && (
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-cyan text-background">New</span>
+                )}
+              </div>
             </motion.button>
           ))}
         </div>
