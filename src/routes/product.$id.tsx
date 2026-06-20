@@ -62,8 +62,10 @@ export const Route = createFileRoute("/product/$id")({
       ],
     };
   },
-  loader: ({ params }) => {
-    const product = getProduct(params.id);
+  loader: async ({ params }) => {
+    // DB first (covers seller-added products), then static fallback for SSR speed.
+    let product = await getActiveProductBySlug({ data: { slug: params.id } }).catch(() => null);
+    if (!product) product = getProduct(params.id) ?? null;
     if (!product) throw notFound();
     return { product };
   },
