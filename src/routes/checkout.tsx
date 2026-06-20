@@ -11,6 +11,7 @@ import { listAddresses, saveAddress, deleteAddress } from "@/lib/addresses.funct
 import { validateCoupon, placeOrder } from "@/lib/orders.functions";
 import { createRazorpayOrder, verifyRazorpayPayment } from "@/lib/payments.functions";
 import { toast } from "sonner";
+import { LocationPickerDialog, type PickedLocation } from "@/components/LocationPickerDialog";
 
 // Lazy-load Razorpay Checkout script the first time it's needed.
 function loadRazorpayScript(): Promise<boolean> {
