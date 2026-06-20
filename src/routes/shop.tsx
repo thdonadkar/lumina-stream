@@ -229,8 +229,19 @@ function Shop() {
 
       {filtered.length === 0 && (
         <div className="glass rounded-2xl p-12 text-center">
-          <p className="font-semibold">No matches found</p>
-          <p className="text-sm text-muted-foreground mt-1">Try widening your filters.</p>
+          {dbLoading ? (
+            <p className="text-sm text-muted-foreground">Loading catalog…</p>
+          ) : (dbProducts?.length ?? 0) === 0 ? (
+            <>
+              <p className="font-semibold">No products available right now</p>
+              <p className="text-sm text-muted-foreground mt-1">Check back soon — new gear lands often.</p>
+            </>
+          ) : (
+            <>
+              <p className="font-semibold">No matches found</p>
+              <p className="text-sm text-muted-foreground mt-1">Try widening your filters.</p>
+            </>
+          )}
         </div>
       )}
     </div>
