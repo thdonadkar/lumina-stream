@@ -84,17 +84,7 @@ export const createTicket = createServerFn({ method: "POST" })
         link: `/seller/support`,
       });
     }
-    const adminIds = await listAdminIds();
-    for (const aid of adminIds) {
-      if (aid === userId || aid === sellerId) continue;
-      notifs.push({
-        user_id: aid,
-        type: "system",
-        title: "New support ticket",
-        body: `New ticket from a customer: ${data.subject}`,
-        link: `/admin/support`,
-      });
-    }
+    // Admins are NOT notified for routine ticket activity — they monitor /admin/support directly.
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await supabaseAdmin.from("notifications").insert(notifs);
     return ticket;
