@@ -26,6 +26,10 @@ export const useWishlist = create<WishlistState>()(
       clear: () => set({ items: [] }),
       count: () => get().items.length,
     }),
-    { name: "neural-wishlist" },
+    {
+      name: "neural-wishlist",
+      version: 1,
+      partialize: (state) => ({ items: state.items }),
+    },
   ),
 );
