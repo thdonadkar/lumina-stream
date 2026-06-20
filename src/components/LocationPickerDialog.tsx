@@ -101,6 +101,11 @@ export function LocationPickerDialog({ open, onClose, onConfirm }: Props) {
 
       const update = async (lat: number, lng: number) => {
         setBusy(true);
+        (window as any).__locDebug = {
+          mapCenter: mapRef.current?.getCenter?.(),
+          marker: { lat, lng },
+          permission: permState,
+        };
         try {
           const j = await reverseGeocode(lat, lng);
           const p = toPicked(lat, lng, j);
@@ -184,6 +189,11 @@ export function LocationPickerDialog({ open, onClose, onConfirm }: Props) {
         const { latitude, longitude } = pos.coords;
         mapRef.current?.setView([latitude, longitude], 15);
         markerRef.current?.setLatLng([latitude, longitude]);
+        (window as any).__locDebug = {
+          mapCenter: mapRef.current?.getCenter?.(),
+          marker: { lat: latitude, lng: longitude },
+          permission: "granted",
+        };
         updateLocationRef.current?.(latitude, longitude);
         setPermState("granted");
         setLocationMessage(`GPS location found: ${latitude.toFixed(5)}, ${longitude.toFixed(5)}`);
@@ -200,6 +210,14 @@ export function LocationPickerDialog({ open, onClose, onConfirm }: Props) {
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
+  }
+
+  function usePinManually() {
+    const point = markerRef.current?.getLatLng?.();
+    if (!point) return;
+    mapRef.current?.setView([point.lat, point.lng], Math.max(mapRef.current?.getZoom?.() ?? 15, 15));
+    updateLocationRef.current?.(point.lat, point.lng);
+    setLocationMessage("Using the selected map pin manually.");
   }
 
   async function runSearch(e: React.FormEvent) {
@@ -307,6 +325,13 @@ export function LocationPickerDialog({ open, onClose, onConfirm }: Props) {
             </div>
 
             <div className="p-4 border-t border-white/10 space-y-3">
+              <button
+                type="button"
+                onClick={usePinManually}
+                className="w-full h-10 rounded-xl glass-strong hover:bg-cyan/10 text-xs font-bold inline-flex items-center justify-center gap-2"
+              >
+                Use map pin manually
+              </button>
               <div className="flex items-start gap-2">
                 <MapPin className="size-4 text-cyan mt-0.5 shrink-0" />
                 <div className="min-w-0 flex-1">
