@@ -453,10 +453,15 @@ function Checkout() {
                 <Tag className="size-3.5" /> Apply
               </button>
             </div>
+            {couponError && (
+              <p id="coupon-error" role="alert" className="text-xs mt-2 text-rose-400">
+                {couponError}
+              </p>
+            )}
             {coupon && (
               <p className="text-xs mt-2 text-cyan flex items-center justify-between">
                 <span>{coupon.code} active</span>
-                <button onClick={() => setCoupon(null)} className="text-muted-foreground hover:text-rose-400">Remove</button>
+                <button onClick={() => { setCoupon(null); setCouponError(null); }} className="text-muted-foreground hover:text-rose-400">Remove</button>
               </p>
             )}
             <p className="text-[10px] text-muted-foreground mt-2 font-mono">Try: WELCOME10 · NEURAL50 · FREESHIP · FLASH25</p>
