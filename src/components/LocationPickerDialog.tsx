@@ -61,7 +61,10 @@ export function LocationPickerDialog({ open, onClose, onConfirm }: Props) {
   const mapDivRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<any>(null);
   const markerRef = useRef<any>(null);
+  const updateLocationRef = useRef<((lat: number, lng: number) => Promise<void>) | null>(null);
   const [permState, setPermState] = useState<"unknown" | "granted" | "denied" | "prompt">("unknown");
+  const [secureState, setSecureState] = useState<"unknown" | "secure" | "insecure">("unknown");
+  const [locationMessage, setLocationMessage] = useState("Click 📍 Use my current location to allow location access");
   const [address, setAddress] = useState<string>("Drag the pin or search to set delivery location");
   const [picked, setPicked] = useState<PickedLocation | null>(null);
   const [busy, setBusy] = useState(false);
@@ -110,6 +113,7 @@ export function LocationPickerDialog({ open, onClose, onConfirm }: Props) {
           setBusy(false);
         }
       };
+      updateLocationRef.current = update;
 
       marker.on("dragend", () => {
         const { lat, lng } = marker.getLatLng();
@@ -125,12 +129,19 @@ export function LocationPickerDialog({ open, onClose, onConfirm }: Props) {
 
       // Only check permission state — DO NOT auto-request location.
       // Geolocation must be triggered by a user gesture (Crosshair button).
+      setSecureState(window.isSecureContext ? "secure" : "insecure");
       try {
         // @ts-ignore
         const status = await navigator.permissions?.query({ name: "geolocation" as PermissionName });
         if (status) {
+          console.log("[geolocation] permission state", status.state);
           setPermState(status.state as any);
-          status.onchange = () => setPermState(status.state as any);
+          setLocationMessage(status.state === "denied" ? "Enable location from browser settings" : "Click 📍 Use my current location to allow location access");
+          status.onchange = () => {
+            console.log("[geolocation] permission state", status.state);
+            setPermState(status.state as any);
+            setLocationMessage(status.state === "denied" ? "Enable location from browser settings" : "Click 📍 Use my current location to allow location access");
+          };
         }
       } catch { /* ignore */ }
     })();
@@ -147,40 +158,47 @@ export function LocationPickerDialog({ open, onClose, onConfirm }: Props) {
       mapRef.current.remove();
       mapRef.current = null;
       markerRef.current = null;
+      updateLocationRef.current = null;
     }
     setPicked(null);
     setAddress("Drag the pin or search to set delivery location");
+    setLocationMessage("Click 📍 Use my current location to allow location access");
     setQ("");
     setResults([]);
   }, [open]);
 
-  async function recenterToMe() {
-    try {
-      // @ts-ignore
-      const status = await navigator.permissions?.query({ name: "geolocation" as PermissionName });
-      if (status?.state === "denied") {
-        setPermState("denied");
-        toast.error("Location is blocked. Tap the lock icon in your address bar → Site settings → Location → Allow, then retry.", { duration: 8000 });
-        return;
-      }
-    } catch { /* ignore */ }
+  function recenterToMe() {
+    if (permState === "denied") {
+      setLocationMessage("Enable location from browser settings");
+      toast.error("Enable Location for this site in your browser settings, then retry.", { duration: 8000 });
+      return;
+    }
+    if (!navigator.geolocation) {
+      setLocationMessage("Geolocation is not supported. Drag the pin or search manually.");
+      toast.error("Geolocation is not supported on this device.");
+      return;
+    }
+    setLocationMessage("Waiting for browser location permission…");
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const { latitude, longitude } = pos.coords;
-        mapRef.current?.setView([latitude, longitude], 16);
+        mapRef.current?.setView([latitude, longitude], 15);
         markerRef.current?.setLatLng([latitude, longitude]);
-        markerRef.current?.fire("dragend");
+        updateLocationRef.current?.(latitude, longitude);
         setPermState("granted");
+        setLocationMessage(`GPS location found: ${latitude.toFixed(5)}, ${longitude.toFixed(5)}`);
       },
       (err) => {
         if (err.code === 1) {
           setPermState("denied");
-          toast.error("Permission denied. Enable Location for this site in your browser settings.", { duration: 8000 });
+          setLocationMessage("Enable location from browser settings");
+          toast.error("Enable Location for this site in your browser settings.", { duration: 8000 });
         } else {
-          toast.error("Couldn't get your location.");
+          setLocationMessage("GPS failed. Drag the pin, tap the map, or search manually.");
+          toast.error("Couldn't get your location. Drag the pin or search manually.");
         }
       },
-      { enableHighAccuracy: true, timeout: 10000 }
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
   }
 
@@ -264,14 +282,15 @@ export function LocationPickerDialog({ open, onClose, onConfirm }: Props) {
               </div>
             )}
 
-            {permState === "denied" && (
-              <div className="px-4 py-2 bg-amber-300/10 text-amber-200 text-xs flex items-start gap-2 border-b border-white/10">
-                <AlertCircle className="size-4 mt-0.5 shrink-0" />
-                <span>
-                  Location is blocked for this site. To use GPS, tap the lock icon in your address bar → Site settings → Location → Allow. You can still drag the pin or search manually below.
+            <div className="px-4 py-2 bg-cyan/10 text-cyan text-xs flex items-start gap-2 border-b border-white/10">
+              <AlertCircle className="size-4 mt-0.5 shrink-0" />
+              <span>
+                {locationMessage}
+                <span className="block mt-1 font-mono text-[10px] text-muted-foreground">
+                  Debug: permission={permState}; context={secureState}
                 </span>
-              </div>
-            )}
+              </span>
+            </div>
 
             <div className="relative flex-1">
               <div ref={mapDivRef} className="absolute inset-0" />
@@ -279,9 +298,11 @@ export function LocationPickerDialog({ open, onClose, onConfirm }: Props) {
                 type="button"
                 onClick={recenterToMe}
                 aria-label="Use my current location"
-                className="absolute bottom-4 right-4 z-[400] size-11 rounded-full bg-background border border-white/20 grid place-items-center shadow-lg hover:bg-white/5"
+                title="Use my current location"
+                className="absolute top-4 right-4 z-[400] h-11 px-3 rounded-full bg-background border border-white/20 inline-flex items-center gap-2 shadow-lg hover:bg-white/5 text-xs font-bold"
               >
                 <Crosshair className="size-5 text-cyan" />
+                <span className="hidden sm:inline">Use my location</span>
               </button>
             </div>
 
