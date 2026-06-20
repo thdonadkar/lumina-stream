@@ -217,6 +217,22 @@ export const placeOrder = createServerFn({ method: "POST" })
     );
     if (itemsErr) throw itemsErr;
 
+    // Atomically decrement stock for every real product line. If any single
+    // decrement fails (race / oversold), roll back the order and surface the error.
+    for (const i of safeItems) {
+      if (!i.product_id) continue;
+      const { error: stockErr } = await (supabase as any).rpc("decrement_stock", {
+        p_product_id: i.product_id,
+        p_qty: i.qty,
+      });
+      if (stockErr) {
+        // Compensating cleanup so we don't leave a ghost order with unfunded stock.
+        await supabase.from("order_items").delete().eq("order_id", order.id);
+        await supabase.from("orders").delete().eq("id", order.id);
+        throw new Error(`Could not reserve stock: ${stockErr.message}`);
+      }
+    }
+
     if (couponId) {
       await supabase.from("coupon_redemptions").insert({
         coupon_id: couponId,
