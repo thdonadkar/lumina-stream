@@ -162,6 +162,7 @@ function Home() {
               className="relative glass-strong rounded-[40px] overflow-hidden aspect-square shadow-elevated"
             >
               <img
+                referrerPolicy="no-referrer"
                 src={hero.image}
                 alt={hero.name}
                 className="size-full object-cover"

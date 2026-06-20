@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { LayoutGrid, List, SlidersHorizontal, Star } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { products as STATIC_PRODUCTS, categories as STATIC_CATEGORIES, type Product } from "@/lib/products";
+import { categories as STATIC_CATEGORIES, type Product } from "@/lib/products";
 import { listActiveProducts } from "@/lib/catalog.functions";
 import { ProductCard } from "@/components/ProductCard";
 import { Slider } from "@/components/ui/slider";
@@ -31,21 +31,15 @@ function Shop() {
   const [filtersOpen, setFiltersOpen] = useState(false);
 
   const listFn = useServerFn(listActiveProducts);
-  const { data: dbProducts } = useQuery<Product[]>({
+  const { data: dbProducts, isLoading: dbLoading } = useQuery<Product[]>({
     queryKey: ["catalog", "active"],
     queryFn: () => listFn(),
     staleTime: 60_000,
     refetchOnWindowFocus: false,
   });
 
-  // Merge DB rows with the static fallback so /shop is never empty during SSR / before hydration.
-  const products = useMemo<Product[]>(() => {
-    if (!dbProducts || dbProducts.length === 0) return STATIC_PRODUCTS;
-    const bySlug = new Map<string, Product>();
-    for (const p of STATIC_PRODUCTS) bySlug.set(p.id, p);
-    for (const p of dbProducts) bySlug.set(p.id, p); // DB wins
-    return Array.from(bySlug.values());
-  }, [dbProducts]);
+  // DB is the source of truth. Empty array means show empty state.
+  const products = useMemo<Product[]>(() => dbProducts ?? [], [dbProducts]);
 
   const categories = useMemo(() => {
     const seen = new Set<string>();
@@ -235,8 +229,19 @@ function Shop() {
 
       {filtered.length === 0 && (
         <div className="glass rounded-2xl p-12 text-center">
-          <p className="font-semibold">No matches found</p>
-          <p className="text-sm text-muted-foreground mt-1">Try widening your filters.</p>
+          {dbLoading ? (
+            <p className="text-sm text-muted-foreground">Loading catalog…</p>
+          ) : (dbProducts?.length ?? 0) === 0 ? (
+            <>
+              <p className="font-semibold">No products available right now</p>
+              <p className="text-sm text-muted-foreground mt-1">Check back soon — new gear lands often.</p>
+            </>
+          ) : (
+            <>
+              <p className="font-semibold">No matches found</p>
+              <p className="text-sm text-muted-foreground mt-1">Try widening your filters.</p>
+            </>
+          )}
         </div>
       )}
     </div>

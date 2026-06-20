@@ -1,6 +1,6 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, ShoppingBag, User, Mic, Heart, ChevronDown, ShieldAlert, Store, LogOut, LifeBuoy, Menu, X } from "lucide-react";
+import { Search, ShoppingBag, User, Heart, ChevronDown, ShieldAlert, Store, LogOut, LifeBuoy, Menu, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useCart } from "@/lib/cart-store";
 import { useWishlist } from "@/lib/wishlist-store";
@@ -59,8 +59,8 @@ export function Navbar() {
       className="fixed top-3 sm:top-5 left-1/2 -translate-x-1/2 z-50 w-[95%] max-w-6xl"
       onMouseLeave={() => setCatsOpen(false)}
     >
-      <div className="glass-strong shadow-elevated rounded-2xl px-4 sm:px-6 py-3 flex items-center justify-between gap-4">
-        <Link to="/" className="flex items-center gap-2 shrink-0">
+      <div className="glass-strong shadow-elevated rounded-2xl px-4 sm:px-6 py-3 flex flex-nowrap items-center justify-between gap-2 sm:gap-4">
+        <Link to="/" className="flex items-center gap-2 shrink-0 min-w-0">
           <div className="size-7 rounded-md bg-aurora animate-aurora animate-pulse-glow grid place-items-center">
             <div className="size-3 rounded-sm bg-background" />
           </div>
@@ -110,10 +110,10 @@ export function Navbar() {
           </Link>
         </nav>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-nowrap items-center gap-1.5 sm:gap-2 shrink-0">
           <button
             onClick={() => setMobileOpen(true)}
-            className="md:hidden grid place-items-center size-9 rounded-full glass hover:glass-strong"
+            className="md:hidden grid place-items-center size-9 rounded-full glass hover:glass-strong shrink-0"
             aria-label="Open menu"
             aria-expanded={mobileOpen}
             aria-controls="mobile-nav-drawer"
@@ -122,28 +122,27 @@ export function Navbar() {
           </button>
 
           {isSeller && (
-            <Link to="/seller/dashboard" title="Seller console" className="hidden sm:grid place-items-center size-9 rounded-full glass hover:glass-strong">
+            <Link to="/seller/dashboard" title="Seller console" className="hidden md:grid place-items-center size-9 rounded-full glass hover:glass-strong shrink-0">
               <Store className="size-4 text-cyan" />
             </Link>
           )}
           {isAdmin && (
-            <Link to="/admin/dashboard" title="Admin" className="hidden sm:grid place-items-center size-9 rounded-full glass hover:glass-strong">
+            <Link to="/admin/dashboard" title="Admin" className="hidden md:grid place-items-center size-9 rounded-full glass hover:glass-strong shrink-0">
               <ShieldAlert className="size-4 text-rose-400" />
             </Link>
           )}
 
           <Link
             to="/search"
-            className="hidden sm:flex items-center gap-2 glass rounded-full px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors group"
+            className="hidden md:flex items-center gap-2 glass rounded-full px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors shrink-0"
           >
             <Search className="size-3.5" />
             <span className="font-mono uppercase tracking-wider">Search</span>
-            <Mic className="size-3.5 text-cyan opacity-0 group-hover:opacity-100 transition-opacity" />
           </Link>
 
           <Link
             to="/wishlist"
-            className="relative grid place-items-center size-9 rounded-full glass hover:glass-strong transition-all"
+            className="relative grid place-items-center size-9 rounded-full glass hover:glass-strong transition-all shrink-0"
             aria-label="Wishlist"
           >
             <Heart className={`size-4 ${wishBadge > 0 ? "fill-rose-400 text-rose-400" : ""}`} />
@@ -154,14 +153,15 @@ export function Navbar() {
             )}
           </Link>
 
-          <NotificationBell />
+          <div className="hidden md:block shrink-0">
+            <NotificationBell />
+          </div>
 
           <button
             onClick={openCart}
-            className="relative grid place-items-center size-9 rounded-full glass hover:glass-strong transition-all"
+            className="relative grid place-items-center size-9 rounded-full glass hover:glass-strong transition-all shrink-0"
             aria-label={`Open cart${cartBadge > 0 ? `, ${cartBadge} item${cartBadge === 1 ? "" : "s"}` : ""}`}
           >
-
             <ShoppingBag className="size-4" />
             {cartBadge > 0 && (
               <motion.span
@@ -177,7 +177,7 @@ export function Navbar() {
 
           <Link
             to="/support"
-            className="hidden sm:grid place-items-center size-9 rounded-full glass hover:glass-strong transition-all"
+            className="hidden md:grid place-items-center size-9 rounded-full glass hover:glass-strong transition-all shrink-0"
             aria-label="Support"
             title="Support"
           >
@@ -186,7 +186,7 @@ export function Navbar() {
 
           <Link
             to={userId ? "/dashboard" : "/auth"}
-            className="grid place-items-center size-9 rounded-full glass hover:glass-strong transition-all"
+            className="grid place-items-center size-9 rounded-full glass hover:glass-strong transition-all shrink-0"
             aria-label="Account"
           >
             <User className="size-4" />
@@ -197,7 +197,7 @@ export function Navbar() {
               onClick={handleLogout}
               aria-label="Sign out"
               title="Sign out"
-              className="grid place-items-center size-9 rounded-full glass hover:glass-strong transition-all text-muted-foreground hover:text-rose-400"
+              className="hidden md:grid place-items-center size-9 rounded-full glass hover:glass-strong transition-all text-muted-foreground hover:text-rose-400 shrink-0"
             >
               <LogOut className="size-4" />
             </button>
