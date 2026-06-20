@@ -146,8 +146,8 @@ export function NotificationBell() {
                         </div>
                       </div>
                     );
-                    const handleClick = () => {
-                      if (!n.is_read) onMarkOne(n.id);
+                    const handleClick = async () => {
+                      if (!n.is_read) await onMarkOne(n.id);
                       setOpen(false);
                     };
                     return n.link ? (
@@ -167,8 +167,8 @@ export function NotificationBell() {
                 )}
               </div>
               <div className="p-2 border-t border-white/5 text-center">
-                <Link to="/dashboard" onClick={() => setOpen(false)} className="text-[11px] text-muted-foreground hover:text-foreground">
-                  View account →
+                <Link to="/notifications" onClick={() => setOpen(false)} className="text-[11px] text-cyan hover:opacity-80">
+                  View all notifications →
                 </Link>
               </div>
             </motion.div>

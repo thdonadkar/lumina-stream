@@ -11,7 +11,7 @@ export function Shell({ children }: { children: ReactNode }) {
       <main className="pt-24 pb-28 md:pb-12">{children}</main>
       <BottomNav />
       <CartDrawer />
-      <Toaster position="bottom-right" offset={16} />
+      <Toaster position="top-center" offset={16} />
 
     </div>
   );

@@ -1,11 +1,11 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { motion } from "framer-motion";
 import { ChevronLeft, Package, MapPin, CreditCard, CheckCircle2, RotateCcw, XCircle, LifeBuoy, Download } from "lucide-react";
 import { toast } from "sonner";
 import { getOrder, requestReturn, cancelOrder } from "@/lib/orders.functions";
-import { createTicket } from "@/lib/support.functions";
+import { createTicket, listMyTickets } from "@/lib/support.functions";
 import { downloadInvoice } from "@/lib/invoice";
 import { formatPrice } from "@/lib/cart-store";
 import { useConfirm } from "@/components/ConfirmDialog";
@@ -30,7 +30,9 @@ function OrderDetail() {
   const doReturn = useServerFn(requestReturn);
   const doCancel = useServerFn(cancelOrder);
   const openTicket = useServerFn(createTicket);
+  const listTickets = useServerFn(listMyTickets);
   const { confirm } = useConfirm();
+  const navigate = useNavigate();
 
   function refresh() {
     fetchOrder({ data: { id } }).then(setOrder).finally(() => setLoading(false));
@@ -53,6 +55,19 @@ function OrderDetail() {
       await doCancel({ data: { id } });
       toast.success("Order cancelled"); refresh();
     } catch (err: any) { toast.error(err.message); }
+  }
+
+  async function openHelp() {
+    try {
+      const tickets = await listTickets();
+      const existing = tickets.find((t: any) => t.order_id === id && (t.status === "open" || t.status === "in_progress"));
+      if (existing) {
+        toast.info("You already have an open ticket for this order — opening it.");
+        navigate({ to: "/support" });
+        return;
+      }
+    } catch { /* fall through to form */ }
+    setHelpOpen(true);
   }
 
   async function submitHelp(e: React.FormEvent) {
@@ -240,7 +255,7 @@ function OrderDetail() {
           )}
 
           {!helpOpen ? (
-            <button onClick={() => setHelpOpen(true)} className="w-full rounded-2xl glass-strong hover:glass transition-all p-3 text-sm font-bold inline-flex items-center justify-center gap-2">
+            <button onClick={openHelp} className="w-full rounded-2xl glass-strong hover:glass transition-all p-3 text-sm font-bold inline-flex items-center justify-center gap-2">
               <LifeBuoy className="size-4" /> Need help with this order?
             </button>
           ) : (
