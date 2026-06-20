@@ -333,7 +333,7 @@ export const setTicketStatus = createServerFn({ method: "POST" })
       .single();
     if (error) throw error;
     if (ticket.user_id && ticket.user_id !== userId) {
-      await supabase.from("notifications").insert({
+      await (await import("@/integrations/supabase/client.server")).supabaseAdmin.from("notifications").insert({
         user_id: ticket.user_id,
         type: "system",
         title: `Ticket ${data.status.replace("_", " ")}`,

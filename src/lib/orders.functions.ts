@@ -249,7 +249,7 @@ export const placeOrder = createServerFn({ method: "POST" })
       });
     }
 
-    await supabase.from("notifications").insert({
+    await (await import("@/integrations/supabase/client.server")).supabaseAdmin.from("notifications").insert({
       user_id: userId,
       type: "order",
       title: "Order placed",
@@ -351,7 +351,7 @@ export const updateOrderStatus = createServerFn({ method: "POST" })
       .select()
       .single();
     if (error) throw error;
-    await supabase.from("notifications").insert({
+    await (await import("@/integrations/supabase/client.server")).supabaseAdmin.from("notifications").insert({
       user_id: order.user_id,
       type: "order",
       title: `Order ${data.status.replace(/_/g, " ")}`,
@@ -418,7 +418,7 @@ export const requestReturn = createServerFn({ method: "POST" })
       })
       .eq("id", data.id).select().single();
     if (error) throw error;
-    await supabase.from("notifications").insert({
+    await (await import("@/integrations/supabase/client.server")).supabaseAdmin.from("notifications").insert({
       user_id: order.user_id, type: "order",
       title: "Return requested",
       body: `Your return for order #${order.id.slice(0, 8)} is being reviewed.`,
@@ -462,7 +462,7 @@ export const cancelOrder = createServerFn({ method: "POST" })
       if (!it.product_id) continue;
       await (supabase as any).rpc("increment_stock", { p_product_id: it.product_id, p_qty: it.qty });
     }
-    await supabase.from("notifications").insert({
+    await (await import("@/integrations/supabase/client.server")).supabaseAdmin.from("notifications").insert({
       user_id: order.user_id, type: "order",
       title: "Order cancelled",
       body: `Your order #${order.id.slice(0, 8)} has been cancelled.`,
@@ -501,7 +501,7 @@ export const approveReturn = createServerFn({ method: "POST" })
       .update({ status: "returned", refund_status: "approved" })
       .eq("id", data.id).select().single();
     if (error) throw error;
-    await context.supabase.from("notifications").insert({
+    await (await import("@/integrations/supabase/client.server")).supabaseAdmin.from("notifications").insert({
       user_id: order.user_id, type: "order",
       title: "Return approved",
       body: `Your return for #${order.id.slice(0, 8)} has been approved. Refund in progress.`,
@@ -520,7 +520,7 @@ export const rejectReturn = createServerFn({ method: "POST" })
       .update({ status: "delivered", refund_status: "rejected" })
       .eq("id", data.id).select().single();
     if (error) throw error;
-    await context.supabase.from("notifications").insert({
+    await (await import("@/integrations/supabase/client.server")).supabaseAdmin.from("notifications").insert({
       user_id: order.user_id, type: "order",
       title: "Return rejected",
       body: `Your return for #${order.id.slice(0, 8)} was not approved.${data.reason ? " Reason: " + data.reason : ""}`,
@@ -570,7 +570,7 @@ export const markRefunded = createServerFn({ method: "POST" })
       .update({ refund_status: "refunded", refund_amount: data.amount ?? null, payment_status: "refunded" })
       .eq("id", data.id).select().single();
     if (error) throw error;
-    await context.supabase.from("notifications").insert({
+    await (await import("@/integrations/supabase/client.server")).supabaseAdmin.from("notifications").insert({
       user_id: order.user_id, type: "order",
       title: "Refund processed",
       body: `₹${data.amount ?? order.total} has been refunded for order #${order.id.slice(0, 8)}.`,
