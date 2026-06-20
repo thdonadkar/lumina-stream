@@ -23,7 +23,6 @@ function OrderDetail() {
   const [order, setOrder] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [returnOpen, setReturnOpen] = useState(false);
-  const [reason, setReason] = useState("");
   const [helpOpen, setHelpOpen] = useState(false);
   const [helpSubject, setHelpSubject] = useState("");
   const [helpMessage, setHelpMessage] = useState("");
