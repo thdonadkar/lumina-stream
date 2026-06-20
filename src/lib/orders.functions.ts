@@ -331,7 +331,19 @@ export const updateOrderStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { id: string; status: string }) => d)
   .handler(async ({ data, context }) => {
-    const { supabase } = context;
+    const { supabase, userId } = context;
+
+    // AuthZ: only an admin or a seller whose product is in the order may change status.
+    const { data: existing } = await supabase
+      .from("orders").select("user_id").eq("id", data.id).maybeSingle();
+    if (!existing) throw new UserError("Order not found");
+
+    const [{ data: isAdmin }, { data: isSeller }] = await Promise.all([
+      supabase.rpc("has_role", { _user_id: userId, _role: "admin" }),
+      supabase.rpc("is_order_seller", { _user_id: userId, _order_id: data.id }),
+    ]);
+    if (!isAdmin && !isSeller) throw new UserError("Forbidden");
+
     const { data: order, error } = await supabase
       .from("orders")
       .update({ status: data.status as never })
