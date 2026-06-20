@@ -11,6 +11,7 @@ import { listAddresses, saveAddress, deleteAddress } from "@/lib/addresses.funct
 import { validateCoupon, placeOrder } from "@/lib/orders.functions";
 import { createRazorpayOrder, verifyRazorpayPayment } from "@/lib/payments.functions";
 import { toast } from "sonner";
+import { LocationPickerDialog, type PickedLocation } from "@/components/LocationPickerDialog";
 
 // Lazy-load Razorpay Checkout script the first time it's needed.
 function loadRazorpayScript(): Promise<boolean> {
@@ -519,77 +520,36 @@ function AddressForm({ onSave }: { onSave: (d: any) => Promise<void> }) {
     is_default: true,
   });
   const [saving, setSaving] = useState(false);
-  const [locating, setLocating] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
   const set = (k: string, v: any) => setD((p) => ({ ...p, [k]: v }));
-
-  async function useMyLocation() {
-    if (!("geolocation" in navigator)) {
-      toast.error("Geolocation not supported on this device");
-      return;
-    }
-    // Proactively check permission so we can give clear guidance when it's blocked
-    try {
-      // @ts-ignore - permissions API not in all TS lib versions
-      const status = await navigator.permissions?.query({ name: "geolocation" as PermissionName });
-      if (status?.state === "denied") {
-        toast.error(
-          "Location is blocked for this site. Tap the lock/info icon in your browser's address bar → Site settings → allow Location, then try again.",
-          { duration: 8000 }
-        );
-        return;
-      }
-    } catch { /* permissions API unavailable — fall through and let the prompt happen */ }
-
-    setLocating(true);
-    try {
-      const pos = await new Promise<GeolocationPosition>((resolve, reject) =>
-        navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 10_000 })
-      );
-      const { latitude, longitude } = pos.coords;
-      const res = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}&addressdetails=1`,
-        { headers: { Accept: "application/json" } }
-      );
-      if (!res.ok) throw new Error("Lookup failed");
-      const j = await res.json();
-      const a = j.address ?? {};
-      const line1 = [a.house_number, a.road || a.pedestrian || a.neighbourhood].filter(Boolean).join(" ") || j.display_name?.split(",").slice(0, 2).join(",") || "";
-      setD((p) => ({
-        ...p,
-        line1: line1 || p.line1,
-        city: a.city || a.town || a.village || a.suburb || p.city,
-        state: a.state || p.state,
-        postal_code: a.postcode || p.postal_code,
-        country: (a.country_code || "in").toUpperCase(),
-      }));
-      toast.success("Address filled from your location — verify before saving");
-    } catch (err: any) {
-      if (err?.code === 1) {
-        toast.error(
-          "Location permission denied. Enable it from the lock icon in your browser's address bar → Site settings → Location → Allow, then try again.",
-          { duration: 8000 }
-        );
-      } else if (err?.code === 3) {
-        toast.error("Location request timed out. Try again outdoors or with Wi-Fi on.");
-      } else {
-        toast.error("Couldn't get your location. Please enter it manually.");
-      }
-    } finally {
-      setLocating(false);
-    }
-  }
 
   return (
     <div className="glass rounded-2xl p-4 mt-3 space-y-3">
       <button
         type="button"
-        onClick={useMyLocation}
-        disabled={locating}
-        className="w-full h-10 rounded-xl glass-strong hover:bg-cyan/10 text-xs font-bold inline-flex items-center justify-center gap-2 disabled:opacity-60"
+        onClick={() => setPickerOpen(true)}
+        className="w-full h-10 rounded-xl glass-strong hover:bg-cyan/10 text-xs font-bold inline-flex items-center justify-center gap-2"
       >
         <span aria-hidden>📍</span>
-        {locating ? "Getting your location…" : "Use my current location"}
+        Pick location on map
       </button>
+      <LocationPickerDialog
+        open={pickerOpen}
+        onClose={() => setPickerOpen(false)}
+        onConfirm={(p: PickedLocation) => {
+          setD((prev) => ({
+            ...prev,
+            line1: p.line1 || prev.line1,
+            city: p.city || prev.city,
+            state: p.state || prev.state,
+            postal_code: p.postal_code || prev.postal_code,
+            country: p.country || prev.country,
+          }));
+          setPickerOpen(false);
+          toast.success("Address filled from map — verify before saving");
+        }}
+      />
+
       <div className="grid sm:grid-cols-2 gap-3">
         <Field label="Full name" value={d.recipient} onChange={(e) => set("recipient", e.target.value)} />
         <Field label="Phone" value={d.phone} onChange={(e) => set("phone", e.target.value)} />
