@@ -107,22 +107,24 @@ function Page() {
                     {p.status}
                   </span>
                 </td>
-                <td className="p-4 text-right whitespace-nowrap">
-                  <Link
-                    to="/seller/edit-product/$id"
-                    params={{ id: p.id }}
-                    aria-label="Edit product"
-                    className="size-8 rounded-full glass grid place-items-center inline-flex mr-2"
-                  >
-                    <Pencil className="size-3.5 text-cyan" />
-                  </Link>
-                  <button
-                    aria-label="Delete product"
-                    onClick={async () => { if (await confirm({ title: `Delete "${p.title}"?`, description: "This permanently removes the product from your catalog.", destructive: true, confirmText: "Delete" })) deleteMut.mutate(p.id); }}
-                    className="size-8 rounded-full glass grid place-items-center"
-                  >
-                    <Trash2 className="size-3.5 text-rose-400" />
-                  </button>
+                <td className="p-4 whitespace-nowrap">
+                  <div className="flex items-center justify-end gap-2">
+                    <Link
+                      to="/seller/edit-product/$id"
+                      params={{ id: p.id }}
+                      aria-label="Edit product"
+                      className="size-8 rounded-full glass grid place-items-center shrink-0"
+                    >
+                      <Pencil className="size-3.5 text-cyan" />
+                    </Link>
+                    <button
+                      aria-label="Delete product"
+                      onClick={async () => { if (await confirm({ title: `Delete "${p.title}"?`, description: "This permanently removes the product from your catalog.", destructive: true, confirmText: "Delete" })) deleteMut.mutate(p.id); }}
+                      className="size-8 rounded-full glass grid place-items-center shrink-0"
+                    >
+                      <Trash2 className="size-3.5 text-rose-400" />
+                    </button>
+                  </div>
                 </td>
               </motion.tr>
             ))}
