@@ -9,6 +9,7 @@ import { useNotificationsRealtime } from "@/hooks/use-notifications-realtime";
 import { listNotifications, markNotificationRead, markAllNotificationsRead } from "@/lib/notifications.functions";
 
 export const Route = createFileRoute("/notifications")({
+  ssr: false,
   head: () => ({ meta: [{ title: "Notifications — Neural" }] }),
   component: NotificationsPage,
 });
