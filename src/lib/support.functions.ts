@@ -307,7 +307,7 @@ export const replyToTicket = createServerFn({ method: "POST" })
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
       await supabaseAdmin.from("notifications").insert(rows);
     }
-    return { ok: true };
+    return { ok: true, messageId: inserted.id };
   });
 
 export const setTicketStatus = createServerFn({ method: "POST" })
