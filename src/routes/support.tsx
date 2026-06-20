@@ -2,13 +2,13 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { motion } from "framer-motion";
-import { LifeBuoy, Send, ChevronLeft, MessageCircle, Plus } from "lucide-react";
+import { LifeBuoy, ChevronLeft, MessageCircle, Plus, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 import { useTicketRealtime } from "@/hooks/use-ticket-realtime";
 import { relativeTimeShort, senderLabel } from "@/lib/support-format";
-import { createTicket, listMyTickets, getTicketThread, replyToTicket, markTicketRead } from "@/lib/support.functions";
-import { TicketAttachments } from "@/components/TicketAttachments";
+import { createTicket, listMyTickets, getTicketThread, markTicketRead } from "@/lib/support.functions";
+import { TicketComposer } from "@/components/TicketComposer";
 
 export const Route = createFileRoute("/support")({
   head: () => ({ meta: [{ title: "Support — Neural" }] }),
@@ -30,13 +30,11 @@ function Support() {
   const [creating, setCreating] = useState(false);
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
-  const [reply, setReply] = useState("");
   const [busy, setBusy] = useState(false);
 
   const fetchList = useServerFn(listMyTickets);
   const fetchThread = useServerFn(getTicketThread);
   const create = useServerFn(createTicket);
-  const send = useServerFn(replyToTicket);
   const markRead = useServerFn(markTicketRead);
 
   async function refreshList() {
@@ -90,22 +88,10 @@ function Support() {
     finally { setBusy(false); }
   }
 
-  async function submitReply(e: React.FormEvent) {
-    e.preventDefault();
-    if (!activeId || !reply.trim()) return;
-    setBusy(true);
-    try {
-      await send({ data: { id: activeId, body: reply } });
-      setReply("");
-      await openTicket(activeId);
-      await refreshList();
-    } catch (err: any) { toast.error(err.message); }
-    finally { setBusy(false); }
-  }
-
   if (activeId && thread) {
     const t = thread.ticket;
     const closed = t.status === "closed" || t.status === "resolved";
+    const attachments: any[] = thread.attachments ?? [];
     return (
       <div className="px-4 sm:px-6 max-w-3xl mx-auto pb-24">
         <button onClick={() => { setActiveId(null); setThread(null); }} className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4">
@@ -128,29 +114,42 @@ function Support() {
             const role = m.sender_role || (m.is_admin ? "admin" : "user");
             const mine = role === "user";
             const label = role === "admin" ? "Support Agent" : role === "seller" ? "Seller" : "You";
+            const msgAtts = attachments.filter((a) => a.message_id === m.id);
             return (
               <div key={m.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
                 <div className={`max-w-[85%] rounded-2xl p-3 ${mine ? "bg-aurora text-background" : "glass-strong"}`}>
                   <p className="text-[10px] uppercase font-mono opacity-70">{label}</p>
-                  <p className="text-sm whitespace-pre-wrap mt-1 break-words">{m.body}</p>
+                  {m.body && <p className="text-sm whitespace-pre-wrap mt-1 break-words">{m.body}</p>}
+                  {msgAtts.length > 0 && (
+                    <div className="mt-2 grid grid-cols-2 gap-1.5">
+                      {msgAtts.map((a) => {
+                        const isImg = a.mime_type?.startsWith("image/");
+                        return (
+                          <a key={a.id} href={a.url ?? "#"} target="_blank" rel="noopener noreferrer"
+                            className={`rounded-lg overflow-hidden block ${mine ? "bg-background/20" : "bg-white/5"}`}>
+                            {isImg && a.url ? (
+                              <img src={a.url} alt={a.file_name} className="w-full h-24 object-cover" />
+                            ) : (
+                              <div className="h-24 grid place-items-center">
+                                <FileText className="size-6 opacity-70" />
+                              </div>
+                            )}
+                            <p className="text-[10px] truncate px-1.5 py-1 font-mono opacity-80">{a.file_name}</p>
+                          </a>
+                        );
+                      })}
+                    </div>
+                  )}
                   <p className="text-[10px] opacity-60 mt-1">{new Date(m.created_at).toLocaleString()}</p>
                 </div>
               </div>
             );
           })}
         </div>
-        <div className="mb-4">
-          <TicketAttachments ticketId={t.id} />
-        </div>
         {closed ? (
           <p className="text-xs text-muted-foreground text-center py-4">This ticket is {t.status.replace("_", " ")}. Open a new one if you need more help.</p>
         ) : (
-          <form onSubmit={submitReply} className="glass-strong rounded-2xl p-3 flex gap-2">
-            <input value={reply} onChange={(e) => setReply(e.target.value)} placeholder="Type your reply…" className="flex-1 bg-transparent outline-none text-sm px-2" />
-            <button disabled={busy || !reply.trim()} className="rounded-full px-4 py-1.5 text-xs font-bold bg-aurora text-background disabled:opacity-50 inline-flex items-center gap-1">
-              <Send className="size-3.5" /> Send
-            </button>
-          </form>
+          <TicketComposer ticketId={t.id} onSent={() => openTicket(t.id).then(refreshList)} />
         )}
       </div>
     );

@@ -219,7 +219,22 @@ export const getTicketThread = createServerFn({ method: "POST" })
       .eq("ticket_id", data.id)
       .order("created_at", { ascending: true });
     if (mErr) throw mErr;
-    return { ticket, messages: msgs ?? [] };
+
+    // Fetch ticket attachments and sign URLs so they render inline in the thread.
+    const { data: atts } = await context.supabase
+      .from("support_ticket_attachments")
+      .select("*")
+      .eq("ticket_id", data.id)
+      .order("created_at", { ascending: true });
+    const signedAtts = await Promise.all(
+      (atts ?? []).map(async (a: any) => {
+        const { data: s } = await context.supabase
+          .storage.from("support-attachments")
+          .createSignedUrl(a.storage_path, 60 * 60);
+        return { ...a, url: s?.signedUrl ?? null };
+      }),
+    );
+    return { ticket, messages: msgs ?? [], attachments: signedAtts };
   });
 
 export const replyToTicket = createServerFn({ method: "POST" })
@@ -257,13 +272,14 @@ export const replyToTicket = createServerFn({ method: "POST" })
     else if (ticket.order_id && await userIsSellerOfOrder(ticket.order_id, userId)) role = "seller";
     else throw new UserError("Forbidden");
 
-    await supabase.from("support_ticket_messages").insert({
+    const { data: inserted, error: insErr } = await supabase.from("support_ticket_messages").insert({
       ticket_id: data.id,
       sender_id: userId,
       is_admin: role === "admin",
       sender_role: role,
       body: data.body,
-    });
+    }).select("id").single();
+    if (insErr) throw insErr;
 
     const patch: { updated_at: string; status?: "in_progress" } = { updated_at: new Date().toISOString() };
     if (role !== "user") patch.status = "in_progress";
@@ -291,7 +307,7 @@ export const replyToTicket = createServerFn({ method: "POST" })
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
       await supabaseAdmin.from("notifications").insert(rows);
     }
-    return { ok: true };
+    return { ok: true, messageId: inserted.id };
   });
 
 export const setTicketStatus = createServerFn({ method: "POST" })
