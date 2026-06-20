@@ -219,7 +219,22 @@ export const getTicketThread = createServerFn({ method: "POST" })
       .eq("ticket_id", data.id)
       .order("created_at", { ascending: true });
     if (mErr) throw mErr;
-    return { ticket, messages: msgs ?? [] };
+
+    // Fetch ticket attachments and sign URLs so they render inline in the thread.
+    const { data: atts } = await context.supabase
+      .from("support_ticket_attachments")
+      .select("*")
+      .eq("ticket_id", data.id)
+      .order("created_at", { ascending: true });
+    const signedAtts = await Promise.all(
+      (atts ?? []).map(async (a: any) => {
+        const { data: s } = await context.supabase
+          .storage.from("support-attachments")
+          .createSignedUrl(a.storage_path, 60 * 60);
+        return { ...a, url: s?.signedUrl ?? null };
+      }),
+    );
+    return { ticket, messages: msgs ?? [], attachments: signedAtts };
   });
 
 export const replyToTicket = createServerFn({ method: "POST" })
