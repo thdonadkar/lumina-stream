@@ -536,7 +536,7 @@ function AddressForm({ onSave }: { onSave: (d: any) => Promise<void> }) {
       <LocationPickerDialog
         open={pickerOpen}
         onClose={() => setPickerOpen(false)}
-        onConfirm={(p) => {
+        onConfirm={(p: PickedLocation) => {
           setD((prev) => ({
             ...prev,
             line1: p.line1 || prev.line1,
