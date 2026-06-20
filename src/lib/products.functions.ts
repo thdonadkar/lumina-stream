@@ -68,6 +68,44 @@ export const listMyProducts = createServerFn({ method: "GET" })
     return data ?? [];
   });
 
+export const listMyArchivedProducts = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const { data, error } = await supabase
+      .from("products")
+      .select("id,seller_id,category_id,slug,title,tagline,description,price,original_price,discount_percent,stock,images,rating,review_count,status,accent,badge,created_at,updated_at")
+      .eq("seller_id", userId)
+      .eq("status", "archived")
+      .order("updated_at", { ascending: false });
+    if (error) throw error;
+    return data ?? [];
+  });
+
+export const restoreMyProduct = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { id: string }) => d)
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { data: existing } = await supabase
+      .from("products").select("seller_id,status").eq("id", data.id).maybeSingle();
+    if (!existing) throw new UserError("Product not found");
+    if ((existing as any).seller_id !== userId) throw new UserError("Forbidden");
+    if ((existing as any).status !== "archived") throw new UserError("Only archived products can be restored");
+
+    const { error: upErr } = await (supabase as any)
+      .from("products").update({ status: "active" }).eq("id", data.id);
+    if (upErr) throw upErr;
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await supabaseAdmin.from("audit_log").insert({
+      actor_id: userId, action: "product.restore",
+      target_table: "products", target_id: data.id,
+      metadata: { from_status: "archived", to_status: "active" },
+    });
+    return { ok: true };
+  });
+
 export const deleteMyProduct = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { id: string }) => d)

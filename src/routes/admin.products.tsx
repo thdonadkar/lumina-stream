@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { RoleGate } from "@/components/RoleGate";
 import { AdminNav } from "./admin.dashboard";
-import { Flag, Check, Trash2 } from "lucide-react";
+import { Flag, Check, Trash2, RotateCcw } from "lucide-react";
 import { listAllProducts, setProductStatus, deleteProductAdmin } from "@/lib/admin.functions";
 import { toast } from "sonner";
 import { useConfirm } from "@/components/ConfirmDialog";
@@ -38,14 +38,33 @@ function Page() {
   const invalidate = () => qc.invalidateQueries({ queryKey: ["admin-products"] });
 
   const statusMut = useMutation({
-    mutationFn: (p: { id: string; status: "active" | "rejected" }) =>
-      setStatus({ data: p }),
-    onSuccess: (_d, v) => { invalidate(); toast.success(v.status === "active" ? "Approved" : "Flagged"); },
+    mutationFn: async (p: { id: string; status: "active" | "rejected" | "archived"; force?: boolean }) => {
+      const res: any = await setStatus({ data: { id: p.id, status: p.status, force: p.force } });
+      if (res?.warn) {
+        const ok = await confirm({
+          title: `Change status to "${p.status}"?`,
+          description: res.message + " Continue anyway?",
+          destructive: true,
+          confirmText: "Yes, change anyway",
+        });
+        if (!ok) return { skipped: true };
+        await setStatus({ data: { id: p.id, status: p.status, force: true } });
+      }
+      return { skipped: false, status: p.status };
+    },
+    onSuccess: (res: any) => {
+      if (res?.skipped) return;
+      invalidate();
+      toast.success(
+        res?.status === "active" ? "Approved/Restored" :
+        res?.status === "archived" ? "Archived" : "Flagged"
+      );
+    },
     onError: (e: any) => toast.error(e.message ?? "Failed"),
   });
   const deleteMut = useMutation({
     mutationFn: (id: string) => del({ data: { id } }),
-    onSuccess: () => { invalidate(); toast.success("Deleted"); },
+    onSuccess: () => { invalidate(); toast.success("Archived"); },
     onError: (e: any) => toast.error(e.message ?? "Failed"),
   });
 
@@ -77,26 +96,38 @@ function Page() {
                 </div>
               </div>
               <div className="flex flex-wrap gap-2 sm:justify-end shrink-0">
-                <button
-                  disabled={p.status === "active" || statusMut.isPending}
-                  onClick={() => statusMut.mutate({ id: p.id, status: "active" })}
-                  className="px-3 py-1.5 rounded-full text-xs font-bold bg-aurora animate-aurora text-background inline-flex items-center gap-1 disabled:opacity-40"
-                >
-                  <Check className="size-3" /> Approve
-                </button>
-                <button
-                  disabled={p.status === "rejected" || statusMut.isPending}
-                  onClick={() => statusMut.mutate({ id: p.id, status: "rejected" })}
-                  className="px-3 py-1.5 rounded-full text-xs font-bold glass hover:glass-strong inline-flex items-center gap-1 disabled:opacity-40"
-                >
-                  <Flag className="size-3 text-rose-400" /> Flag
-                </button>
-                <button
-                  onClick={async () => { if (await confirm({ title: `Delete "${p.title}"?`, description: "This permanently removes the product from the catalog.", destructive: true, confirmText: "Delete" })) deleteMut.mutate(p.id); }}
-                  className="px-3 py-1.5 rounded-full text-xs font-bold glass hover:glass-strong inline-flex items-center gap-1"
-                >
-                  <Trash2 className="size-3 text-rose-400" /> Delete
-                </button>
+                {p.status === "archived" ? (
+                  <button
+                    disabled={statusMut.isPending}
+                    onClick={() => statusMut.mutate({ id: p.id, status: "active" })}
+                    className="px-3 py-1.5 rounded-full text-xs font-bold bg-aurora animate-aurora text-background inline-flex items-center gap-1 disabled:opacity-40"
+                  >
+                    <RotateCcw className="size-3" /> Restore
+                  </button>
+                ) : (
+                  <>
+                    <button
+                      disabled={p.status === "active" || statusMut.isPending}
+                      onClick={() => statusMut.mutate({ id: p.id, status: "active" })}
+                      className="px-3 py-1.5 rounded-full text-xs font-bold bg-aurora animate-aurora text-background inline-flex items-center gap-1 disabled:opacity-40"
+                    >
+                      <Check className="size-3" /> Approve
+                    </button>
+                    <button
+                      disabled={p.status === "rejected" || statusMut.isPending}
+                      onClick={() => statusMut.mutate({ id: p.id, status: "rejected" })}
+                      className="px-3 py-1.5 rounded-full text-xs font-bold glass hover:glass-strong inline-flex items-center gap-1 disabled:opacity-40"
+                    >
+                      <Flag className="size-3 text-rose-400" /> Flag
+                    </button>
+                    <button
+                      onClick={async () => { if (await confirm({ title: `Archive "${p.title}"?`, description: "This hides the product from the catalog but preserves order history. You can restore it later.", destructive: true, confirmText: "Archive" })) deleteMut.mutate(p.id); }}
+                      className="px-3 py-1.5 rounded-full text-xs font-bold glass hover:glass-strong inline-flex items-center gap-1"
+                    >
+                      <Trash2 className="size-3 text-rose-400" /> Archive
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           ))}

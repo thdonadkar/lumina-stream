@@ -33,13 +33,31 @@ export const listAllProducts = createServerFn({ method: "GET" })
 
 export const setProductStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { id: string; status: "active" | "rejected" | "pending" | "draft" }) => d)
+  .inputValidator((d: { id: string; status: "active" | "rejected" | "pending" | "draft" | "archived"; force?: boolean }) => d)
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const db = await admin();
+    // If moving away from 'active' (rejected/pending/draft/archived), warn admin
+    // when there are active orders referencing this product.
+    if (data.status !== "active" && !data.force) {
+      const { count, error: cErr } = await db
+        .from("order_items")
+        .select("id, orders!inner(status)", { count: "exact", head: true })
+        .eq("product_id", data.id)
+        .not("orders.status", "in", "(delivered,cancelled,returned,refunded)");
+      if (cErr) throw cErr;
+      const activeOrders = count ?? 0;
+      if (activeOrders > 0) {
+        return {
+          warn: true as const,
+          activeOrders,
+          message: `This product has ${activeOrders} active order${activeOrders === 1 ? "" : "s"}. Changing status to "${data.status}" may break customer order pages.`,
+        };
+      }
+    }
     const { error } = await db.from("products").update({ status: data.status }).eq("id", data.id);
     if (error) throw error;
-    return { ok: true };
+    return { ok: true as const };
   });
 
 export const deleteProductAdmin = createServerFn({ method: "POST" })
@@ -48,8 +66,13 @@ export const deleteProductAdmin = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const db = await admin();
-    const { error } = await db.from("products").delete().eq("id", data.id);
+    const { error } = await db.from("products").update({ status: "archived" }).eq("id", data.id);
     if (error) throw error;
+    await db.from("audit_log").insert({
+      actor_id: context.userId, action: "product.archive",
+      target_table: "products", target_id: data.id,
+      metadata: { reason: "admin_delete" },
+    });
     return { ok: true };
   });
 
