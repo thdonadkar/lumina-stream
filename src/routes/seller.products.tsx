@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { requireRole } from "@/lib/route-guards";
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Search, Trash2 } from "lucide-react";
+import { Search, Trash2, Pencil } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { RoleGate } from "@/components/RoleGate";
