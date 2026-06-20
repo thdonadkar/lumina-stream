@@ -114,6 +114,7 @@ function Page() {
             })}
           </tbody>
         </table>
+        </div>
       </div>
 
       <AdminNav />
