@@ -7,6 +7,7 @@ import { RoleGate } from "@/components/RoleGate";
 import { AdminNav } from "./admin.dashboard";
 import { listReturnRequests, approveReturn, rejectReturn, markRefunded } from "@/lib/orders.functions";
 import { formatPrice } from "@/lib/cart-store";
+import { useConfirm } from "@/components/ConfirmDialog";
 
 export const Route = createFileRoute("/admin/returns")({
   head: () => ({ meta: [{ title: "Returns — Admin" }] }),
@@ -28,6 +29,7 @@ const REFUND_TONE: Record<string, string> = {
 function Page() {
   const [rows, setRows] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const { prompt } = useConfirm();
   const fetchRows = useServerFn(listReturnRequests);
   const approve = useServerFn(approveReturn);
   const reject = useServerFn(rejectReturn);
@@ -82,7 +84,7 @@ function Page() {
                     <button onClick={() => act(approve, { data: { id: o.id } }, "Return approved")} className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold bg-aurora text-background">
                       <CheckCircle2 className="size-3.5" /> Approve
                     </button>
-                    <button onClick={() => { const r = prompt("Reason for rejection (optional)") ?? ""; act(reject, { data: { id: o.id, reason: r } }, "Return rejected"); }} className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs glass-strong text-rose-400">
+                    <button onClick={async () => { const r = await prompt({ title: "Reject return", description: "Optional reason for rejection.", placeholder: "Reason (optional)", confirmText: "Reject" }); if (r === null) return; act(reject, { data: { id: o.id, reason: r } }, "Return rejected"); }} className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs glass-strong text-rose-400">
                       <XCircle className="size-3.5" /> Reject
                     </button>
                   </>

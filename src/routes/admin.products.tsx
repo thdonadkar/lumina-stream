@@ -6,6 +6,7 @@ import { AdminNav } from "./admin.dashboard";
 import { Flag, Check, Trash2 } from "lucide-react";
 import { listAllProducts, setProductStatus, deleteProductAdmin } from "@/lib/admin.functions";
 import { toast } from "sonner";
+import { useConfirm } from "@/components/ConfirmDialog";
 
 export const Route = createFileRoute("/admin/products")({
   head: () => ({ meta: [{ title: "Products — Admin" }] }),
@@ -18,6 +19,7 @@ export const Route = createFileRoute("/admin/products")({
 
 function Page() {
   const qc = useQueryClient();
+  const { confirm } = useConfirm();
   const list = useServerFn(listAllProducts);
   const setStatus = useServerFn(setProductStatus);
   const del = useServerFn(deleteProductAdmin);
@@ -75,7 +77,7 @@ function Page() {
                 <Flag className="size-3 text-rose-400" /> Flag
               </button>
               <button
-                onClick={() => { if (confirm(`Delete "${p.title}"?`)) deleteMut.mutate(p.id); }}
+                onClick={async () => { if (await confirm({ title: `Delete "${p.title}"?`, description: "This permanently removes the product from the catalog.", destructive: true, confirmText: "Delete" })) deleteMut.mutate(p.id); }}
                 className="px-3 py-1.5 rounded-full text-xs font-bold glass hover:glass-strong inline-flex items-center gap-1"
               >
                 <Trash2 className="size-3 text-rose-400" /> Delete
