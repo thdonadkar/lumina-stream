@@ -12,8 +12,8 @@ import { RecentlyViewed } from "@/components/RecentlyViewed";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/product/$id")({
-  head: ({ params }) => {
-    const p = getProduct(params.id);
+  head: ({ params, loaderData }) => {
+    const p = (loaderData as any)?.product ?? getProduct(params.id);
     if (!p) {
       return { meta: [{ title: "Product not found — Neural" }] };
     }
