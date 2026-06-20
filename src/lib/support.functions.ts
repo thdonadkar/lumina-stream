@@ -269,19 +269,17 @@ export const replyToTicket = createServerFn({ method: "POST" })
     if (role !== "user") patch.status = "in_progress";
     await supabase.from("support_tickets").update(patch).eq("id", data.id);
 
-    // Notify the other parties: customer, seller, and all admins.
+    // Notify the OTHER party only (customer ↔ seller). Admins are not bell-spammed
+    // for routine replies — they monitor /admin/support directly.
     const recipients = new Set<string>();
     if (ticket.user_id && ticket.user_id !== userId) recipients.add(ticket.user_id);
     if (effectiveSellerId && effectiveSellerId !== userId) recipients.add(effectiveSellerId);
-    const adminIds = await listAdminIds();
-    for (const aid of adminIds) if (aid !== userId) recipients.add(aid);
 
     if (recipients.size) {
       const senderLabel = role === "admin" ? "Support agent" : role === "seller" ? "Seller" : "Customer";
       const rows = Array.from(recipients).map((uid) => {
         const isSellerRecipient = uid === effectiveSellerId;
-        const isAdminRecipient = adminIds.includes(uid);
-        const link = isAdminRecipient ? "/admin/support" : isSellerRecipient ? "/seller/support" : "/support";
+        const link = isSellerRecipient ? "/seller/support" : "/support";
         return {
           user_id: uid,
           type: "system" as const,
