@@ -272,7 +272,7 @@ function Checkout() {
 
           <AnimatePresence mode="wait">
             {step === 0 && (
-              <motion.div key="address" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-3">
+              <motion.div id="address-list" key="address" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-3">
                 <div className="flex items-center justify-between mb-2">
                   <h2 className="text-xl font-bold">Shipping address</h2>
                   <button onClick={() => setShowAddrForm((v) => !v)} className="text-xs flex items-center gap-1 text-cyan">
