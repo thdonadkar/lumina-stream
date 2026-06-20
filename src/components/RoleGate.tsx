@@ -24,13 +24,14 @@ export function RoleGate({
 
   if (loading) {
     return (
-      <div className="px-4 min-h-[60vh] grid place-items-center">
+      <div className="px-4 min-h-[60vh] grid place-items-center" role="status" aria-busy="true" aria-live="polite">
         <div className="glass rounded-3xl p-8 animate-pulse text-sm text-muted-foreground">
-          Establishing secure link…
+          <span className="sr-only">Loading. </span>Establishing secure link…
         </div>
       </div>
     );
   }
+
 
   if (!userId) {
     return (
