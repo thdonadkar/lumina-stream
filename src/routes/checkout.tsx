@@ -51,6 +51,7 @@ function Checkout() {
   const [showAddrForm, setShowAddrForm] = useState(false);
 
   const [couponInput, setCouponInput] = useState("");
+  const [couponError, setCouponError] = useState<string | null>(null);
   const [coupon, setCoupon] = useState<{ code: string; discount: number; freeShipping: boolean } | null>(null);
   const [placing, setPlacing] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<"razorpay" | "cod">("razorpay");
