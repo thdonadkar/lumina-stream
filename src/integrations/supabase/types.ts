@@ -62,6 +62,69 @@ export type Database = {
         }
         Relationships: []
       }
+      analytics_events: {
+        Row: {
+          anonymous_id: string | null
+          created_at: string
+          event_name: string
+          id: number
+          properties: Json
+          session_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          anonymous_id?: string | null
+          created_at?: string
+          event_name: string
+          id?: number
+          properties?: Json
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          anonymous_id?: string | null
+          created_at?: string
+          event_name?: string
+          id?: number
+          properties?: Json
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      audit_log: {
+        Row: {
+          action: string
+          actor_id: string | null
+          created_at: string
+          id: number
+          ip_address: unknown
+          metadata: Json
+          target_id: string | null
+          target_table: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          created_at?: string
+          id?: number
+          ip_address?: unknown
+          metadata?: Json
+          target_id?: string | null
+          target_table?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          created_at?: string
+          id?: number
+          ip_address?: unknown
+          metadata?: Json
+          target_id?: string | null
+          target_table?: string | null
+        }
+        Relationships: []
+      }
       banners: {
         Row: {
           active: boolean
@@ -104,6 +167,7 @@ export type Database = {
       categories: {
         Row: {
           created_at: string
+          deleted_at: string | null
           icon: string | null
           id: string
           image_url: string | null
@@ -115,6 +179,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          deleted_at?: string | null
           icon?: string | null
           id?: string
           image_url?: string | null
@@ -126,6 +191,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          deleted_at?: string | null
           icon?: string | null
           id?: string
           image_url?: string | null
@@ -534,6 +600,7 @@ export type Database = {
           badge: string | null
           category_id: string | null
           created_at: string
+          deleted_at: string | null
           description: string | null
           discount_percent: number | null
           id: string
@@ -556,6 +623,7 @@ export type Database = {
           badge?: string | null
           category_id?: string | null
           created_at?: string
+          deleted_at?: string | null
           description?: string | null
           discount_percent?: number | null
           id?: string
@@ -578,6 +646,7 @@ export type Database = {
           badge?: string | null
           category_id?: string | null
           created_at?: string
+          deleted_at?: string | null
           description?: string | null
           discount_percent?: number | null
           id?: string
