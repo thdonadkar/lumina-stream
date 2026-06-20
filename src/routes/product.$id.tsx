@@ -8,6 +8,7 @@ import { useCart, formatPrice } from "@/lib/cart-store";
 import { useWishlist } from "@/lib/wishlist-store";
 import { useRecentlyViewed } from "@/lib/recently-viewed-store";
 import { ProductCard } from "@/components/ProductCard";
+import { ProductReviews } from "@/components/ProductReviews";
 import { RecentlyViewed } from "@/components/RecentlyViewed";
 import { toast } from "sonner";
 
@@ -277,53 +278,8 @@ function ProductPage() {
       </div>
 
       {/* Reviews */}
-      <section className="mt-24">
-        <h2 className="text-2xl font-bold mb-6">Customer signal</h2>
-        <div className="grid md:grid-cols-3 gap-6">
-          <div className="glass-strong rounded-2xl p-6">
-            <p className="text-5xl font-extrabold font-mono text-gradient">
-              {product.rating}
-            </p>
-            <p className="text-sm text-muted-foreground mt-2">
-              From {product.reviews} verified buyers
-            </p>
-            <div className="mt-4 space-y-2">
-              {[5, 4, 3, 2, 1].map((s) => {
-                const w = s === 5 ? 78 : s === 4 ? 16 : s === 3 ? 4 : 1;
-                return (
-                  <div key={s} className="flex items-center gap-3 text-xs">
-                    <span className="w-3 font-mono text-muted-foreground">{s}</span>
-                    <div className="flex-1 h-1.5 rounded-full bg-secondary overflow-hidden">
-                      <motion.div
-                        initial={{ width: 0 }}
-                        whileInView={{ width: `${w}%` }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 1, delay: 0.1 * (5 - s) }}
-                        className="h-full bg-aurora"
-                      />
-                    </div>
-                    <span className="w-8 font-mono text-muted-foreground">{w}%</span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-          {[
-            { name: "Aria K.", text: "Genuinely changed my workflow. The haptics are uncanny." },
-            { name: "Mateo R.", text: "Build quality is on another tier. Looks like jewelry." },
-          ].map((r) => (
-            <div key={r.name} className="glass rounded-2xl p-6">
-              <div className="flex items-center gap-1 mb-3">
-                {[1, 2, 3, 4, 5].map((s) => (
-                  <Star key={s} className="size-3 fill-cyan text-cyan" />
-                ))}
-              </div>
-              <p className="text-sm">{r.text}</p>
-              <p className="mt-4 text-xs font-mono text-muted-foreground">— {r.name}</p>
-            </div>
-          ))}
-        </div>
-      </section>
+      <ProductReviews productId={product.id} />
+
 
       {/* You may also like */}
       <section className="mt-24">
