@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { requireRole } from "@/lib/route-guards";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { motion } from "framer-motion";
@@ -9,6 +10,8 @@ import { AdminNav } from "./admin.dashboard";
 import { listAllTickets, getTicketThread, replyToTicket, setTicketStatus } from "@/lib/support.functions";
 
 export const Route = createFileRoute("/admin/support")({
+  ssr: false,
+  beforeLoad: () => requireRole("admin"),
   head: () => ({ meta: [{ title: "Support — Admin" }] }),
   component: () => (
     <RoleGate role="admin">

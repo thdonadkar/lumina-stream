@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { requireRole } from "@/lib/route-guards";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { motion } from "framer-motion";
@@ -10,6 +11,8 @@ import { formatPrice } from "@/lib/cart-store";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/seller/orders")({
+  ssr: false,
+  beforeLoad: () => requireRole("seller"),
   head: () => ({ meta: [{ title: "Orders — Seller" }] }),
   component: () => (
     <RoleGate role="seller">

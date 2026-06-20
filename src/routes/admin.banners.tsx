@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { requireRole } from "@/lib/route-guards";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Plus, Trash2, Save, X, ToggleLeft, ToggleRight, Upload } from "lucide-react";
@@ -10,6 +11,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useConfirm } from "@/components/ConfirmDialog";
 
 export const Route = createFileRoute("/admin/banners")({
+  ssr: false,
+  beforeLoad: () => requireRole("admin"),
   head: () => ({ meta: [{ title: "Banners — Admin" }] }),
   component: () => (
     <RoleGate role="admin">

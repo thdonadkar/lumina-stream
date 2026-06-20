@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { requireRole } from "@/lib/route-guards";
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import {
@@ -18,6 +19,8 @@ import { RangeFilter } from "@/components/charts/RangeFilter";
 import { RANGES, revenueSeries, totals, type Range } from "@/lib/analytics-mock";
 
 export const Route = createFileRoute("/seller/dashboard")({
+  ssr: false,
+  beforeLoad: () => requireRole("seller"),
   head: () => ({ meta: [{ title: "Seller — Neural" }] }),
   component: () => (
     <RoleGate role="seller">

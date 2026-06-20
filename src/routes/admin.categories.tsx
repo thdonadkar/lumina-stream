@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { requireRole } from "@/lib/route-guards";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Plus, Trash2, Power } from "lucide-react";
@@ -13,6 +14,8 @@ import { toast } from "sonner";
 import { useConfirm } from "@/components/ConfirmDialog";
 
 export const Route = createFileRoute("/admin/categories")({
+  ssr: false,
+  beforeLoad: () => requireRole("admin"),
   head: () => ({ meta: [{ title: "Categories — Admin" }] }),
   component: () => (
     <RoleGate role="admin">
