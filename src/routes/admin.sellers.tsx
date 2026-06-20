@@ -5,6 +5,7 @@ import { RoleGate } from "@/components/RoleGate";
 import { AdminNav } from "./admin.dashboard";
 import { listSellersAdmin, setUserRole } from "@/lib/admin.functions";
 import { toast } from "sonner";
+import { useConfirm } from "@/components/ConfirmDialog";
 
 export const Route = createFileRoute("/admin/sellers")({
   head: () => ({ meta: [{ title: "Sellers — Admin" }] }),
@@ -17,6 +18,7 @@ export const Route = createFileRoute("/admin/sellers")({
 
 function Page() {
   const qc = useQueryClient();
+  const { confirm } = useConfirm();
   const list = useServerFn(listSellersAdmin);
   const setRole = useServerFn(setUserRole);
 
@@ -55,7 +57,7 @@ function Page() {
               )}
               <div className="mt-4 flex gap-2">
                 <button
-                  onClick={() => { if (confirm(`Revoke seller role from ${s.display_name ?? s.id.slice(0, 8)}?`)) revokeMut.mutate(s.id); }}
+                  onClick={async () => { if (await confirm({ title: "Revoke seller role?", description: `${s.display_name ?? s.id.slice(0, 8)} will lose seller access.`, destructive: true, confirmText: "Revoke" })) revokeMut.mutate(s.id); }}
                   className="flex-1 px-3 py-1.5 rounded-full text-xs font-bold glass hover:glass-strong"
                 >
                   Revoke seller

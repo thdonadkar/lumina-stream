@@ -7,6 +7,7 @@ import { RoleGate } from "@/components/RoleGate";
 import { AdminNav } from "./admin.dashboard";
 import { listAllBanners, saveBanner, deleteBanner } from "@/lib/banners.functions";
 import { supabase } from "@/integrations/supabase/client";
+import { useConfirm } from "@/components/ConfirmDialog";
 
 export const Route = createFileRoute("/admin/banners")({
   head: () => ({ meta: [{ title: "Banners — Admin" }] }),
@@ -34,6 +35,7 @@ function Page() {
   const [banners, setBanners] = useState<any[]>([]);
   const [editing, setEditing] = useState<Banner | null>(null);
   const [uploading, setUploading] = useState(false);
+  const { confirm } = useConfirm();
   const fetchAll = useServerFn(listAllBanners);
   const save = useServerFn(saveBanner);
   const del = useServerFn(deleteBanner);
@@ -65,7 +67,7 @@ function Page() {
   }
 
   async function handleDelete(id: string) {
-    if (!confirm("Delete banner?")) return;
+    if (!(await confirm({ title: "Delete banner?", description: "This will remove it from the homepage immediately.", destructive: true, confirmText: "Delete" }))) return;
     await del({ data: { id } }); toast.success("Deleted"); load();
   }
 

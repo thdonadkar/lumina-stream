@@ -10,6 +10,7 @@ import {
   listCategoriesAdmin, createCategory, updateCategory, deleteCategory,
 } from "@/lib/admin.functions";
 import { toast } from "sonner";
+import { useConfirm } from "@/components/ConfirmDialog";
 
 export const Route = createFileRoute("/admin/categories")({
   head: () => ({ meta: [{ title: "Categories — Admin" }] }),
@@ -22,6 +23,7 @@ export const Route = createFileRoute("/admin/categories")({
 
 function Page() {
   const qc = useQueryClient();
+  const { confirm } = useConfirm();
   const list = useServerFn(listCategoriesAdmin);
   const create = useServerFn(createCategory);
   const update = useServerFn(updateCategory);
@@ -99,7 +101,7 @@ function Page() {
                 </button>
                 <button
                   aria-label="Delete category"
-                  onClick={() => { if (confirm(`Delete "${c.name}"?`)) deleteMut.mutate(c.id); }}
+                  onClick={async () => { if (await confirm({ title: `Delete "${c.name}"?`, description: "Products in this category will be uncategorized.", destructive: true, confirmText: "Delete" })) deleteMut.mutate(c.id); }}
                   className="size-8 rounded-full glass grid place-items-center"
                 >
                   <Trash2 className="size-3.5 text-rose-400" />

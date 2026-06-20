@@ -8,6 +8,7 @@ import { getOrder, requestReturn, cancelOrder } from "@/lib/orders.functions";
 import { createTicket } from "@/lib/support.functions";
 import { downloadInvoice } from "@/lib/invoice";
 import { formatPrice } from "@/lib/cart-store";
+import { useConfirm } from "@/components/ConfirmDialog";
 
 export const Route = createFileRoute("/orders/$id")({
   head: () => ({ meta: [{ title: "Order — Neural" }] }),
@@ -29,6 +30,7 @@ function OrderDetail() {
   const doReturn = useServerFn(requestReturn);
   const doCancel = useServerFn(cancelOrder);
   const openTicket = useServerFn(createTicket);
+  const { confirm } = useConfirm();
 
   function refresh() {
     fetchOrder({ data: { id } }).then(setOrder).finally(() => setLoading(false));
@@ -44,7 +46,7 @@ function OrderDetail() {
     } catch (err: any) { toast.error(err.message); }
   }
   async function handleCancel() {
-    if (!confirm("Cancel this order?")) return;
+    if (!(await confirm({ title: "Cancel this order?", description: "This action cannot be undone.", destructive: true, confirmText: "Cancel order", cancelText: "Keep order" }))) return;
     try {
       await doCancel({ data: { id } });
       toast.success("Order cancelled"); refresh();

@@ -8,6 +8,7 @@ import { RoleGate } from "@/components/RoleGate";
 import { SellerNav } from "./seller.dashboard";
 import { listMyProducts, deleteMyProduct } from "@/lib/products.functions";
 import { toast } from "sonner";
+import { useConfirm } from "@/components/ConfirmDialog";
 
 export const Route = createFileRoute("/seller/products")({
   head: () => ({ meta: [{ title: "My Products — Seller" }] }),
@@ -21,6 +22,7 @@ export const Route = createFileRoute("/seller/products")({
 function Page() {
   const [q, setQ] = useState("");
   const qc = useQueryClient();
+  const { confirm } = useConfirm();
   const list = useServerFn(listMyProducts);
   const del = useServerFn(deleteMyProduct);
 
@@ -104,7 +106,7 @@ function Page() {
                 <td className="p-4 text-right whitespace-nowrap">
                   <button
                     aria-label="Delete product"
-                    onClick={() => { if (confirm(`Delete "${p.title}"?`)) deleteMut.mutate(p.id); }}
+                    onClick={async () => { if (await confirm({ title: `Delete "${p.title}"?`, description: "This permanently removes the product from your catalog.", destructive: true, confirmText: "Delete" })) deleteMut.mutate(p.id); }}
                     className="size-8 rounded-full glass grid place-items-center"
                   >
                     <Trash2 className="size-3.5 text-rose-400" />
