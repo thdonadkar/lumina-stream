@@ -26,134 +26,242 @@ type InvoiceOrder = {
   } | null;
 };
 
-const inr = (n: number) =>
-  new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 2 }).format(n);
+// jsPDF's built-in Helvetica lacks the ₹ glyph (renders as ¹ / box).
+// "Rs." is the standard fallback used on Indian tax invoices.
+const RS = "Rs. ";
+const fmt = (n: number) =>
+  new Intl.NumberFormat("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(
+    isFinite(n) ? n : 0,
+  );
+const money = (n: number) => `${RS}${fmt(n)}`;
+
+const GST_RATE = 18;
+
+function prettyDate(iso: string) {
+  return new Date(iso).toLocaleDateString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  }) + ", " + new Date(iso).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
+}
+
+function methodLabel(m?: string) {
+  if (!m) return "-";
+  if (m === "cod") return "Cash on Delivery";
+  if (m === "razorpay") return "Razorpay (Card / UPI / Netbanking)";
+  return m;
+}
 
 export function downloadInvoice(order: InvoiceOrder) {
   const doc = new jsPDF({ unit: "pt", format: "a4" });
   const W = doc.internal.pageSize.getWidth();
+  const H = doc.internal.pageSize.getHeight();
   const M = 40;
   let y = 50;
 
-  // Header
+  // ─── Brand header ────────────────────────────────────────────────
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(22);
+  doc.setFontSize(24);
+  doc.setTextColor(20);
   doc.text("NEURAL", M, y);
-  doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
-  doc.text("Tax Invoice", W - M, y, { align: "right" });
-  y += 18;
-  doc.setDrawColor(220);
+  doc.setFontSize(9);
+  doc.setTextColor(110);
+  doc.text("Neural Commerce Pvt Ltd", M, y + 14);
+  doc.text("Bengaluru, Karnataka, India", M, y + 26);
+  doc.text("support@neural.shop", M, y + 38);
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(16);
+  doc.setTextColor(20);
+  doc.text("TAX INVOICE", W - M, y, { align: "right" });
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  doc.setTextColor(110);
+  doc.text("Original for Recipient", W - M, y + 14, { align: "right" });
+
+  y += 58;
+  doc.setDrawColor(30);
+  doc.setLineWidth(1);
   doc.line(M, y, W - M, y);
-  y += 24;
+  y += 20;
 
-  // Meta
-  doc.setFontSize(10);
-  doc.setFont("helvetica", "bold");
-  doc.text("Invoice #", M, y);
-  doc.setFont("helvetica", "normal");
-  doc.text(order.id.slice(0, 8).toUpperCase(), M + 60, y);
-  doc.setFont("helvetica", "bold");
-  doc.text("Date", W - M - 130, y);
-  doc.setFont("helvetica", "normal");
-  doc.text(new Date(order.created_at).toLocaleString("en-IN"), W - M - 100, y);
-  y += 16;
-  doc.setFont("helvetica", "bold");
-  doc.text("Order status", M, y);
-  doc.setFont("helvetica", "normal");
-  doc.text(String(order.status).replace(/_/g, " "), M + 80, y);
-  doc.setFont("helvetica", "bold");
-  doc.text("Payment", W - M - 130, y);
-  doc.setFont("helvetica", "normal");
-  doc.text(
-    `${order.payment_status ?? "paid"} (${order.payment_method ?? "demo"})`,
-    W - M - 100,
-    y,
-  );
-  y += 24;
+  // ─── Invoice meta (two columns) ──────────────────────────────────
+  doc.setTextColor(20);
+  doc.setFontSize(9);
+  const invoiceNo = `INV-${order.id.slice(0, 8).toUpperCase()}`;
+  const orderNo = `#${order.id.slice(0, 8).toUpperCase()}`;
 
-  // Bill To
+  const metaLeft: Array<[string, string]> = [
+    ["Invoice No", invoiceNo],
+    ["Order No", orderNo],
+    ["Invoice Date", prettyDate(order.created_at)],
+  ];
+  const metaRight: Array<[string, string]> = [
+    ["Payment Method", methodLabel(order.payment_method)],
+    ["Payment Status", (order.payment_status ?? "paid").toUpperCase()],
+    ["Order Status", String(order.status).replace(/_/g, " ").toUpperCase()],
+  ];
+
+  const metaStart = y;
+  metaLeft.forEach(([k, v], i) => {
+    const ly = metaStart + i * 14;
+    doc.setFont("helvetica", "bold");
+    doc.text(`${k}:`, M, ly);
+    doc.setFont("helvetica", "normal");
+    doc.text(v, M + 80, ly);
+  });
+  metaRight.forEach(([k, v], i) => {
+    const ly = metaStart + i * 14;
+    doc.setFont("helvetica", "bold");
+    doc.text(`${k}:`, W / 2 + 10, ly);
+    doc.setFont("helvetica", "normal");
+    doc.text(v, W / 2 + 110, ly);
+  });
+  y = metaStart + Math.max(metaLeft.length, metaRight.length) * 14 + 14;
+
+  // ─── Bill / Ship to ──────────────────────────────────────────────
   const a = order.addresses;
   if (a) {
+    doc.setFillColor(247, 247, 250);
+    doc.rect(M, y, W - 2 * M, 18, "F");
     doc.setFont("helvetica", "bold");
-    doc.text("Bill / Ship to:", M, y);
+    doc.setFontSize(10);
+    doc.setTextColor(20);
+    doc.text("BILL TO / SHIP TO", M + 8, y + 12);
+    y += 26;
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    doc.text(a.recipient || "-", M, y);
     y += 14;
+
     doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.setTextColor(60);
+    const street = [a.line1, a.line2].filter(Boolean).join(", ");
+    const cityLine = `${a.city ?? ""}${a.state ? ", " + a.state : ""}${a.postal_code ? " - " + a.postal_code : ""}`;
     const lines = [
-      a.recipient,
-      a.line1,
-      a.line2,
-      `${a.city ?? ""}, ${a.state ?? ""} ${a.postal_code ?? ""}`,
-      a.country,
+      street,
+      cityLine,
+      a.country || "India",
       a.phone ? `Phone: ${a.phone}` : null,
     ].filter(Boolean) as string[];
     lines.forEach((l) => {
       doc.text(l, M, y);
       y += 12;
     });
-    y += 10;
+    y += 12;
   }
 
-  // Items header
-  doc.setFillColor(245, 245, 245);
+  // ─── Items table ─────────────────────────────────────────────────
+  const colItemX = M + 8;
+  const colQtyX = W - M - 240;
+  const colUnitX = W - M - 170;
+  const colTotalX = W - M - 8;
+
+  // Header row
+  doc.setFillColor(20);
   doc.rect(M, y, W - 2 * M, 22, "F");
   doc.setFont("helvetica", "bold");
-  doc.text("Item", M + 8, y + 15);
-  doc.text("Qty", W - M - 200, y + 15);
-  doc.text("Unit", W - M - 140, y + 15);
-  doc.text("Amount", W - M - 8, y + 15, { align: "right" });
+  doc.setFontSize(9);
+  doc.setTextColor(255);
+  doc.text("ITEM DESCRIPTION", colItemX, y + 14);
+  doc.text("QTY", colQtyX, y + 14, { align: "right" });
+  doc.text("UNIT PRICE", colUnitX, y + 14, { align: "right" });
+  doc.text("TOTAL", colTotalX, y + 14, { align: "right" });
   y += 22;
 
   doc.setFont("helvetica", "normal");
-  (order.order_items ?? []).forEach((it) => {
+  doc.setTextColor(20);
+  doc.setFontSize(9);
+
+  (order.order_items ?? []).forEach((it, idx) => {
     const unit = Number(it.unit_price);
     const amt = unit * it.qty;
-    const title = doc.splitTextToSize(it.title, W - M - 240) as string[];
-    title.forEach((ln, i) => doc.text(ln, M + 8, y + 14 + i * 12));
-    doc.text(String(it.qty), W - M - 200, y + 14);
-    doc.text(inr(unit), W - M - 140, y + 14);
-    doc.text(inr(amt), W - M - 8, y + 14, { align: "right" });
-    y += Math.max(20, title.length * 12 + 6);
-    doc.setDrawColor(240);
-    doc.line(M, y, W - M, y);
+    const titleLines = doc.splitTextToSize(it.title, colQtyX - colItemX - 12) as string[];
+    const rowH = Math.max(24, titleLines.length * 12 + 12);
+
+    if (idx % 2 === 1) {
+      doc.setFillColor(250, 250, 252);
+      doc.rect(M, y, W - 2 * M, rowH, "F");
+    }
+
+    titleLines.forEach((ln, i) => doc.text(ln, colItemX, y + 14 + i * 12));
+    doc.text(String(it.qty), colQtyX, y + 14, { align: "right" });
+    doc.text(money(unit), colUnitX, y + 14, { align: "right" });
+    doc.setFont("helvetica", "bold");
+    doc.text(money(amt), colTotalX, y + 14, { align: "right" });
+    doc.setFont("helvetica", "normal");
+    y += rowH;
   });
 
-  y += 14;
-  // Totals
-  const rightX = W - M - 8;
-  const labelX = W - M - 180;
-  const row = (label: string, value: string, bold = false) => {
-    doc.setFont("helvetica", bold ? "bold" : "normal");
+  doc.setDrawColor(220);
+  doc.line(M, y, W - M, y);
+  y += 16;
+
+  // ─── Totals ──────────────────────────────────────────────────────
+  const labelX = W - M - 200;
+  const valueX = W - M - 8;
+  const totalRow = (label: string, value: string, opts: { bold?: boolean; muted?: boolean } = {}) => {
+    doc.setFont("helvetica", opts.bold ? "bold" : "normal");
+    doc.setTextColor(opts.muted ? 110 : 20);
     doc.text(label, labelX, y);
-    doc.text(value, rightX, y, { align: "right" });
+    doc.text(value, valueX, y, { align: "right" });
     y += 14;
   };
-  row("Subtotal", inr(Number(order.subtotal)));
-  if (Number(order.discount) > 0) row(`Discount${order.coupon_code ? ` (${order.coupon_code})` : ""}`, `- ${inr(Number(order.discount))}`);
-  row("Shipping", Number(order.shipping) === 0 ? "Free" : inr(Number(order.shipping)));
-  row("GST", inr(Number(order.tax)));
+
+  const subtotal = Number(order.subtotal);
+  const discount = Number(order.discount);
+  const shipping = Number(order.shipping);
+  const tax = Number(order.tax);
+  const total = Number(order.total);
+
+  totalRow("Subtotal", money(subtotal));
+  if (discount > 0)
+    totalRow(`Discount${order.coupon_code ? ` (${order.coupon_code})` : ""}`, `- ${money(discount)}`);
+  totalRow("Shipping", shipping === 0 ? "FREE" : money(shipping));
+  totalRow(`GST (${GST_RATE}%)`, money(tax));
+
   y += 4;
-  doc.setDrawColor(180);
-  doc.line(labelX, y - 8, rightX, y - 8);
+  doc.setDrawColor(20);
+  doc.setLineWidth(0.8);
+  doc.line(labelX, y - 6, valueX, y - 6);
+
+  // Highlighted total bar
+  doc.setFillColor(20);
+  doc.rect(labelX - 8, y, valueX - labelX + 16, 26, "F");
+  doc.setFont("helvetica", "bold");
   doc.setFontSize(12);
-  row("Total", inr(Number(order.total)), true);
-  doc.setFontSize(10);
+  doc.setTextColor(255);
+  doc.text("GRAND TOTAL", labelX, y + 17);
+  doc.text(money(total), valueX, y + 17, { align: "right" });
+  y += 40;
 
-  if (order.payment_ref) {
-    y += 10;
-    doc.setFont("helvetica", "normal");
-    doc.text(`Payment reference: ${order.payment_ref}`, M, y);
-  }
-
-  // Footer
-  doc.setTextColor(140);
+  // ─── Payment reference ──────────────────────────────────────────
   doc.setFontSize(9);
+  doc.setTextColor(60);
+  doc.setFont("helvetica", "normal");
+  if (order.payment_ref) {
+    doc.text(`Payment Reference: ${order.payment_ref}`, M, y);
+    y += 14;
+  }
+  doc.text("All amounts are in Indian Rupees (INR). E. & O.E.", M, y);
+
+  // ─── Footer ──────────────────────────────────────────────────────
+  doc.setDrawColor(220);
+  doc.line(M, H - 50, W - M, H - 50);
+  doc.setTextColor(140);
+  doc.setFontSize(8);
   doc.text(
-    "Thank you for shopping with Neural. This is a system-generated invoice.",
+    "Thank you for shopping with Neural. This is a computer-generated invoice and does not require a signature.",
     W / 2,
-    doc.internal.pageSize.getHeight() - 30,
+    H - 32,
     { align: "center" },
   );
+  doc.text("Neural Commerce Pvt Ltd  •  support@neural.shop  •  neural.shop", W / 2, H - 20, {
+    align: "center",
+  });
 
-  doc.save(`invoice-${order.id.slice(0, 8)}.pdf`);
+  doc.save(`invoice-${order.id.slice(0, 8).toUpperCase()}.pdf`);
 }
