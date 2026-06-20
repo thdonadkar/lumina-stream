@@ -14,6 +14,8 @@ export type AddressInput = {
   postal_code: string;
   country?: string;
   is_default?: boolean;
+  latitude?: number | null;
+  longitude?: number | null;
 };
 
 function validate(d: AddressInput): AddressInput {
@@ -55,6 +57,8 @@ export const saveAddress = createServerFn({ method: "POST" })
       postal_code: data.postal_code,
       country: data.country ?? "IN",
       is_default: !!data.is_default,
+      latitude: data.latitude ?? null,
+      longitude: data.longitude ?? null,
     };
 
     if (data.is_default) {
