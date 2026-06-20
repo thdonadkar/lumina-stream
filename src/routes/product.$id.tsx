@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Star, ShoppingBag, Heart, Share2, Shield, Truck, RotateCcw } from "lucide-react";
 import { getProduct, products } from "@/lib/products";
+import { getActiveProductBySlug } from "@/lib/catalog.functions";
 import { useCart, formatPrice } from "@/lib/cart-store";
 import { useWishlist } from "@/lib/wishlist-store";
 import { useRecentlyViewed } from "@/lib/recently-viewed-store";
@@ -11,8 +12,8 @@ import { RecentlyViewed } from "@/components/RecentlyViewed";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/product/$id")({
-  head: ({ params }) => {
-    const p = getProduct(params.id);
+  head: ({ params, loaderData }) => {
+    const p = (loaderData as any)?.product ?? getProduct(params.id);
     if (!p) {
       return { meta: [{ title: "Product not found — Neural" }] };
     }
@@ -61,8 +62,10 @@ export const Route = createFileRoute("/product/$id")({
       ],
     };
   },
-  loader: ({ params }) => {
-    const product = getProduct(params.id);
+  loader: async ({ params }) => {
+    // DB first (covers seller-added products), then static fallback for SSR speed.
+    let product = await getActiveProductBySlug({ data: { slug: params.id } }).catch(() => null);
+    if (!product) product = getProduct(params.id) ?? null;
     if (!product) throw notFound();
     return { product };
   },

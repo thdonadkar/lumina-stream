@@ -1,11 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { motion } from "framer-motion";
 import { LifeBuoy, Send, ChevronLeft, MessageCircle, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
-import { createTicket, listMyTickets, getTicketThread, replyToTicket } from "@/lib/support.functions";
+import { useTicketRealtime } from "@/hooks/use-ticket-realtime";
+import { relativeTimeShort, senderLabel } from "@/lib/support-format";
+import { createTicket, listMyTickets, getTicketThread, replyToTicket, markTicketRead } from "@/lib/support.functions";
 
 export const Route = createFileRoute("/support")({
   head: () => ({ meta: [{ title: "Support — Neural" }] }),
@@ -34,6 +36,7 @@ function Support() {
   const fetchThread = useServerFn(getTicketThread);
   const create = useServerFn(createTicket);
   const send = useServerFn(replyToTicket);
+  const markRead = useServerFn(markTicketRead);
 
   async function refreshList() {
     try { setTickets(await fetchList()); } catch { /* */ }
@@ -41,8 +44,23 @@ function Support() {
   async function openTicket(id: string) {
     setActiveId(id);
     setThread(null);
-    try { setThread(await fetchThread({ data: { id } })); } catch { /* */ }
+    try {
+      const t = await fetchThread({ data: { id } });
+      setThread(t);
+      await markRead({ data: { id } });
+      refreshList();
+    } catch { /* */ }
   }
+
+  const onRealtimeInsert = useCallback((row: any) => {
+    setThread((prev: any) => {
+      if (!prev || prev.ticket.id !== row.ticket_id) return prev;
+      if (prev.messages.some((m: any) => m.id === row.id)) return prev;
+      return { ...prev, messages: [...prev.messages, row] };
+    });
+    if (activeId) markRead({ data: { id: activeId } }).catch(() => {});
+  }, [activeId, markRead]);
+  useTicketRealtime(activeId, onRealtimeInsert);
 
   useEffect(() => { if (userId) refreshList(); /* eslint-disable-next-line */ }, [userId]);
 
@@ -195,12 +213,28 @@ function Support() {
             >
               <MessageCircle className="size-5 text-cyan shrink-0" />
               <div className="flex-1 min-w-0">
-                <p className="font-bold truncate">{t.subject}</p>
-                <p className="text-xs text-muted-foreground font-mono">#{t.id.slice(0, 8)} · {new Date(t.updated_at).toLocaleDateString()}</p>
+                <div className="flex items-center gap-2">
+                  <p className="font-bold truncate">{t.subject}</p>
+                  {t.unread && <span aria-label="Unread reply" className="size-2 rounded-full bg-cyan shrink-0" />}
+                </div>
+                {t.last_message ? (
+                  <p className="text-xs text-muted-foreground truncate">
+                    <span className="font-mono">{senderLabel(t.last_message.sender_role)}:</span>{" "}
+                    {t.last_message.body}
+                  </p>
+                ) : null}
+                <p className="text-[10px] text-muted-foreground font-mono mt-0.5">
+                  #{t.id.slice(0, 8)} · {relativeTimeShort(t.updated_at)}
+                </p>
               </div>
-              <span className={`px-2 py-0.5 rounded-full text-[10px] uppercase font-mono ${STATUS_TONE[t.status]}`}>
-                {t.status.replace("_", " ")}
-              </span>
+              <div className="flex flex-col items-end gap-1 shrink-0">
+                <span className={`px-2 py-0.5 rounded-full text-[10px] uppercase font-mono ${STATUS_TONE[t.status]}`}>
+                  {t.status.replace("_", " ")}
+                </span>
+                {t.unread && (
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-cyan text-background">New</span>
+                )}
+              </div>
             </motion.button>
           ))}
         </div>

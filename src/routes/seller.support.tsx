@@ -1,13 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { requireRole } from "@/lib/route-guards";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { motion } from "framer-motion";
 import { Send, ChevronLeft, LifeBuoy } from "lucide-react";
 import { toast } from "sonner";
 import { RoleGate } from "@/components/RoleGate";
 import { SellerNav } from "./seller.dashboard";
-import { listSellerTickets, getTicketThread, replyToTicket, setTicketStatus } from "@/lib/support.functions";
+import { useTicketRealtime } from "@/hooks/use-ticket-realtime";
+import { relativeTimeShort, senderLabel } from "@/lib/support-format";
+import { listSellerTickets, getTicketThread, replyToTicket, setTicketStatus, markTicketRead } from "@/lib/support.functions";
 
 export const Route = createFileRoute("/seller/support")({
   ssr: false,
@@ -38,14 +40,30 @@ function Page() {
   const fetchThread = useServerFn(getTicketThread);
   const send = useServerFn(replyToTicket);
   const setStatus = useServerFn(setTicketStatus);
+  const markRead = useServerFn(markTicketRead);
 
   async function refreshList() {
     try { setTickets(await fetchList()); } catch (e: any) { toast.error(e.message); }
   }
   async function openTicket(id: string) {
     setActiveId(id); setThread(null);
-    try { setThread(await fetchThread({ data: { id } })); } catch { /* */ }
+    try {
+      const t = await fetchThread({ data: { id } });
+      setThread(t);
+      await markRead({ data: { id } });
+      refreshList();
+    } catch { /* */ }
   }
+  const onRealtimeInsert = useCallback((row: any) => {
+    setThread((prev: any) => {
+      if (!prev || prev.ticket.id !== row.ticket_id) return prev;
+      if (prev.messages.some((m: any) => m.id === row.id)) return prev;
+      return { ...prev, messages: [...prev.messages, row] };
+    });
+    if (activeId) markRead({ data: { id: activeId } }).catch(() => {});
+  }, [activeId, markRead]);
+  useTicketRealtime(activeId, onRealtimeInsert);
+
   useEffect(() => { refreshList(); /* eslint-disable-next-line */ }, []);
 
   async function submitReply(e: React.FormEvent) {
@@ -152,14 +170,28 @@ function Page() {
               className="w-full glass hover:glass-strong rounded-2xl p-4 flex items-center gap-3 text-left transition-all"
             >
               <div className="flex-1 min-w-0">
-                <p className="font-bold truncate">{t.subject}</p>
-                <p className="text-xs text-muted-foreground font-mono truncate">
-                  #{t.id.slice(0, 8)} · {t.profiles?.display_name ?? "customer"} · {new Date(t.updated_at).toLocaleDateString()}
+                <div className="flex items-center gap-2">
+                  <p className="font-bold truncate">{t.subject}</p>
+                  {t.unread && <span aria-label="Unread reply" className="size-2 rounded-full bg-cyan shrink-0" />}
+                </div>
+                {t.last_message ? (
+                  <p className="text-xs text-muted-foreground truncate">
+                    <span className="font-mono">{senderLabel(t.last_message.sender_role)}:</span>{" "}
+                    {t.last_message.body}
+                  </p>
+                ) : null}
+                <p className="text-[10px] text-muted-foreground font-mono mt-0.5 truncate">
+                  #{t.id.slice(0, 8)} · {t.profiles?.display_name ?? "customer"} · {relativeTimeShort(t.updated_at)}
                 </p>
               </div>
-              <span className={`px-2 py-0.5 rounded-full text-[10px] uppercase font-mono shrink-0 ${STATUS_TONE[t.status]}`}>
-                {t.status.replace("_", " ")}
-              </span>
+              <div className="flex flex-col items-end gap-1 shrink-0">
+                <span className={`px-2 py-0.5 rounded-full text-[10px] uppercase font-mono ${STATUS_TONE[t.status]}`}>
+                  {t.status.replace("_", " ")}
+                </span>
+                {t.unread && (
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-cyan text-background">New</span>
+                )}
+              </div>
             </motion.button>
           ))}
         </div>

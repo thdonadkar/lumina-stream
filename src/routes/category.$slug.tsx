@@ -1,9 +1,14 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { ChevronRight } from "lucide-react";
+import { useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { getCategory, CATEGORIES } from "@/lib/categories";
 import { productsByCategorySlug } from "@/lib/products";
+import { listActiveProducts } from "@/lib/catalog.functions";
 import { ProductCard } from "@/components/ProductCard";
+import type { Product } from "@/lib/products";
 
 export const Route = createFileRoute("/category/$slug")({
   head: ({ params }) => {
@@ -34,7 +39,19 @@ export const Route = createFileRoute("/category/$slug")({
 function CategoryPage() {
   const { slug } = Route.useParams();
   const cat = getCategory(slug)!;
-  const items = productsByCategorySlug(slug);
+  const listFn = useServerFn(listActiveProducts);
+  const { data: dbProducts } = useQuery<Product[]>({
+    queryKey: ["catalog", "active"],
+    queryFn: () => listFn(),
+    staleTime: 60_000,
+    refetchOnWindowFocus: false,
+  });
+  const items = useMemo<Product[]>(() => {
+    const bySlug = new Map<string, Product>();
+    for (const p of productsByCategorySlug(slug)) bySlug.set(p.id, p);
+    for (const p of dbProducts ?? []) if (p.categorySlug === slug) bySlug.set(p.id, p);
+    return Array.from(bySlug.values());
+  }, [slug, dbProducts]);
   const Icon = cat.icon;
 
   return (

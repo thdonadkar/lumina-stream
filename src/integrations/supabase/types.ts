@@ -841,6 +841,9 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          last_read_admin_at: string | null
+          last_read_seller_at: string | null
+          last_read_user_at: string | null
           message: string
           order_id: string | null
           seller_id: string | null
@@ -852,6 +855,9 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          last_read_admin_at?: string | null
+          last_read_seller_at?: string | null
+          last_read_user_at?: string | null
           message: string
           order_id?: string | null
           seller_id?: string | null
@@ -863,6 +869,9 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          last_read_admin_at?: string | null
+          last_read_seller_at?: string | null
+          last_read_user_at?: string | null
           message?: string
           order_id?: string | null
           seller_id?: string | null

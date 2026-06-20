@@ -2,7 +2,10 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { LayoutGrid, List, SlidersHorizontal, Star } from "lucide-react";
-import { products, categories } from "@/lib/products";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { products as STATIC_PRODUCTS, categories as STATIC_CATEGORIES, type Product } from "@/lib/products";
+import { listActiveProducts } from "@/lib/catalog.functions";
 import { ProductCard } from "@/components/ProductCard";
 import { Slider } from "@/components/ui/slider";
 import { formatPrice } from "@/lib/cart-store";
@@ -27,6 +30,30 @@ function Shop() {
   const [sort, setSort] = useState<SortKey>("featured");
   const [filtersOpen, setFiltersOpen] = useState(false);
 
+  const listFn = useServerFn(listActiveProducts);
+  const { data: dbProducts } = useQuery<Product[]>({
+    queryKey: ["catalog", "active"],
+    queryFn: () => listFn(),
+    staleTime: 60_000,
+    refetchOnWindowFocus: false,
+  });
+
+  // Merge DB rows with the static fallback so /shop is never empty during SSR / before hydration.
+  const products = useMemo<Product[]>(() => {
+    if (!dbProducts || dbProducts.length === 0) return STATIC_PRODUCTS;
+    const bySlug = new Map<string, Product>();
+    for (const p of STATIC_PRODUCTS) bySlug.set(p.id, p);
+    for (const p of dbProducts) bySlug.set(p.id, p); // DB wins
+    return Array.from(bySlug.values());
+  }, [dbProducts]);
+
+  const categories = useMemo(() => {
+    const seen = new Set<string>();
+    for (const p of products) if (p.category) seen.add(p.category);
+    for (const c of STATIC_CATEGORIES) seen.add(c);
+    return Array.from(seen);
+  }, [products]);
+
   const filtered = useMemo(() => {
     let list = products.filter(
       (p) =>
@@ -39,7 +66,7 @@ function Shop() {
     if (sort === "price-desc") list = [...list].sort((a, b) => b.price - a.price);
     if (sort === "rating") list = [...list].sort((a, b) => b.rating - a.rating);
     return list;
-  }, [category, minRating, priceRange, sort]);
+  }, [products, category, minRating, priceRange, sort]);
 
   return (
     <div className="px-4 sm:px-6 max-w-7xl mx-auto">
