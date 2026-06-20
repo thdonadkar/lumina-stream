@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { X, Minus, Plus, Trash2, Sparkles } from "lucide-react";
 import { Link } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { useCart, formatPrice } from "@/lib/cart-store";
 import { products } from "@/lib/products";
 
@@ -10,6 +11,21 @@ export function CartDrawer() {
   const suggestions = products
     .filter((p) => !items.some((i) => i.product.id === p.id))
     .slice(0, 2);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") closeCart();
+    };
+    document.addEventListener("keydown", onKey);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [isOpen, closeCart]);
+
 
   return (
     <AnimatePresence>
