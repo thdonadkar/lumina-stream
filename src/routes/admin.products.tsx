@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { RoleGate } from "@/components/RoleGate";
 import { AdminNav } from "./admin.dashboard";
-import { Flag, Check, Trash2 } from "lucide-react";
+import { Flag, Check, Trash2, RotateCcw } from "lucide-react";
 import { listAllProducts, setProductStatus, deleteProductAdmin } from "@/lib/admin.functions";
 import { toast } from "sonner";
 import { useConfirm } from "@/components/ConfirmDialog";
