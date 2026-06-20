@@ -141,6 +141,8 @@ function Dashboard() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
         <QA to="/shop" icon={ShoppingBag} label="Continue shopping" />
         <QA to="/wishlist" icon={Heart} label="My wishlist" />
+        <QA to="/addresses" icon={MapPin} label="Saved addresses" />
+        <QA to="/notifications" icon={Bell} label="Notifications" />
         <QA to="/support" icon={LifeBuoy} label="Support" />
         <QA onClick={() => setTab("addresses")} icon={MapPin} label="Manage addresses" />
       </div>
