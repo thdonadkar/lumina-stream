@@ -190,7 +190,7 @@ export function LocationPickerDialog({ open, onClose, onConfirm }: Props) {
         const { latitude, longitude } = pos.coords;
         console.log("LOCATION:", latitude, longitude);
         try {
-          mapRef.current?.setView([latitude, longitude], 16, { animate: true, duration: 1.5 });
+          mapRef.current?.flyTo([latitude, longitude], 16, { duration: 1.8, easeLinearity: 0.25 });
           markerRef.current?.setLatLng([latitude, longitude]);
           setTimeout(() => {
             const c = mapRef.current?.getCenter?.();
@@ -207,10 +207,16 @@ export function LocationPickerDialog({ open, onClose, onConfirm }: Props) {
         console.error("geolocation error", err.code, err.message);
         if (err.code === 1) {
           setPermState("denied");
-          setLocationMessage("Enable location from browser settings");
+          setLocationMessage("Please allow location access from browser settings.");
           toast.error("Location blocked. Enable it for this site in your browser settings.", { duration: 8000 });
+        } else if (err.code === 2) {
+          setLocationMessage("GPS is OFF. Please enable location services on your device.");
+          toast.error("GPS unavailable. Enable location services and try again.");
+        } else if (err.code === 3) {
+          setLocationMessage("Location request timed out. Try again.");
+          toast.error("Timed out getting your location. Try again.");
         } else {
-          setLocationMessage("GPS failed. Drag the pin, tap the map, or search manually.");
+          setLocationMessage("Unable to fetch location. Drag the pin or search manually.");
           toast.error("Couldn't get your location. Drag the pin or search manually.");
         }
       },
