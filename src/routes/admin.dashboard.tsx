@@ -71,7 +71,7 @@ function Page() {
               transition={{ delay: i * 0.05 }}
               className="glass rounded-2xl p-5 relative overflow-hidden group"
             >
-              <div className={`absolute -top-10 -right-10 size-28 rounded-full bg-${k.tone}/30 blur-3xl opacity-50 group-hover:opacity-80 transition-opacity`} />
+              <div className={`absolute -top-10 -right-10 size-28 rounded-full ${k.glow} blur-3xl opacity-50 group-hover:opacity-80 transition-opacity`} />
               <div className="flex items-center justify-between">
                 <I className="size-4 text-muted-foreground" />
                 <span className="text-[10px] font-mono uppercase text-cyan flex items-center gap-0.5">
