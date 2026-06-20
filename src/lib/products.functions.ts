@@ -181,6 +181,9 @@ export const updateProduct = createServerFn({ method: "POST" })
     if (d.title !== undefined && !d.title.trim()) throw new UserError("Title required");
     if (d.price !== undefined && (typeof d.price !== "number" || d.price < 0)) throw new UserError("Valid price required");
     if (d.stock !== undefined && (typeof d.stock !== "number" || d.stock < 0)) throw new UserError("Valid stock required");
+    if (d.status !== undefined && !["draft", "active"].includes(d.status)) {
+      throw new UserError("Invalid status");
+    }
     return d;
   })
   .handler(async ({ data, context }) => {
