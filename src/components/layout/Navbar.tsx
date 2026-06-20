@@ -2,6 +2,7 @@ import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, ShoppingBag, User, Heart, ChevronDown, ShieldAlert, Store, LogOut, LifeBuoy, Menu, X } from "lucide-react";
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { useCart } from "@/lib/cart-store";
 import { useWishlist } from "@/lib/wishlist-store";
 import { useAuth } from "@/hooks/use-auth";
@@ -246,101 +247,104 @@ export function Navbar() {
         )}
       </AnimatePresence>
 
-      {/* Mobile drawer */}
-      <AnimatePresence>
-        {mobileOpen && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setMobileOpen(false)}
-              className="fixed inset-0 z-[80] bg-black/60 backdrop-blur-sm md:hidden"
-              aria-hidden="true"
-            />
-            <motion.div
-              id="mobile-nav-drawer"
-              role="dialog"
-              aria-modal="true"
-              aria-label="Main menu"
-              initial={{ x: "100%" }}
-              animate={{ x: 0 }}
-              exit={{ x: "100%" }}
-              transition={{ type: "spring", stiffness: 320, damping: 34 }}
-              className="fixed top-0 right-0 bottom-0 z-[90] w-[92%] max-w-sm glass-strong border-l border-white/10 flex flex-col md:hidden"
-            >
-              <div className="flex items-center justify-between p-4 border-b border-white/5">
-                <span className="font-extrabold tracking-tighter text-lg">NEURAL.</span>
-                <button
-                  onClick={() => setMobileOpen(false)}
-                  aria-label="Close menu"
-                  className="size-9 grid place-items-center rounded-full glass hover:glass-strong"
-                >
-                  <X className="size-4" aria-hidden="true" />
-                </button>
-              </div>
-              <nav className="flex-1 overflow-y-auto p-4 space-y-1">
-                {navLinks.map((l) => (
-                  <Link key={l.to} to={l.to} className="block px-4 py-3 rounded-xl glass hover:glass-strong font-semibold">
-                    {l.label}
-                  </Link>
-                ))}
-                <Link to="/search" className="block px-4 py-3 rounded-xl glass hover:glass-strong font-semibold">Search</Link>
-                <Link to="/wishlist" className="block px-4 py-3 rounded-xl glass hover:glass-strong font-semibold">
-                  Wishlist {wishBadge > 0 && <span className="ml-1 text-xs text-rose-400">({wishBadge})</span>}
-                </Link>
-                <Link to="/dashboard" className="block px-4 py-3 rounded-xl glass hover:glass-strong font-semibold">Account</Link>
-                <Link to="/support" className="block px-4 py-3 rounded-xl glass hover:glass-strong font-semibold">Support</Link>
-                {isSeller && (
-                  <Link to="/seller/dashboard" className="block px-4 py-3 rounded-xl glass hover:glass-strong font-semibold text-cyan">
-                    Seller console
-                  </Link>
-                )}
-                {isAdmin && (
-                  <Link to="/admin/dashboard" className="block px-4 py-3 rounded-xl glass hover:glass-strong font-semibold text-rose-400">
-                    Admin
-                  </Link>
-                )}
-
-                <div className="pt-4">
-                  <p className="px-4 pb-2 text-[10px] font-mono uppercase tracking-widest text-muted-foreground">Categories</p>
-                  <div className="grid grid-cols-2 gap-2">
-                    {CATEGORIES.map((c) => {
-                      const I = c.icon;
-                      return (
-                        <Link
-                          key={c.slug}
-                          to="/category/$slug"
-                          params={{ slug: c.slug }}
-                          className="glass hover:glass-strong rounded-xl p-3 flex items-center gap-2"
-                        >
-                          <div className="size-7 rounded-lg bg-aurora animate-aurora grid place-items-center text-background shrink-0">
-                            <I className="size-3.5" />
-                          </div>
-                          <span className="text-sm font-semibold truncate">{c.name}</span>
-                        </Link>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {userId ? (
+      {/* Mobile drawer — portaled to body so it isn't trapped by the header's transform containing block */}
+      {typeof document !== "undefined" && createPortal(
+        <AnimatePresence>
+          {mobileOpen && (
+            <>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setMobileOpen(false)}
+                className="fixed inset-0 z-[80] bg-black/60 backdrop-blur-sm md:hidden"
+                aria-hidden="true"
+              />
+              <motion.div
+                id="mobile-nav-drawer"
+                role="dialog"
+                aria-modal="true"
+                aria-label="Main menu"
+                initial={{ x: "100%" }}
+                animate={{ x: 0 }}
+                exit={{ x: "100%" }}
+                transition={{ type: "spring", stiffness: 320, damping: 34 }}
+                className="fixed top-0 right-0 bottom-0 z-[90] w-[92%] max-w-sm glass-strong border-l border-white/10 flex flex-col md:hidden"
+              >
+                <div className="flex items-center justify-between p-4 border-b border-white/5">
+                  <span className="font-extrabold tracking-tighter text-lg">NEURAL.</span>
                   <button
-                    onClick={handleLogout}
-                    className="w-full mt-4 px-4 py-3 rounded-xl glass hover:glass-strong font-semibold text-rose-400 text-left flex items-center gap-2"
+                    onClick={() => setMobileOpen(false)}
+                    aria-label="Close menu"
+                    className="size-9 grid place-items-center rounded-full glass hover:glass-strong"
                   >
-                    <LogOut className="size-4" aria-hidden="true" /> Sign out
+                    <X className="size-4" aria-hidden="true" />
                   </button>
-                ) : (
-                  <Link to="/auth" className="block mt-4 px-4 py-3 rounded-xl bg-aurora animate-aurora font-bold text-background text-center">
-                    Sign in
+                </div>
+                <nav className="flex-1 overflow-y-auto p-4 space-y-1">
+                  {navLinks.map((l) => (
+                    <Link key={l.to} to={l.to} className="block px-4 py-3 rounded-xl glass hover:glass-strong font-semibold">
+                      {l.label}
+                    </Link>
+                  ))}
+                  <Link to="/search" className="block px-4 py-3 rounded-xl glass hover:glass-strong font-semibold">Search</Link>
+                  <Link to="/wishlist" className="block px-4 py-3 rounded-xl glass hover:glass-strong font-semibold">
+                    Wishlist {wishBadge > 0 && <span className="ml-1 text-xs text-rose-400">({wishBadge})</span>}
                   </Link>
-                )}
-              </nav>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+                  <Link to="/dashboard" className="block px-4 py-3 rounded-xl glass hover:glass-strong font-semibold">Account</Link>
+                  <Link to="/support" className="block px-4 py-3 rounded-xl glass hover:glass-strong font-semibold">Support</Link>
+                  {isSeller && (
+                    <Link to="/seller/dashboard" className="block px-4 py-3 rounded-xl glass hover:glass-strong font-semibold text-cyan">
+                      Seller console
+                    </Link>
+                  )}
+                  {isAdmin && (
+                    <Link to="/admin/dashboard" className="block px-4 py-3 rounded-xl glass hover:glass-strong font-semibold text-rose-400">
+                      Admin
+                    </Link>
+                  )}
+
+                  <div className="pt-4">
+                    <p className="px-4 pb-2 text-[10px] font-mono uppercase tracking-widest text-muted-foreground">Categories</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      {CATEGORIES.map((c) => {
+                        const I = c.icon;
+                        return (
+                          <Link
+                            key={c.slug}
+                            to="/category/$slug"
+                            params={{ slug: c.slug }}
+                            className="glass hover:glass-strong rounded-xl p-3 flex items-center gap-2"
+                          >
+                            <div className="size-7 rounded-lg bg-aurora animate-aurora grid place-items-center text-background shrink-0">
+                              <I className="size-3.5" />
+                            </div>
+                            <span className="text-sm font-semibold truncate">{c.name}</span>
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {userId ? (
+                    <button
+                      onClick={handleLogout}
+                      className="w-full mt-4 px-4 py-3 rounded-xl glass hover:glass-strong font-semibold text-rose-400 text-left flex items-center gap-2"
+                    >
+                      <LogOut className="size-4" aria-hidden="true" /> Sign out
+                    </button>
+                  ) : (
+                    <Link to="/auth" className="block mt-4 px-4 py-3 rounded-xl bg-aurora animate-aurora font-bold text-background text-center">
+                      Sign in
+                    </Link>
+                  )}
+                </nav>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>,
+        document.body,
+      )}
     </motion.header>
   );
 }
