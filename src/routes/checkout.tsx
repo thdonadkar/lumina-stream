@@ -53,12 +53,15 @@ function Checkout() {
   const [couponInput, setCouponInput] = useState("");
   const [coupon, setCoupon] = useState<{ code: string; discount: number; freeShipping: boolean } | null>(null);
   const [placing, setPlacing] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<"razorpay" | "cod">("razorpay");
 
   const listAddrs = useServerFn(listAddresses);
   const saveAddrFn = useServerFn(saveAddress);
   const delAddrFn = useServerFn(deleteAddress);
   const validateCouponFn = useServerFn(validateCoupon);
   const placeOrderFn = useServerFn(placeOrder);
+  const createRzpFn = useServerFn(createRazorpayOrder);
+  const verifyRzpFn = useServerFn(verifyRazorpayPayment);
 
   const subtotal = total();
   const shippingBase = delivery === "drone" ? 400 : delivery === "express" ? 150 : 0;
