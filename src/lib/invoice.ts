@@ -40,7 +40,7 @@ const formatINR = (amount: number | string) =>
 
 const cleanText = (value: unknown) =>
   String(value ?? "-")
-    .replace(/[₹¹]/g, "Rs.")
+    .replace(/[\u20b9\u00b9]/g, "Rs.")
     .replace(/\s+/g, " ")
     .trim();
 
@@ -125,7 +125,7 @@ export function createInvoicePdf(order: InvoiceOrder) {
     ["Seller", "Neural Commerce Pvt Ltd"],
   ];
   const metaRight: Array<[string, string]> = [
-    ["Payment", paymentSummary],
+    ["Payment", `${paymentStatus} (${paymentMethodShort(order.payment_method)})`],
     ["Payment Method", paymentMethod],
     ["Payment Status", paymentStatus],
     ["GSTIN", "Optional / Not provided"],
