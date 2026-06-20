@@ -8,8 +8,11 @@ import {
   Area, AreaChart, Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip,
   XAxis, YAxis,
 } from "recharts";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { RoleGate } from "@/components/RoleGate";
 import { products } from "@/lib/products";
+import { listSellerOrders } from "@/lib/orders.functions";
 import { ChartShell, ChartTooltip } from "@/components/charts/ChartShell";
 import { RangeFilter } from "@/components/charts/RangeFilter";
 import { RANGES, revenueSeries, totals, type Range } from "@/lib/analytics-mock";
@@ -41,13 +44,18 @@ function SellerDashboard() {
     { label: "Conversion", value: "3.42%", delta: "+0.4pt", icon: TrendingUp },
   ];
 
-  const recentOrders = [
-    { id: "ORD-4821", customer: "Alex Morris", item: "Void Receptor", total: 2499, status: "pending" },
-    { id: "ORD-4822", customer: "Priya Shah", item: "Echo Implants", total: 820, status: "shipped" },
-    { id: "ORD-4823", customer: "Hiro Tanaka", item: "Onyx Controller", total: 499, status: "delivered" },
-    { id: "ORD-4824", customer: "Nour Khalil", item: "Chronos Band", total: 390, status: "packed" },
-    { id: "ORD-4825", customer: "Kai Brennan", item: "Prism Tablet", total: 1299, status: "pending" },
-  ];
+  const listOrders = useServerFn(listSellerOrders);
+  const { data: orders = [] } = useQuery({
+    queryKey: ["seller-orders"],
+    queryFn: () => listOrders(),
+  });
+  const recentOrders = (orders as any[]).slice(0, 5).map((o) => ({
+    id: `ORD-${o.id.slice(0, 6).toUpperCase()}`,
+    customer: o.user_id?.slice(0, 8) ?? "—",
+    item: o.order_items?.[0]?.title ?? `${o.order_items?.length ?? 0} items`,
+    total: Number(o.total),
+    status: o.status,
+  }));
 
   return (
     <div className="px-4 pt-28 pb-24 max-w-7xl mx-auto">
