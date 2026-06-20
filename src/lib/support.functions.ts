@@ -69,6 +69,56 @@ export const createTicket = createServerFn({ method: "POST" })
     return ticket;
   });
 
+async function decorateTickets(supabase: any, tickets: any[], role: "user" | "seller" | "admin") {
+  if (!tickets.length) return [];
+  const ids = tickets.map((t) => t.id);
+  const userIds = Array.from(new Set(tickets.map((t) => t.user_id).filter(Boolean)));
+
+  // Pull last message per ticket (one query, sorted desc, then dedupe)
+  const { data: msgs } = await supabase
+    .from("support_ticket_messages")
+    .select("ticket_id, body, sender_role, is_admin, created_at")
+    .in("ticket_id", ids)
+    .order("created_at", { ascending: false });
+  const lastByTicket: Record<string, any> = {};
+  for (const m of msgs ?? []) {
+    if (!lastByTicket[m.ticket_id]) lastByTicket[m.ticket_id] = m;
+  }
+
+  let nameMap: Record<string, string> = {};
+  if (userIds.length) {
+    const { data: profs } = await supabase
+      .from("profiles").select("id, display_name").in("id", userIds);
+    nameMap = Object.fromEntries((profs ?? []).map((p: any) => [p.id, p.display_name]));
+  }
+
+  return tickets.map((t) => {
+    const last = lastByTicket[t.id] ?? null;
+    const readKey =
+      role === "user" ? t.last_read_user_at
+      : role === "seller" ? t.last_read_seller_at
+      : t.last_read_admin_at;
+    let unread = false;
+    if (last) {
+      const incoming =
+        role === "user" ? last.sender_role !== "user"
+        : role === "seller" ? last.sender_role !== "seller"
+        : last.sender_role !== "admin";
+      const readTs = readKey ? new Date(readKey).getTime() : 0;
+      unread = incoming && new Date(last.created_at).getTime() > readTs;
+    }
+    const preview = last
+      ? { body: (last.body ?? "").slice(0, 120), sender_role: last.sender_role, created_at: last.created_at }
+      : null;
+    return {
+      ...t,
+      profiles: { display_name: nameMap[t.user_id] ?? null },
+      last_message: preview,
+      unread,
+    };
+  });
+}
+
 export const listMyTickets = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
@@ -78,7 +128,7 @@ export const listMyTickets = createServerFn({ method: "GET" })
       .eq("user_id", context.userId)
       .order("updated_at", { ascending: false });
     if (error) throw error;
-    return data ?? [];
+    return decorateTickets(context.supabase, data ?? [], "user");
   });
 
 export const listSellerTickets = createServerFn({ method: "GET" })
@@ -91,17 +141,7 @@ export const listSellerTickets = createServerFn({ method: "GET" })
       .order("updated_at", { ascending: false })
       .limit(200);
     if (error) throw error;
-    const tickets = data ?? [];
-    const ids = Array.from(new Set(tickets.map((t: any) => t.user_id).filter(Boolean)));
-    let nameMap: Record<string, string> = {};
-    if (ids.length) {
-      const { data: profs } = await context.supabase
-        .from("profiles")
-        .select("id, display_name")
-        .in("id", ids);
-      nameMap = Object.fromEntries((profs ?? []).map((p: any) => [p.id, p.display_name]));
-    }
-    return tickets.map((t: any) => ({ ...t, profiles: { display_name: nameMap[t.user_id] ?? null } }));
+    return decorateTickets(context.supabase, data ?? [], "seller");
   });
 
 export const listAllTickets = createServerFn({ method: "GET" })
@@ -118,17 +158,27 @@ export const listAllTickets = createServerFn({ method: "GET" })
       .order("updated_at", { ascending: false })
       .limit(200);
     if (error) throw error;
-    const tickets = data ?? [];
-    const ids = Array.from(new Set(tickets.map((t: any) => t.user_id).filter(Boolean)));
-    let nameMap: Record<string, string> = {};
-    if (ids.length) {
-      const { data: profs } = await context.supabase
-        .from("profiles")
-        .select("id, display_name")
-        .in("id", ids);
-      nameMap = Object.fromEntries((profs ?? []).map((p: any) => [p.id, p.display_name]));
-    }
-    return tickets.map((t: any) => ({ ...t, profiles: { display_name: nameMap[t.user_id] ?? null } }));
+    return decorateTickets(context.supabase, data ?? [], "admin");
+  });
+
+export const markTicketRead = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { id: string }) => d)
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { data: isAdmin } = await supabase.rpc("has_role", { _user_id: userId, _role: "admin" });
+    const { data: ticket } = await supabase
+      .from("support_tickets").select("user_id, seller_id").eq("id", data.id).maybeSingle();
+    if (!ticket) throw new UserError("Ticket not found");
+    const now = new Date().toISOString();
+    const patch: any = {};
+    if (isAdmin) patch.last_read_admin_at = now;
+    else if (ticket.seller_id === userId) patch.last_read_seller_at = now;
+    else if (ticket.user_id === userId) patch.last_read_user_at = now;
+    else throw new UserError("Forbidden");
+    const { error } = await supabase.from("support_tickets").update(patch).eq("id", data.id);
+    if (error) throw error;
+    return { ok: true };
   });
 
 export const getTicketThread = createServerFn({ method: "POST" })
