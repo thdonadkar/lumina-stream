@@ -54,6 +54,7 @@ type PlaceOrderInput = {
   shipping: number;
   coupon_code?: string | null;
   notes?: string | null;
+  payment_method?: "razorpay" | "cod";
 };
 
 function validateOrderInput(d: PlaceOrderInput): PlaceOrderInput {
@@ -66,14 +67,16 @@ function validateOrderInput(d: PlaceOrderInput): PlaceOrderInput {
       throw new Error("Invalid cart item title");
     if (!Number.isInteger(it.qty) || it.qty < 1 || it.qty > 100)
       throw new Error("Invalid quantity");
-    // unit_price is a hint; server re-fetches the true price below.
     if (typeof it.unit_price !== "number" || !Number.isFinite(it.unit_price) || it.unit_price < 0)
       throw new Error("Invalid unit price");
     if (it.product_id !== null && typeof it.product_id !== "string")
       throw new Error("Invalid product id");
   }
+  if (d.payment_method && d.payment_method !== "razorpay" && d.payment_method !== "cod")
+    throw new Error("Invalid payment method");
   return d;
 }
+
 
 export const validateCoupon = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
