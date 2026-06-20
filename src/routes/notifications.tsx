@@ -114,6 +114,7 @@ function NotificationsPage() {
     return <div className="p-20 text-center text-muted-foreground">Loading…</div>;
   }
 
+  const userId = session.user.id;
   const filtered = filter === "unread" ? items.filter((n) => !n.is_read) : items;
   const unread = items.filter((n) => !n.is_read).length;
 
@@ -123,9 +124,9 @@ function NotificationsPage() {
         .from("notifications")
         .update({ is_read: true })
         .eq("id", id)
-        .eq("user_id", session.user.id);
+        .eq("user_id", userId);
       if (updateError) throw updateError;
-      setItems((xs) => xs.map((x) => (x.id === id ? { ...x, is_read: true } : x)));
+      setItems((xs) => (xs ?? []).map((x) => (x.id === id ? { ...x, is_read: true } : x)));
     } catch { toast.error("Couldn't mark as read"); }
   }
   async function onMarkAll() {
@@ -133,10 +134,10 @@ function NotificationsPage() {
       const { error: updateError } = await supabase
         .from("notifications")
         .update({ is_read: true })
-        .eq("user_id", session.user.id)
+        .eq("user_id", userId)
         .eq("is_read", false);
       if (updateError) throw updateError;
-      setItems((xs) => xs.map((x) => ({ ...x, is_read: true })));
+      setItems((xs) => (xs ?? []).map((x) => ({ ...x, is_read: true })));
       toast.success("All notifications marked as read");
     } catch { toast.error("Couldn't mark all as read"); }
   }
