@@ -1,4 +1,5 @@
 import jsPDF from "jspdf";
+import QRCode from "qrcode";
 
 type InvoiceOrder = {
   id: string;
@@ -23,8 +24,11 @@ type InvoiceOrder = {
     postal_code?: string;
     country?: string;
     phone?: string | null;
+    latitude?: number | null;
+    longitude?: number | null;
   } | null;
 };
+
 
 const GST_RATE = 18;
 
@@ -73,7 +77,7 @@ function statusLabel(status?: string) {
     .replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
-export function createInvoicePdf(order: InvoiceOrder) {
+export async function createInvoicePdf(order: InvoiceOrder) {
   const doc = new jsPDF({ unit: "pt", format: "a4" });
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
@@ -149,6 +153,8 @@ export function createInvoicePdf(order: InvoiceOrder) {
   y += 36;
 
   const address = order.addresses;
+  const addrStartY = y;
+  const addrBlockWidth = contentWidth - 130; // reserve space for QR on the right
   setFont("bold", 10, 20);
   text(address?.recipient || "-", margin, y);
   y += 15;
@@ -159,10 +165,43 @@ export function createInvoicePdf(order: InvoiceOrder) {
   [street, postalLine, address?.country || "India", address?.phone ? `Phone: ${address.phone}` : null]
     .filter(Boolean)
     .forEach((line) => {
-      text(line, margin, y);
-      y += 13;
+      const wrapped = doc.splitTextToSize(cleanText(line), addrBlockWidth) as string[];
+      wrapped.forEach((w) => {
+        text(w, margin, y);
+        y += 13;
+      });
     });
+
+  // QR code linking to Google Maps for delivery navigation
+  const lat = address?.latitude;
+  const lng = address?.longitude;
+  const mapsQuery = lat != null && lng != null
+    ? `${lat},${lng}`
+    : encodeURIComponent([address?.line1, address?.city, address?.state, address?.postal_code, address?.country]
+        .filter(Boolean).join(", "));
+  const mapsUrl = `https://www.google.com/maps?q=${mapsQuery}`;
+  try {
+    const qrDataUrl = await QRCode.toDataURL(mapsUrl, { margin: 1, width: 240 });
+    const qrSize = 80;
+    const qrX = pageWidth - margin - qrSize;
+    const qrY = addrStartY - 4;
+    doc.addImage(qrDataUrl, "PNG", qrX, qrY, qrSize, qrSize);
+    setFont("normal", 8, 90);
+    text("Scan to view delivery location", qrX + qrSize / 2, qrY + qrSize + 10, { align: "center" });
+    // Clickable link over the QR
+    doc.link(qrX, qrY, qrSize, qrSize, { url: mapsUrl });
+    setFont("normal", 8, 60);
+    doc.textWithLink("Open in Google Maps", qrX + qrSize / 2, qrY + qrSize + 22, {
+      url: mapsUrl,
+      align: "center",
+    });
+  } catch {
+    // QR generation is best-effort; ignore failures
+  }
+
+  y = Math.max(y, addrStartY + 96);
   y += 14;
+
 
   const tableX = margin;
   const itemW = 252;
@@ -262,7 +301,8 @@ export function createInvoicePdf(order: InvoiceOrder) {
   return doc;
 }
 
-export function downloadInvoice(order: InvoiceOrder) {
-  const doc = createInvoicePdf(order);
+export async function downloadInvoice(order: InvoiceOrder) {
+  const doc = await createInvoicePdf(order);
   doc.save(`invoice-${order.id.slice(0, 8).toUpperCase()}.pdf`);
 }
+
