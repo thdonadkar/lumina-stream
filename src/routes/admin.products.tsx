@@ -38,14 +38,33 @@ function Page() {
   const invalidate = () => qc.invalidateQueries({ queryKey: ["admin-products"] });
 
   const statusMut = useMutation({
-    mutationFn: (p: { id: string; status: "active" | "rejected" }) =>
-      setStatus({ data: p }),
-    onSuccess: (_d, v) => { invalidate(); toast.success(v.status === "active" ? "Approved" : "Flagged"); },
+    mutationFn: async (p: { id: string; status: "active" | "rejected" | "archived"; force?: boolean; title: string }) => {
+      const res: any = await setStatus({ data: { id: p.id, status: p.status, force: p.force } });
+      if (res?.warn) {
+        const ok = await confirm({
+          title: `Change status to "${p.status}"?`,
+          description: res.message + " Continue anyway?",
+          destructive: true,
+          confirmText: "Yes, change anyway",
+        });
+        if (!ok) return { skipped: true };
+        await setStatus({ data: { id: p.id, status: p.status, force: true } });
+      }
+      return { skipped: false, status: p.status };
+    },
+    onSuccess: (res: any) => {
+      if (res?.skipped) return;
+      invalidate();
+      toast.success(
+        res?.status === "active" ? "Approved/Restored" :
+        res?.status === "archived" ? "Archived" : "Flagged"
+      );
+    },
     onError: (e: any) => toast.error(e.message ?? "Failed"),
   });
   const deleteMut = useMutation({
     mutationFn: (id: string) => del({ data: { id } }),
-    onSuccess: () => { invalidate(); toast.success("Deleted"); },
+    onSuccess: () => { invalidate(); toast.success("Archived"); },
     onError: (e: any) => toast.error(e.message ?? "Failed"),
   });
 
