@@ -9,6 +9,7 @@ import { listMyOrders } from "@/lib/orders.functions";
 import { listAddresses, saveAddress, deleteAddress } from "@/lib/addresses.functions";
 import { formatPrice } from "@/lib/cart-store";
 import { supabase } from "@/integrations/supabase/client";
+import { OrderListSkeleton } from "@/components/skeletons";
 
 export const Route = createFileRoute("/dashboard")({
   head: () => ({ meta: [{ title: "Account — Neural" }] }),
