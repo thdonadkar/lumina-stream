@@ -9,7 +9,21 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/use-auth";
 import { listAddresses, saveAddress, deleteAddress } from "@/lib/addresses.functions";
 import { validateCoupon, placeOrder } from "@/lib/orders.functions";
+import { createRazorpayOrder, verifyRazorpayPayment } from "@/lib/payments.functions";
 import { toast } from "sonner";
+
+// Lazy-load Razorpay Checkout script the first time it's needed.
+function loadRazorpayScript(): Promise<boolean> {
+  return new Promise((resolve) => {
+    if (typeof window === "undefined") return resolve(false);
+    if ((window as any).Razorpay) return resolve(true);
+    const s = document.createElement("script");
+    s.src = "https://checkout.razorpay.com/v1/checkout.js";
+    s.onload = () => resolve(true);
+    s.onerror = () => resolve(false);
+    document.body.appendChild(s);
+  });
+}
 
 export const Route = createFileRoute("/checkout")({
   head: () => ({ meta: [{ title: "Checkout — Neural" }] }),
