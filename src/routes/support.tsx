@@ -1,11 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { motion } from "framer-motion";
 import { LifeBuoy, Send, ChevronLeft, MessageCircle, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
-import { createTicket, listMyTickets, getTicketThread, replyToTicket } from "@/lib/support.functions";
+import { useTicketRealtime } from "@/hooks/use-ticket-realtime";
+import { relativeTimeShort, senderLabel } from "@/lib/support-format";
+import { createTicket, listMyTickets, getTicketThread, replyToTicket, markTicketRead } from "@/lib/support.functions";
 
 export const Route = createFileRoute("/support")({
   head: () => ({ meta: [{ title: "Support — Neural" }] }),
