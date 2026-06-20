@@ -7,19 +7,15 @@ import { searchProducts, suggestProducts } from "@/lib/search.functions";
 import { CATEGORIES } from "@/lib/categories";
 
 export const Route = createFileRoute("/search")({
-  head: ({ search }) => {
-    const q = (search as { q?: string })?.q ?? "";
-    const title = q ? `Search "${q}" — Neural` : "Search — Neural";
-    return {
-      meta: [
-        { title },
-        { name: "description", content: q ? `Results for "${q}" on Neural.` : "Search products on Neural." },
-        { property: "og:title", content: title },
-        { property: "og:url", content: "/search" },
-      ],
-      links: [{ rel: "canonical", href: "/search" }],
-    };
-  },
+  head: () => ({
+    meta: [
+      { title: "Search — Neural" },
+      { name: "description", content: "Search products on Neural." },
+      { property: "og:title", content: "Search — Neural" },
+      { property: "og:url", content: "/search" },
+    ],
+    links: [{ rel: "canonical", href: "/search" }],
+  }),
   validateSearch: (s: Record<string, unknown>) => ({
     q: typeof s.q === "string" ? s.q : "",
   }),
