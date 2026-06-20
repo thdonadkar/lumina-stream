@@ -117,7 +117,6 @@ export function createInvoicePdf(order: InvoiceOrder) {
   const orderId = `#${order.id.slice(0, 8).toUpperCase()}`;
   const paymentStatus = statusLabel(order.payment_status);
   const paymentMethod = paymentMethodLabel(order.payment_method);
-  const paymentSummary = `Payment: ${paymentStatus} (${paymentMethodShort(order.payment_method)})`;
   const metaLeft: Array<[string, string]> = [
     ["Invoice ID", invoiceId],
     ["Order ID", orderId],
