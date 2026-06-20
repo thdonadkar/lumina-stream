@@ -301,7 +301,8 @@ export async function createInvoicePdf(order: InvoiceOrder) {
   return doc;
 }
 
-export function downloadInvoice(order: InvoiceOrder) {
-  const doc = createInvoicePdf(order);
+export async function downloadInvoice(order: InvoiceOrder) {
+  const doc = await createInvoicePdf(order);
   doc.save(`invoice-${order.id.slice(0, 8).toUpperCase()}.pdf`);
 }
+
