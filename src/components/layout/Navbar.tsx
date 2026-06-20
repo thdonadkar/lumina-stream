@@ -100,6 +100,16 @@ export function Navbar() {
         </nav>
 
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => setMobileOpen(true)}
+            className="md:hidden grid place-items-center size-9 rounded-full glass hover:glass-strong"
+            aria-label="Open menu"
+            aria-expanded={mobileOpen}
+            aria-controls="mobile-nav-drawer"
+          >
+            <Menu className="size-4" aria-hidden="true" />
+          </button>
+
           {isSeller && (
             <Link to="/seller/dashboard" title="Seller console" className="hidden sm:grid place-items-center size-9 rounded-full glass hover:glass-strong">
               <Store className="size-4 text-cyan" />
