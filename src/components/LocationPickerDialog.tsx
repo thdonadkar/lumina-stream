@@ -42,16 +42,19 @@ async function searchPlace(q: string) {
 
 function toPicked(lat: number, lng: number, j: any): PickedLocation {
   const a = j?.address ?? {};
+  const road = a.road || a.pedestrian || a.footway || a.cycleway || a.path || "";
+  const area = a.suburb || a.neighbourhood || a.hamlet || a.quarter || "";
+  const houseNum = a.house_number ? `${a.house_number} ` : "";
   const line1 =
-    [a.house_number, a.road || a.pedestrian || a.neighbourhood].filter(Boolean).join(" ") ||
+    [`${houseNum}${road}`.trim(), area].filter(Boolean).join(", ") ||
     j?.display_name?.split(",").slice(0, 2).join(", ") ||
     "";
   return {
     lat,
     lng,
     line1,
-    city: a.city || a.town || a.village || a.suburb || "",
-    state: a.state || "",
+    city: a.city || a.town || a.village || a.municipality || a.county || "",
+    state: a.state || a.region || "",
     postal_code: a.postcode || "",
     country: (a.country_code || "in").toUpperCase(),
   };
