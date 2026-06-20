@@ -151,6 +151,7 @@ function NotificationsPage() {
 
   const unread = notifications.filter((n) => !n.is_read).length;
   const filtered = filter === "unread" ? notifications.filter((n) => !n.is_read) : notifications;
+  const userId = session.user.id;
 
   async function markOne(id: string) {
     try {
@@ -158,7 +159,7 @@ function NotificationsPage() {
         .from("notifications")
         .update({ is_read: true })
         .eq("id", id)
-        .eq("user_id", session.user.id);
+        .eq("user_id", userId);
 
       if (updateError) throw updateError;
       setNotifications((current) => current.map((n) => (n.id === id ? { ...n, is_read: true } : n)));
@@ -173,7 +174,7 @@ function NotificationsPage() {
       const { error: updateError } = await supabase
         .from("notifications")
         .update({ is_read: true })
-        .eq("user_id", session.user.id)
+        .eq("user_id", userId)
         .eq("is_read", false);
 
       if (updateError) throw updateError;
