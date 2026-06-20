@@ -54,6 +54,7 @@ type PlaceOrderInput = {
   shipping: number;
   coupon_code?: string | null;
   notes?: string | null;
+  payment_method?: "razorpay" | "cod";
 };
 
 function validateOrderInput(d: PlaceOrderInput): PlaceOrderInput {
@@ -66,14 +67,16 @@ function validateOrderInput(d: PlaceOrderInput): PlaceOrderInput {
       throw new Error("Invalid cart item title");
     if (!Number.isInteger(it.qty) || it.qty < 1 || it.qty > 100)
       throw new Error("Invalid quantity");
-    // unit_price is a hint; server re-fetches the true price below.
     if (typeof it.unit_price !== "number" || !Number.isFinite(it.unit_price) || it.unit_price < 0)
       throw new Error("Invalid unit price");
     if (it.product_id !== null && typeof it.product_id !== "string")
       throw new Error("Invalid product id");
   }
+  if (d.payment_method && d.payment_method !== "razorpay" && d.payment_method !== "cod")
+    throw new Error("Invalid payment method");
   return d;
 }
+
 
 export const validateCoupon = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -187,6 +190,7 @@ export const placeOrder = createServerFn({ method: "POST" })
     const tax = Math.round((subtotal - discount) * 0.18);
     const total = Math.max(0, subtotal - discount) + shipping + tax;
 
+    const paymentMethod = data.payment_method ?? "cod";
     const { data: order, error: orderErr } = await supabase
       .from("orders")
       .insert({
@@ -200,10 +204,13 @@ export const placeOrder = createServerFn({ method: "POST" })
         coupon_code: data.coupon_code ?? null,
         notes: data.notes ?? null,
         status: "pending",
+        payment_method: paymentMethod as never,
+        payment_status: "pending" as never,
       })
       .select()
       .single();
     if (orderErr) throw orderErr;
+
 
     const { error: itemsErr } = await supabase.from("order_items").insert(
       safeItems.map((i) => ({
@@ -478,9 +485,40 @@ export const markRefunded = createServerFn({ method: "POST" })
   .inputValidator((d: { id: string; amount?: number }) => d)
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
+
+    // If there's a captured Razorpay payment, issue an actual refund.
+    const { data: payment } = await (context.supabase as any)
+      .from("payments")
+      .select("provider, provider_payment_id, amount, status")
+      .eq("order_id", data.id)
+      .eq("provider", "razorpay")
+      .eq("status", "captured")
+      .maybeSingle();
+
+    if (payment?.provider_payment_id) {
+      const key = process.env.RAZORPAY_KEY_ID;
+      const secret = process.env.RAZORPAY_KEY_SECRET;
+      if (key && secret) {
+        const refundAmount = Math.round(Number(data.amount ?? payment.amount) * 100);
+        const res = await fetch(`https://api.razorpay.com/v1/payments/${payment.provider_payment_id}/refund`, {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            authorization: "Basic " + btoa(`${key}:${secret}`),
+          },
+          body: JSON.stringify({ amount: refundAmount, speed: "normal" }),
+        });
+        if (!res.ok) {
+          const body = await res.text().catch(() => "");
+          console.error("[razorpay] refund failed", res.status, body);
+          throw new Error("Refund failed at payment gateway");
+        }
+      }
+    }
+
     const { data: order, error } = await (context.supabase as any)
       .from("orders")
-      .update({ refund_status: "refunded", refund_amount: data.amount ?? null })
+      .update({ refund_status: "refunded", refund_amount: data.amount ?? null, payment_status: "refunded" })
       .eq("id", data.id).select().single();
     if (error) throw error;
     await context.supabase.from("notifications").insert({

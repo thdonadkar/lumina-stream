@@ -9,7 +9,21 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/use-auth";
 import { listAddresses, saveAddress, deleteAddress } from "@/lib/addresses.functions";
 import { validateCoupon, placeOrder } from "@/lib/orders.functions";
+import { createRazorpayOrder, verifyRazorpayPayment } from "@/lib/payments.functions";
 import { toast } from "sonner";
+
+// Lazy-load Razorpay Checkout script the first time it's needed.
+function loadRazorpayScript(): Promise<boolean> {
+  return new Promise((resolve) => {
+    if (typeof window === "undefined") return resolve(false);
+    if ((window as any).Razorpay) return resolve(true);
+    const s = document.createElement("script");
+    s.src = "https://checkout.razorpay.com/v1/checkout.js";
+    s.onload = () => resolve(true);
+    s.onerror = () => resolve(false);
+    document.body.appendChild(s);
+  });
+}
 
 export const Route = createFileRoute("/checkout")({
   head: () => ({ meta: [{ title: "Checkout — Neural" }] }),
@@ -39,12 +53,15 @@ function Checkout() {
   const [couponInput, setCouponInput] = useState("");
   const [coupon, setCoupon] = useState<{ code: string; discount: number; freeShipping: boolean } | null>(null);
   const [placing, setPlacing] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<"razorpay" | "cod">("razorpay");
 
   const listAddrs = useServerFn(listAddresses);
   const saveAddrFn = useServerFn(saveAddress);
   const delAddrFn = useServerFn(deleteAddress);
   const validateCouponFn = useServerFn(validateCoupon);
   const placeOrderFn = useServerFn(placeOrder);
+  const createRzpFn = useServerFn(createRazorpayOrder);
+  const verifyRzpFn = useServerFn(verifyRazorpayPayment);
 
   const subtotal = total();
   const shippingBase = delivery === "drone" ? 400 : delivery === "express" ? 150 : 0;
@@ -136,28 +153,79 @@ function Checkout() {
     }
     setPlacing(true);
     try {
-      const res = await placeOrderFn({
+      // Note: items use product_id from the catalog where available so the
+      // server can re-fetch true price and reserve stock atomically.
+      const cartItems = items.map((i) => ({
+        product_id: (i.product as any).id?.length === 36 ? (i.product as any).id : null,
+        title: i.product.name,
+        image: i.product.image,
+        unit_price: i.product.price,
+        qty: i.qty,
+      }));
+
+      const placed = await placeOrderFn({
         data: {
-          items: items.map((i) => ({
-            product_id: null,
-            title: i.product.name,
-            image: i.product.image,
-            unit_price: i.product.price,
-            qty: i.qty,
-          })),
+          items: cartItems,
           address_id: selectedAddr,
           shipping: shippingBase,
           coupon_code: coupon?.code ?? null,
+          payment_method: paymentMethod,
         },
       });
-      clear();
-      setDone(res);
+
+      if (paymentMethod === "cod") {
+        clear();
+        setDone(placed);
+        return;
+      }
+
+      // Razorpay flow: create RZP order on server, then open Checkout.
+      const ok = await loadRazorpayScript();
+      if (!ok) throw new Error("Could not load payment gateway");
+      const rzp = await createRzpFn({ data: { order_id: placed.id } });
+
+      await new Promise<void>((resolve, reject) => {
+        const checkout = new (window as any).Razorpay({
+          key: rzp.key_id,
+          amount: rzp.amount,
+          currency: rzp.currency,
+          order_id: rzp.razorpay_order_id,
+          name: "Neural",
+          description: `Order #${placed.id.slice(0, 8)}`,
+          handler: async (resp: any) => {
+            try {
+              await verifyRzpFn({
+                data: {
+                  order_id: placed.id,
+                  razorpay_order_id: resp.razorpay_order_id,
+                  razorpay_payment_id: resp.razorpay_payment_id,
+                  razorpay_signature: resp.razorpay_signature,
+                },
+              });
+              clear();
+              setDone(placed);
+              resolve();
+            } catch (e: any) {
+              reject(e);
+            }
+          },
+          modal: {
+            ondismiss: () => reject(new Error("Payment cancelled")),
+          },
+          theme: { color: "#06b6d4" },
+        });
+        checkout.on("payment.failed", (resp: any) => {
+          reject(new Error(resp?.error?.description ?? "Payment failed"));
+        });
+        checkout.open();
+      });
     } catch (e: any) {
       toast.error(e.message ?? "Order failed");
     } finally {
       setPlacing(false);
     }
   }
+
 
   return (
     <div className="px-4 sm:px-6 max-w-6xl mx-auto">
@@ -284,20 +352,33 @@ function Checkout() {
             {step === 2 && (
               <motion.div key="payment" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-4">
                 <h2 className="text-xl font-bold mb-2">Payment</h2>
-                <div className="flex gap-2 flex-wrap">
-                  {["Card", "UPI", "Wallet", "Cash on delivery"].map((m) => (
-                    <button key={m} className="px-4 py-2 rounded-full glass hover:glass-strong text-sm font-medium">
-                      {m}
-                    </button>
-                  ))}
+                <div className="grid sm:grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod("razorpay")}
+                    className={`text-left p-4 rounded-2xl transition-all ${
+                      paymentMethod === "razorpay" ? "glass-strong ring-2 ring-cyan shadow-glow-cyan" : "glass hover:glass-strong"
+                    }`}
+                  >
+                    <p className="font-bold">Card · UPI · Wallet · Netbanking</p>
+                    <p className="text-xs text-muted-foreground mt-1">Secure payment via Razorpay</p>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod("cod")}
+                    className={`text-left p-4 rounded-2xl transition-all ${
+                      paymentMethod === "cod" ? "glass-strong ring-2 ring-cyan shadow-glow-cyan" : "glass hover:glass-strong"
+                    }`}
+                  >
+                    <p className="font-bold">Cash on delivery</p>
+                    <p className="text-xs text-muted-foreground mt-1">Pay when your order arrives</p>
+                  </button>
                 </div>
-                <Field label="Card number" placeholder="4242 4242 4242 4242" />
-                <div className="grid sm:grid-cols-3 gap-4">
-                  <Field label="Expiry" placeholder="12/27" />
-                  <Field label="CVC" placeholder="123" />
-                  <Field label="ZIP" placeholder="560001" />
-                </div>
-                <p className="text-xs text-muted-foreground">Demo only — no payment will be charged.</p>
+                <p className="text-xs text-muted-foreground">
+                  {paymentMethod === "razorpay"
+                    ? "You'll be redirected to a secure payment window after placing the order."
+                    : "We'll confirm your order; pay the courier in cash on delivery."}
+                </p>
               </motion.div>
             )}
           </AnimatePresence>
