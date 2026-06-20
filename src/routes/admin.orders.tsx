@@ -113,7 +113,8 @@ function Page() {
         {loading ? (
           <p className="p-8 text-center text-muted-foreground text-sm">Loading…</p>
         ) : (
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="w-full text-sm min-w-[640px]">
             <thead className="text-xs uppercase tracking-widest text-muted-foreground">
               <tr className="border-b border-white/5">
                 <th className="text-left p-4">Order</th>
