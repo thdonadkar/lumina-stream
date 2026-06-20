@@ -12,6 +12,7 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Shell } from "@/components/layout/Shell";
+import { DialogProvider } from "@/components/ConfirmDialog";
 
 function NotFoundComponent() {
   return (
@@ -121,9 +122,11 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <Shell>
-        <Outlet />
-      </Shell>
+      <DialogProvider>
+        <Shell>
+          <Outlet />
+        </Shell>
+      </DialogProvider>
     </QueryClientProvider>
   );
 }
