@@ -104,7 +104,7 @@ export function NotificationBell() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.18 }}
-              className="fixed left-2 right-2 top-16 sm:absolute sm:left-auto sm:right-0 sm:top-auto sm:mt-2 sm:w-[360px] glass-strong shadow-elevated rounded-2xl z-50 overflow-hidden"
+              className="fixed left-2 right-2 top-16 sm:absolute sm:left-auto sm:right-0 sm:top-auto sm:mt-2 sm:w-[360px] bg-background/95 backdrop-blur-2xl border border-white/10 shadow-elevated rounded-2xl z-50 overflow-hidden"
             >
               <div className="flex items-center justify-between p-3 border-b border-white/5">
                 <p className="text-sm font-bold">Notifications</p>
