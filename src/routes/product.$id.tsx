@@ -332,6 +332,9 @@ function ProductPage() {
         </div>
       </section>
 
+      <RecentlyViewed excludeId={product.id} />
+
+
       {/* Particle burst */}
       <div className="fixed inset-0 pointer-events-none z-[80]">
         <AnimatePresence>
