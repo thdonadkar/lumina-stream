@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Star, ShoppingBag, Heart, Share2, Shield, Truck, RotateCcw } from "lucide-react";
 import { getProduct, products } from "@/lib/products";
+import { getActiveProductBySlug } from "@/lib/catalog.functions";
 import { useCart, formatPrice } from "@/lib/cart-store";
 import { useWishlist } from "@/lib/wishlist-store";
 import { useRecentlyViewed } from "@/lib/recently-viewed-store";
