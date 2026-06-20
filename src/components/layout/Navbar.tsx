@@ -92,8 +92,8 @@ export function Navbar() {
 
           {/* Categories trigger */}
           <button
-            onMouseEnter={() => setCatsOpen(true)}
             onClick={() => setCatsOpen((v) => !v)}
+
             onFocus={() => setCatsOpen(true)}
             aria-expanded={catsOpen}
             aria-haspopup="true"
