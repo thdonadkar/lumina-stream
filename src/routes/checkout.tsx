@@ -352,20 +352,33 @@ function Checkout() {
             {step === 2 && (
               <motion.div key="payment" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-4">
                 <h2 className="text-xl font-bold mb-2">Payment</h2>
-                <div className="flex gap-2 flex-wrap">
-                  {["Card", "UPI", "Wallet", "Cash on delivery"].map((m) => (
-                    <button key={m} className="px-4 py-2 rounded-full glass hover:glass-strong text-sm font-medium">
-                      {m}
-                    </button>
-                  ))}
+                <div className="grid sm:grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod("razorpay")}
+                    className={`text-left p-4 rounded-2xl transition-all ${
+                      paymentMethod === "razorpay" ? "glass-strong ring-2 ring-cyan shadow-glow-cyan" : "glass hover:glass-strong"
+                    }`}
+                  >
+                    <p className="font-bold">Card · UPI · Wallet · Netbanking</p>
+                    <p className="text-xs text-muted-foreground mt-1">Secure payment via Razorpay</p>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod("cod")}
+                    className={`text-left p-4 rounded-2xl transition-all ${
+                      paymentMethod === "cod" ? "glass-strong ring-2 ring-cyan shadow-glow-cyan" : "glass hover:glass-strong"
+                    }`}
+                  >
+                    <p className="font-bold">Cash on delivery</p>
+                    <p className="text-xs text-muted-foreground mt-1">Pay when your order arrives</p>
+                  </button>
                 </div>
-                <Field label="Card number" placeholder="4242 4242 4242 4242" />
-                <div className="grid sm:grid-cols-3 gap-4">
-                  <Field label="Expiry" placeholder="12/27" />
-                  <Field label="CVC" placeholder="123" />
-                  <Field label="ZIP" placeholder="560001" />
-                </div>
-                <p className="text-xs text-muted-foreground">Demo only — no payment will be charged.</p>
+                <p className="text-xs text-muted-foreground">
+                  {paymentMethod === "razorpay"
+                    ? "You'll be redirected to a secure payment window after placing the order."
+                    : "We'll confirm your order; pay the courier in cash on delivery."}
+                </p>
               </motion.div>
             )}
           </AnimatePresence>
