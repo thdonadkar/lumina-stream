@@ -37,11 +37,11 @@ function Page() {
   const feed = useMemo(() => activityFeed(), []);
 
   const kpis = [
-    { label: "Total revenue", value: `₹${t.revenue.toLocaleString("en-IN")}`, delta: "+18.4%", icon: TrendingUp, tone: "cyan" },
-    { label: "Total orders", value: t.orders.toLocaleString(), delta: "+12.1%", icon: ShoppingBag, tone: "purple" },
-    { label: "Active users", value: t.users.toLocaleString(), delta: "+8.3%", icon: Users, tone: "rose" },
-    { label: "Total sellers", value: "238", delta: "+6 new", icon: Store, tone: "cyan" },
-    { label: "Conversion rate", value: "3.42%", delta: "+0.4pt", icon: Activity, tone: "purple" },
+    { label: "Total revenue", value: `₹${t.revenue.toLocaleString("en-IN")}`, delta: "+18.4%", icon: TrendingUp, glow: "bg-cyan/30", text: "text-cyan", ring: "ring-cyan/30" },
+    { label: "Total orders", value: t.orders.toLocaleString(), delta: "+12.1%", icon: ShoppingBag, glow: "bg-purple-500/30", text: "text-purple-400", ring: "ring-purple-500/30" },
+    { label: "Active users", value: t.users.toLocaleString(), delta: "+8.3%", icon: Users, glow: "bg-rose-500/30", text: "text-rose-400", ring: "ring-rose-500/30" },
+    { label: "Total sellers", value: "238", delta: "+6 new", icon: Store, glow: "bg-cyan/30", text: "text-cyan", ring: "ring-cyan/30" },
+    { label: "Conversion rate", value: "3.42%", delta: "+0.4pt", icon: Activity, glow: "bg-purple-500/30", text: "text-purple-400", ring: "ring-purple-500/30" },
   ];
 
   return (
@@ -71,7 +71,7 @@ function Page() {
               transition={{ delay: i * 0.05 }}
               className="glass rounded-2xl p-5 relative overflow-hidden group"
             >
-              <div className={`absolute -top-10 -right-10 size-28 rounded-full bg-${k.tone}/30 blur-3xl opacity-50 group-hover:opacity-80 transition-opacity`} />
+              <div className={`absolute -top-10 -right-10 size-28 rounded-full ${k.glow} blur-3xl opacity-50 group-hover:opacity-80 transition-opacity`} />
               <div className="flex items-center justify-between">
                 <I className="size-4 text-muted-foreground" />
                 <span className="text-[10px] font-mono uppercase text-cyan flex items-center gap-0.5">
@@ -186,7 +186,11 @@ function Page() {
                   transition={{ delay: 0.3 + i * 0.04 }}
                   className="flex items-start gap-3"
                 >
-                  <div className={`size-8 rounded-xl grid place-items-center shrink-0 ring-1 ring-${f.tone}/30 text-${f.tone}`}>
+                  <div className={`size-8 rounded-xl grid place-items-center shrink-0 ring-1 ${
+                    f.tone === "cyan" ? "ring-cyan/30 text-cyan"
+                    : f.tone === "purple" ? "ring-purple-500/30 text-purple-400"
+                    : "ring-rose-500/30 text-rose-400"
+                  }`}>
                     <Icon className="size-3.5" />
                   </div>
                   <div className="min-w-0 flex-1">

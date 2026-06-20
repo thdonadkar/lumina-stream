@@ -52,3 +52,30 @@ export const createProduct = createServerFn({ method: "POST" })
     if (error) throw error;
     return row;
   });
+
+export const listMyProducts = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const { data, error } = await supabase
+      .from("products")
+      .select("*")
+      .eq("seller_id", userId)
+      .order("created_at", { ascending: false });
+    if (error) throw error;
+    return data ?? [];
+  });
+
+export const deleteMyProduct = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { id: string }) => d)
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { data: existing } = await supabase
+      .from("products").select("seller_id").eq("id", data.id).maybeSingle();
+    if (!existing) throw new Error("Product not found");
+    if ((existing as any).seller_id !== userId) throw new Error("Forbidden");
+    const { error } = await supabase.from("products").delete().eq("id", data.id);
+    if (error) throw error;
+    return { ok: true };
+  });
