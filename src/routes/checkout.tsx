@@ -51,6 +51,7 @@ function Checkout() {
   const [showAddrForm, setShowAddrForm] = useState(false);
 
   const [couponInput, setCouponInput] = useState("");
+  const [couponError, setCouponError] = useState<string | null>(null);
   const [coupon, setCoupon] = useState<{ code: string; discount: number; freeShipping: boolean } | null>(null);
   const [placing, setPlacing] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<"razorpay" | "cod">("razorpay");
@@ -131,17 +132,24 @@ function Checkout() {
   }
 
   async function applyCoupon() {
-    if (!couponInput.trim()) return;
+    setCouponError(null);
+    if (!couponInput.trim()) {
+      setCouponError("Enter a code");
+      return;
+    }
     try {
       const res = await validateCouponFn({ data: { code: couponInput, subtotal } });
       if (!res.ok) {
+        setCouponError(res.reason);
         toast.error(res.reason);
         return;
       }
       setCoupon({ code: res.code, discount: res.discount, freeShipping: res.freeShipping });
       toast.success(`Coupon ${res.code} applied`);
     } catch (e: any) {
-      toast.error(e.message ?? "Failed");
+      const msg = e?.message ?? "Couldn't apply coupon";
+      setCouponError(msg);
+      toast.error(msg);
     }
   }
 
@@ -264,7 +272,7 @@ function Checkout() {
 
           <AnimatePresence mode="wait">
             {step === 0 && (
-              <motion.div key="address" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-3">
+              <motion.div id="address-list" key="address" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-3">
                 <div className="flex items-center justify-between mb-2">
                   <h2 className="text-xl font-bold">Shipping address</h2>
                   <button onClick={() => setShowAddrForm((v) => !v)} className="text-xs flex items-center gap-1 text-cyan">
@@ -395,13 +403,16 @@ function Checkout() {
               onClick={() => {
                 if (step === 0 && !selectedAddr) {
                   toast.error("Select a shipping address");
+                  document.getElementById("address-list")?.scrollIntoView({ behavior: "smooth", block: "center" });
                   return;
                 }
                 if (step < 2) setStep(step + 1);
                 else submitOrder();
               }}
-              disabled={placing}
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-aurora animate-aurora font-bold text-background shadow-glow-cyan hover:scale-[1.02] active:scale-95 transition-transform disabled:opacity-60"
+              disabled={placing || (step === 0 && !selectedAddr)}
+              aria-disabled={placing || (step === 0 && !selectedAddr)}
+              title={step === 0 && !selectedAddr ? "Select an address to continue" : undefined}
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-aurora animate-aurora font-bold text-background shadow-glow-cyan hover:scale-[1.02] active:scale-95 transition-transform disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
             >
               {step === 2 ? (placing ? "Placing…" : "Place order") : "Continue"}
               <ChevronRight className="size-4" />
@@ -434,14 +445,23 @@ function Checkout() {
                 placeholder="Coupon code"
                 className="flex-1 h-10 rounded-xl bg-glass border border-white/10 px-3 text-sm font-mono"
               />
-              <button onClick={applyCoupon} className="h-10 px-4 rounded-xl glass-strong text-sm font-bold flex items-center gap-1">
+            <button
+              onClick={applyCoupon}
+              aria-describedby={couponError ? "coupon-error" : undefined}
+              className="h-10 px-4 rounded-xl glass-strong text-sm font-bold flex items-center gap-1"
+            >
                 <Tag className="size-3.5" /> Apply
               </button>
             </div>
+            {couponError && (
+              <p id="coupon-error" role="alert" className="text-xs mt-2 text-rose-400">
+                {couponError}
+              </p>
+            )}
             {coupon && (
               <p className="text-xs mt-2 text-cyan flex items-center justify-between">
                 <span>{coupon.code} active</span>
-                <button onClick={() => setCoupon(null)} className="text-muted-foreground hover:text-rose-400">Remove</button>
+                <button onClick={() => { setCoupon(null); setCouponError(null); }} className="text-muted-foreground hover:text-rose-400">Remove</button>
               </p>
             )}
             <p className="text-[10px] text-muted-foreground mt-2 font-mono">Try: WELCOME10 · NEURAL50 · FREESHIP · FLASH25</p>
