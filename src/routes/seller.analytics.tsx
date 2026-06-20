@@ -11,7 +11,7 @@ import { RoleGate } from "@/components/RoleGate";
 import { SellerNav } from "./seller.dashboard";
 import { ChartShell, ChartTooltip } from "@/components/charts/ChartShell";
 import { listSellerOrders } from "@/lib/orders.functions";
-import { listMyProducts } from "@/lib/products.functions";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/seller/analytics")({
   ssr: false,
@@ -28,10 +28,24 @@ type Order = { id: string; total: number | string; status: string; created_at: s
 
 function Page() {
   const listOrders = useServerFn(listSellerOrders);
-  const listProds = useServerFn(listMyProducts);
 
-  const { data: orders = [] } = useQuery({ queryKey: ["seller-orders"], queryFn: () => listOrders() });
-  const { data: prods = [] } = useQuery({ queryKey: ["my-products"], queryFn: () => listProds() });
+  const { data: orders = [] } = useQuery({ queryKey: ["seller-orders"], queryFn: () => listOrders(), retry: false });
+  const { data: prods = [] } = useQuery({
+    queryKey: ["my-products"],
+    retry: false,
+    queryFn: async () => {
+      const { data: sess } = await supabase.auth.getSession();
+      const uid = sess.session?.user?.id;
+      if (!uid) return [];
+      const { data, error } = await supabase
+        .from("products")
+        .select("id,title,price,stock,status,created_at")
+        .eq("seller_id", uid)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
 
   const stats = useMemo(() => {
     const list = orders as Order[];
