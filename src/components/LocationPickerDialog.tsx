@@ -190,7 +190,18 @@ export function LocationPickerDialog({ open, onClose, onConfirm }: Props) {
         const { latitude, longitude } = pos.coords;
         console.log("LOCATION:", latitude, longitude);
         try {
-          mapRef.current?.flyTo([latitude, longitude], 16, { duration: 1.8, easeLinearity: 0.25 });
+          // Two-stage cinematic zoom: pan out high, then dive in for an Uber/Zomato feel
+          try {
+            const currentZoom = mapRef.current?.getZoom?.() ?? 5;
+            if (currentZoom > 6) {
+              mapRef.current?.flyTo([latitude, longitude], 16, { duration: 2.5, easeLinearity: 0.25 });
+            } else {
+              mapRef.current?.flyTo([latitude, longitude], 6, { duration: 1.4, easeLinearity: 0.25 });
+              setTimeout(() => {
+                mapRef.current?.flyTo([latitude, longitude], 17, { duration: 2.8, easeLinearity: 0.2 });
+              }, 1500);
+            }
+          } catch (e) { console.error("flyTo failed", e); }
           markerRef.current?.setLatLng([latitude, longitude]);
           setTimeout(() => {
             const c = mapRef.current?.getCenter?.();
