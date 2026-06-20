@@ -1,4 +1,5 @@
 import jsPDF from "jspdf";
+import QRCode from "qrcode";
 
 type InvoiceOrder = {
   id: string;
@@ -23,8 +24,11 @@ type InvoiceOrder = {
     postal_code?: string;
     country?: string;
     phone?: string | null;
+    latitude?: number | null;
+    longitude?: number | null;
   } | null;
 };
+
 
 const GST_RATE = 18;
 
