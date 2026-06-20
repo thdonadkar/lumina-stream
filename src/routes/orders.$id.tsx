@@ -119,24 +119,26 @@ function OrderDetail() {
         )}
 
         {statusIdx >= 0 && (
-          <div className="mt-8 flex items-center justify-between gap-1">
-            {TIMELINE.map((s, i) => (
-              <div key={s} className="flex-1 flex flex-col items-center text-center">
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ delay: i * 0.1 }}
-                  className={`size-9 rounded-full grid place-items-center ${
-                    i <= statusIdx ? "bg-aurora text-background shadow-glow-cyan" : "glass text-muted-foreground"
-                  }`}
-                >
-                  {i <= statusIdx ? <CheckCircle2 className="size-4" /> : <span className="text-xs font-mono">{i + 1}</span>}
-                </motion.div>
-                <p className={`text-[10px] mt-2 uppercase font-mono ${i <= statusIdx ? "text-cyan" : "text-muted-foreground"}`}>
-                  {s.replace(/_/g, " ")}
-                </p>
-              </div>
-            ))}
+          <div className="mt-8 -mx-2 overflow-x-auto">
+            <div className="flex items-start justify-between gap-1 px-2 min-w-[480px]">
+              {TIMELINE.map((s, i) => (
+                <div key={s} className="flex-1 flex flex-col items-center text-center min-w-[64px]">
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ delay: i * 0.1 }}
+                    className={`size-9 rounded-full grid place-items-center shrink-0 ${
+                      i <= statusIdx ? "bg-aurora text-background shadow-glow-cyan" : "glass text-muted-foreground"
+                    }`}
+                  >
+                    {i <= statusIdx ? <CheckCircle2 className="size-4" /> : <span className="text-xs font-mono">{i + 1}</span>}
+                  </motion.div>
+                  <p className={`text-[10px] mt-2 uppercase font-mono ${i <= statusIdx ? "text-cyan" : "text-muted-foreground"}`}>
+                    {s.replace(/_/g, " ")}
+                  </p>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>
