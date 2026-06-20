@@ -98,13 +98,13 @@ export function NotificationBell() {
       <AnimatePresence>
         {open && (
           <>
-            <div aria-hidden="true" className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+            <div aria-hidden="true" className="fixed inset-0 z-40 bg-background/40 backdrop-blur-sm sm:bg-transparent sm:backdrop-blur-0" onClick={() => setOpen(false)} />
             <motion.div
               initial={{ opacity: 0, y: -8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.18 }}
-              className="absolute right-0 mt-2 w-[340px] max-w-[92vw] glass-strong shadow-elevated rounded-2xl z-50 overflow-hidden"
+              className="fixed left-2 right-2 top-16 sm:absolute sm:left-auto sm:right-0 sm:top-auto sm:mt-2 sm:w-[360px] glass-strong shadow-elevated rounded-2xl z-50 overflow-hidden"
             >
               <div className="flex items-center justify-between p-3 border-b border-white/5">
                 <p className="text-sm font-bold">Notifications</p>
