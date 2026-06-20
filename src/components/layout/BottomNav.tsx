@@ -1,6 +1,8 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { Home, Search, ShoppingBag, User } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useCart } from "@/lib/cart-store";
+
 
 const items = [
   { to: "/", icon: Home, label: "Home" },
