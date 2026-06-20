@@ -85,6 +85,10 @@ function ProductPage() {
   const [imgIdx, setImgIdx] = useState(0);
   const [zoom, setZoom] = useState({ x: 50, y: 50, active: false });
   const [particles, setParticles] = useState<Particle[]>([]);
+  const pushRecent = useRecentlyViewed((s) => s.push);
+
+  // Record this product as "recently viewed" once per mount. Persists to localStorage.
+  useEffect(() => { pushRecent(product); }, [product, pushRecent]);
 
   const related = products.filter((p) => p.id !== product.id && p.category === product.category).slice(0, 3);
   const others = products.filter((p) => p.id !== product.id).slice(0, 3);
