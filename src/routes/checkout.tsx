@@ -519,10 +519,55 @@ function AddressForm({ onSave }: { onSave: (d: any) => Promise<void> }) {
     is_default: true,
   });
   const [saving, setSaving] = useState(false);
+  const [locating, setLocating] = useState(false);
   const set = (k: string, v: any) => setD((p) => ({ ...p, [k]: v }));
+
+  async function useMyLocation() {
+    if (!("geolocation" in navigator)) {
+      toast.error("Geolocation not supported on this device");
+      return;
+    }
+    setLocating(true);
+    try {
+      const pos = await new Promise<GeolocationPosition>((resolve, reject) =>
+        navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 10_000 })
+      );
+      const { latitude, longitude } = pos.coords;
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}&addressdetails=1`,
+        { headers: { Accept: "application/json" } }
+      );
+      if (!res.ok) throw new Error("Lookup failed");
+      const j = await res.json();
+      const a = j.address ?? {};
+      const line1 = [a.house_number, a.road || a.pedestrian || a.neighbourhood].filter(Boolean).join(" ") || j.display_name?.split(",").slice(0, 2).join(",") || "";
+      setD((p) => ({
+        ...p,
+        line1: line1 || p.line1,
+        city: a.city || a.town || a.village || a.suburb || p.city,
+        state: a.state || p.state,
+        postal_code: a.postcode || p.postal_code,
+        country: (a.country_code || "in").toUpperCase(),
+      }));
+      toast.success("Address filled from your location — verify before saving");
+    } catch (err: any) {
+      toast.error(err?.code === 1 ? "Location permission denied" : "Couldn't get your location");
+    } finally {
+      setLocating(false);
+    }
+  }
 
   return (
     <div className="glass rounded-2xl p-4 mt-3 space-y-3">
+      <button
+        type="button"
+        onClick={useMyLocation}
+        disabled={locating}
+        className="w-full h-10 rounded-xl glass-strong hover:bg-cyan/10 text-xs font-bold inline-flex items-center justify-center gap-2 disabled:opacity-60"
+      >
+        <span aria-hidden>📍</span>
+        {locating ? "Getting your location…" : "Use my current location"}
+      </button>
       <div className="grid sm:grid-cols-2 gap-3">
         <Field label="Full name" value={d.recipient} onChange={(e) => set("recipient", e.target.value)} />
         <Field label="Phone" value={d.phone} onChange={(e) => set("phone", e.target.value)} />
