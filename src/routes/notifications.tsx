@@ -19,22 +19,54 @@ function NotificationsPage() {
   const { userId, loading } = useAuth();
   const [items, setItems] = useState<any[]>([]);
   const [filter, setFilter] = useState<"all" | "unread">("all");
+  const [error, setError] = useState(false);
+  const [fetching, setFetching] = useState(true);
   const fetchList = useServerFn(listNotifications);
   const markOne = useServerFn(markNotificationRead);
   const markAll = useServerFn(markAllNotificationsRead);
 
   async function refresh() {
-    try { setItems(await fetchList()); } catch { /* */ }
+    setError(false);
+    try {
+      const data = await fetchList();
+      setItems(data);
+    } catch (err) {
+      console.error("[notifications] fetch failed:", err);
+      setError(true);
+    } finally {
+      setFetching(false);
+    }
   }
-  useEffect(() => { if (userId) refresh(); /* eslint-disable-next-line */ }, [userId]);
+  useEffect(() => {
+    if (loading) return;
+    if (!userId) { setFetching(false); return; }
+    refresh();
+    // eslint-disable-next-line
+  }, [userId, loading]);
   useNotificationsRealtime(userId ?? null, () => refresh());
 
-  if (loading) return <div className="p-20 text-center text-muted-foreground">Loading…</div>;
+  if (loading || (userId && fetching && items.length === 0 && !error)) {
+    return <div className="p-20 text-center text-muted-foreground">Loading…</div>;
+  }
   if (!userId) {
     return (
       <div className="p-20 text-center">
         <h1 className="text-3xl font-bold">Sign in to view notifications</h1>
         <Link to="/auth" className="mt-6 inline-block px-6 py-3 rounded-full bg-aurora text-background font-bold">Sign in</Link>
+      </div>
+    );
+  }
+  if (error) {
+    return (
+      <div className="px-4 sm:px-6 max-w-3xl mx-auto pt-20 pb-24 text-center">
+        <div className="glass-strong rounded-3xl p-12">
+          <Bell className="size-12 mx-auto text-muted-foreground opacity-50 mb-3" />
+          <p className="font-bold">Unable to load notifications.</p>
+          <p className="text-sm text-muted-foreground mt-1">Please try again.</p>
+          <button onClick={() => { setFetching(true); refresh(); }} className="mt-5 px-5 py-2 rounded-full bg-aurora text-background font-bold text-sm">
+            Retry
+          </button>
+        </div>
       </div>
     );
   }
