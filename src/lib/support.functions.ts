@@ -272,13 +272,14 @@ export const replyToTicket = createServerFn({ method: "POST" })
     else if (ticket.order_id && await userIsSellerOfOrder(ticket.order_id, userId)) role = "seller";
     else throw new UserError("Forbidden");
 
-    await supabase.from("support_ticket_messages").insert({
+    const { data: inserted, error: insErr } = await supabase.from("support_ticket_messages").insert({
       ticket_id: data.id,
       sender_id: userId,
       is_admin: role === "admin",
       sender_role: role,
       body: data.body,
-    });
+    }).select("id").single();
+    if (insErr) throw insErr;
 
     const patch: { updated_at: string; status?: "in_progress" } = { updated_at: new Date().toISOString() };
     if (role !== "user") patch.status = "in_progress";
