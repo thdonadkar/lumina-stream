@@ -9,6 +9,7 @@ import { createTicket } from "@/lib/support.functions";
 import { downloadInvoice } from "@/lib/invoice";
 import { formatPrice } from "@/lib/cart-store";
 import { useConfirm } from "@/components/ConfirmDialog";
+import { ReturnForm } from "@/components/ReturnForm";
 
 export const Route = createFileRoute("/orders/$id")({
   head: () => ({ meta: [{ title: "Order — Neural" }] }),
@@ -22,7 +23,6 @@ function OrderDetail() {
   const [order, setOrder] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [returnOpen, setReturnOpen] = useState(false);
-  const [reason, setReason] = useState("");
   const [helpOpen, setHelpOpen] = useState(false);
   const [helpSubject, setHelpSubject] = useState("");
   const [helpMessage, setHelpMessage] = useState("");
@@ -37,13 +37,15 @@ function OrderDetail() {
   }
   useEffect(refresh, [id, fetchOrder]);
 
-  async function submitReturn(e: React.FormEvent) {
-    e.preventDefault();
+  async function submitReturn(payload: { reason: string; description: string; order_item_id: string | null; photos: string[] }) {
     try {
-      await doReturn({ data: { id, reason } });
+      await doReturn({ data: { id, ...payload } });
       toast.success("Return requested");
-      setReturnOpen(false); setReason(""); refresh();
-    } catch (err: any) { toast.error(err.message); }
+      setReturnOpen(false);
+      refresh();
+    } catch (err: any) {
+      toast.error(err.message);
+    }
   }
   async function handleCancel() {
     if (!(await confirm({ title: "Cancel this order?", description: "This action cannot be undone.", destructive: true, confirmText: "Cancel order", cancelText: "Keep order" }))) return;
@@ -197,18 +199,11 @@ function OrderDetail() {
             </button>
           )}
           {returnOpen && (
-            <form onSubmit={submitReturn} className="glass-strong rounded-2xl p-4 space-y-2">
-              <p className="text-sm font-bold">Return reason</p>
-              <textarea
-                value={reason} onChange={(e) => setReason(e.target.value)} required maxLength={500} rows={3}
-                placeholder="Tell us what went wrong…"
-                className="w-full glass rounded-xl px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-cyan resize-y"
-              />
-              <div className="flex justify-end gap-2">
-                <button type="button" onClick={() => setReturnOpen(false)} className="rounded-full px-3 py-1.5 text-xs glass">Cancel</button>
-                <button className="rounded-full px-4 py-1.5 text-xs font-bold bg-aurora text-background">Submit return</button>
-              </div>
-            </form>
+            <ReturnForm
+              items={items.map((i: any) => ({ id: i.id, title: i.title, image: i.image }))}
+              onCancel={() => setReturnOpen(false)}
+              onSubmit={submitReturn}
+            />
           )}
 
           {!helpOpen ? (
