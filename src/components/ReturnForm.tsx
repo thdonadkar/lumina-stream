@@ -195,5 +195,5 @@ function PhotoThumb({ path }: { path: string }) {
     });
     return 0;
   });
-  return url ? <img src={url} alt="" className="size-full object-cover" /> : <div className="size-full bg-secondary" />;
+  return url ? <img referrerPolicy="no-referrer" src={url} alt="" className="size-full object-cover" /> : <div className="size-full bg-secondary" />;
 }

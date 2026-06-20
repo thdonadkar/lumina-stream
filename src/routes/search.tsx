@@ -154,7 +154,7 @@ function SearchPage() {
                   >
                     <div className="aspect-square bg-secondary overflow-hidden">
                       {p.images?.[0] ? (
-                        <img src={p.images[0]} alt={p.title} className="size-full object-cover" loading="lazy" />
+                        <img referrerPolicy="no-referrer" src={p.images[0]} alt={p.title} className="size-full object-cover" loading="lazy" />
                       ) : null}
                     </div>
                     <div className="p-4">

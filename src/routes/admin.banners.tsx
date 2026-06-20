@@ -96,7 +96,7 @@ function Page() {
         {banners.map((b) => (
           <div key={b.id} className="glass-strong rounded-2xl overflow-hidden">
             <div className="h-32 bg-secondary relative overflow-hidden">
-              {b.image_url ? <img src={b.image_url} alt="" className="size-full object-cover" /> : <div className="size-full bg-aurora opacity-30" />}
+              {b.image_url ? <img referrerPolicy="no-referrer" src={b.image_url} alt="" className="size-full object-cover" /> : <div className="size-full bg-aurora opacity-30" />}
               <span className={`absolute top-2 right-2 px-2 py-0.5 rounded-full text-[10px] font-mono uppercase ${b.active ? "bg-emerald-400/20 text-emerald-300" : "bg-white/10 text-muted-foreground"}`}>{b.active ? "live" : "hidden"}</span>
             </div>
             <div className="p-4">
@@ -147,7 +147,7 @@ function Page() {
             <label className="block">
               <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-mono">Banner image</span>
               <div className="mt-1.5 glass rounded-xl p-3 flex items-center gap-3">
-                {editing.image_url && <img src={editing.image_url} alt="" className="size-14 rounded-lg object-cover" />}
+                {editing.image_url && <img referrerPolicy="no-referrer" src={editing.image_url} alt="" className="size-14 rounded-lg object-cover" />}
                 <label className="inline-flex items-center gap-1.5 cursor-pointer rounded-full px-3 py-1.5 text-xs glass-strong hover:bg-white/5">
                   <Upload className="size-3.5" /> {uploading ? "Uploading…" : "Upload image"}
                   <input type="file" accept="image/*" onChange={handleUpload} className="hidden" />
@@ -163,7 +163,7 @@ function Page() {
               <div className="mt-1.5 glass-strong rounded-2xl overflow-hidden flex min-h-[110px]">
                 <div className="relative w-2/5 shrink-0">
                   {editing.image_url ? (
-                    <img src={editing.image_url} alt="" className="absolute inset-0 size-full object-cover" />
+                    <img referrerPolicy="no-referrer" src={editing.image_url} alt="" className="absolute inset-0 size-full object-cover" />
                   ) : (
                     <div className="absolute inset-0 bg-aurora animate-aurora opacity-70" />
                   )}

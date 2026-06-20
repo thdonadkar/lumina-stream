@@ -165,7 +165,7 @@ function ProductPage() {
                     i === imgIdx ? "ring-cyan shadow-glow-cyan" : "ring-white/10"
                   }`}
                 >
-                  <img src={g} alt="" className="size-full object-cover" />
+                  <img referrerPolicy="no-referrer" src={g} alt="" className="size-full object-cover" />
                 </button>
               ))}
             </div>

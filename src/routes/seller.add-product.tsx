@@ -110,7 +110,7 @@ function Page() {
             <div className="mt-3 grid grid-cols-4 gap-2">
               {images.map((url, i) => (
                 <div key={i} className="relative group aspect-square rounded-xl overflow-hidden glass">
-                  <img src={url} alt="" className="size-full object-cover" />
+                  <img referrerPolicy="no-referrer" src={url} alt="" className="size-full object-cover" />
                   <button type="button" onClick={() => setImages((a) => a.filter((_, j) => j !== i))} className="absolute top-1 right-1 size-5 rounded-full bg-black/60 grid place-items-center opacity-0 group-hover:opacity-100">
                     <X className="size-3 text-white" />
                   </button>

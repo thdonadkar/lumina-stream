@@ -57,7 +57,7 @@ function Page() {
         <div className="grid gap-3">
           {data.map((p: any) => (
             <div key={p.id} className="glass-strong rounded-2xl p-4 flex items-center gap-4 flex-wrap">
-              <img src={p.images?.[0] ?? ""} alt="" className="size-14 rounded-xl object-cover bg-white/5" />
+              <img referrerPolicy="no-referrer" src={p.images?.[0] ?? ""} alt="" className="size-14 rounded-xl object-cover bg-white/5" />
               <div className="flex-1 min-w-0">
                 <p className="font-bold truncate">{p.title}</p>
                 <p className="text-xs text-muted-foreground truncate">

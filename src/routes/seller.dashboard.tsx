@@ -137,7 +137,7 @@ function SellerDashboard() {
                 className="flex items-center gap-3"
               >
                 <span className="font-mono text-xs text-muted-foreground w-4">{i + 1}</span>
-                <img src={p.image} alt="" className="size-10 rounded-lg object-cover" />
+                <img referrerPolicy="no-referrer" src={p.image} alt="" className="size-10 rounded-lg object-cover" />
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium truncate">{p.name}</p>
                   <p className="text-[11px] text-muted-foreground flex items-center gap-1">

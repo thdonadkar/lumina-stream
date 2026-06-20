@@ -89,7 +89,7 @@ function Page() {
                 className="border-b border-white/5 hover:bg-white/[0.02]"
               >
                 <td className="p-4 flex items-center gap-3">
-                  <img src={p.images?.[0] ?? ""} alt="" className="size-10 rounded-lg object-cover bg-white/5" />
+                  <img referrerPolicy="no-referrer" src={p.images?.[0] ?? ""} alt="" className="size-10 rounded-lg object-cover bg-white/5" />
                   <div className="min-w-0">
                     <p className="font-medium truncate">{p.title}</p>
                     <p className="text-xs text-muted-foreground truncate">{p.tagline}</p>

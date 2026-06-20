@@ -64,7 +64,7 @@ function CartPage() {
               className="glass-strong rounded-2xl p-3 sm:p-4 flex items-center gap-4"
             >
               <Link to="/product/$id" params={{ id: i.product.id }} className="size-20 rounded-xl overflow-hidden bg-secondary shrink-0">
-                <img src={i.product.image} alt={i.product.name} className="size-full object-cover" loading="lazy" />
+                <img referrerPolicy="no-referrer" src={i.product.image} alt={i.product.name} className="size-full object-cover" loading="lazy" />
               </Link>
               <div className="flex-1 min-w-0">
                 <Link to="/product/$id" params={{ id: i.product.id }} className="font-bold truncate block hover:text-cyan">
