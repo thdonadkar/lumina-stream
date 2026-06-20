@@ -445,7 +445,11 @@ function Checkout() {
                 placeholder="Coupon code"
                 className="flex-1 h-10 rounded-xl bg-glass border border-white/10 px-3 text-sm font-mono"
               />
-              <button onClick={applyCoupon} className="h-10 px-4 rounded-xl glass-strong text-sm font-bold flex items-center gap-1">
+            <button
+              onClick={applyCoupon}
+              aria-describedby={couponError ? "coupon-error" : undefined}
+              className="h-10 px-4 rounded-xl glass-strong text-sm font-bold flex items-center gap-1"
+            >
                 <Tag className="size-3.5" /> Apply
               </button>
             </div>
