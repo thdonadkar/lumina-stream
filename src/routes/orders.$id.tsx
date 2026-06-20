@@ -120,33 +120,36 @@ function OrderDetail() {
 
         {statusIdx >= 0 && (
           <div className="mt-8">
-            {/* Mobile: vertical timeline */}
-            <ol className="sm:hidden relative pl-3">
-              <div className="absolute left-[22px] top-2 bottom-2 w-px bg-white/10" aria-hidden="true" />
+            {/* Mobile/tablet: vertical timeline with connecting rail */}
+            <ol className="md:hidden relative">
+              <div className="absolute left-[18px] top-3 bottom-3 w-px bg-gradient-to-b from-aurora via-cyan/40 to-white/5" aria-hidden="true" />
               {TIMELINE.map((s, i) => {
                 const done = i <= statusIdx;
                 const current = i === statusIdx;
                 return (
-                  <li key={s} className="relative flex items-center gap-3 py-2">
+                  <li key={s} className="relative flex items-center gap-4 py-2.5">
                     <motion.div
                       initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ delay: i * 0.06 }}
+                      animate={{ scale: current ? [1, 1.15, 1] : 1 }}
+                      transition={{ delay: i * 0.05, duration: current ? 1.6 : 0.3, repeat: current ? Infinity : 0 }}
                       className={`relative z-10 size-9 rounded-full grid place-items-center shrink-0 ${
                         done ? "bg-aurora text-background shadow-glow-cyan" : "glass text-muted-foreground"
                       }`}
                     >
-                      {done ? <CheckCircle2 className="size-4" /> : <span className="text-xs font-mono">{i + 1}</span>}
+                      {done && !current ? <CheckCircle2 className="size-4" /> : <span className="text-xs font-mono font-bold">{i + 1}</span>}
                     </motion.div>
-                    <p className={`text-xs uppercase font-mono tracking-wider ${current ? "text-cyan font-bold" : done ? "text-foreground" : "text-muted-foreground"}`}>
-                      {s.replace(/_/g, " ")}
-                    </p>
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-sm uppercase font-mono tracking-wider truncate ${current ? "text-cyan font-bold" : done ? "text-foreground" : "text-muted-foreground"}`}>
+                        {s.replace(/_/g, " ")}
+                      </p>
+                      {current && <p className="text-[10px] text-cyan/70 font-mono mt-0.5">● current status</p>}
+                    </div>
                   </li>
                 );
               })}
             </ol>
             {/* Desktop: horizontal timeline */}
-            <div className="hidden sm:block">
+            <div className="hidden md:block">
               <div className="flex items-start justify-between gap-1">
                 {TIMELINE.map((s, i) => (
                   <div key={s} className="flex-1 flex flex-col items-center text-center min-w-[64px]">
