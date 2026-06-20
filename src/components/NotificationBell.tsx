@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { listNotifications, markNotificationRead, markAllNotificationsRead } from "@/lib/notifications.functions";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
+import { useNotificationsRealtime } from "@/hooks/use-notifications-realtime";
 
 type Notif = Awaited<ReturnType<typeof listNotifications>>[number];
 
@@ -35,11 +36,11 @@ export function NotificationBell() {
 
   useEffect(() => {
     refresh({ silent: true });
-    if (!userId) return;
-    const t = setInterval(() => refresh({ silent: true }), 30000);
-    return () => clearInterval(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
+
+  // Realtime: re-fetch when a notification row for this user changes.
+  useNotificationsRealtime(userId ?? null, () => refresh({ silent: true }));
 
   // ESC closes and restores focus to the trigger
   useEffect(() => {
