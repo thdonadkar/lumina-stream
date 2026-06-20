@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { MapPin, Search, X, Crosshair, Loader2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
@@ -243,7 +244,9 @@ export function LocationPickerDialog({ open, onClose, onConfirm }: Props) {
     setQ("");
   }
 
-  return (
+  if (typeof document === "undefined") return null;
+
+  return createPortal(
     <AnimatePresence>
       {open && (
         <motion.div
@@ -355,6 +358,7 @@ export function LocationPickerDialog({ open, onClose, onConfirm }: Props) {
           </motion.div>
         </motion.div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }
