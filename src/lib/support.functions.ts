@@ -2,14 +2,34 @@ import { createServerFn } from "@tanstack/react-start";
 import { UserError } from "@/lib/user-error";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-async function resolveSellerForOrder(supabase: any, orderId: string): Promise<string | null> {
-  const { data } = await supabase
+/** Use the service-role client so RLS can't hide the order→product→seller chain. */
+async function resolveSellerForOrder(orderId: string): Promise<string | null> {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data } = await supabaseAdmin
     .from("order_items")
     .select("product_id, products:product_id(seller_id)")
     .eq("order_id", orderId)
     .limit(1)
     .maybeSingle();
+  // @ts-expect-error embedded select
   return data?.products?.seller_id ?? null;
+}
+
+/** Returns true if `userId` owns any product in the given order. */
+async function userIsSellerOfOrder(orderId: string, userId: string): Promise<boolean> {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data } = await supabaseAdmin
+    .from("order_items")
+    .select("product_id, products:product_id(seller_id)")
+    .eq("order_id", orderId);
+  // @ts-expect-error embedded select
+  return (data ?? []).some((row: any) => row?.products?.seller_id === userId);
+}
+
+async function listAdminIds(): Promise<string[]> {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data } = await supabaseAdmin.from("user_roles").select("user_id").eq("role", "admin");
+  return (data ?? []).map((r: any) => r.user_id);
 }
 
 export const createTicket = createServerFn({ method: "POST" })
