@@ -237,7 +237,7 @@ export const placeOrder = createServerFn({ method: "POST" })
         // Compensating cleanup so we don't leave a ghost order with unfunded stock.
         await supabase.from("order_items").delete().eq("order_id", order.id);
         await supabase.from("orders").delete().eq("id", order.id);
-        throw new UserError(`Could not reserve stock: ${stockErr.message}`);
+        throw new Error(`Could not reserve stock: ${stockErr.message}`);
       }
     }
 

@@ -10,7 +10,7 @@ const RZP_BASE = "https://api.razorpay.com/v1";
 function rzpAuthHeader() {
   const key = process.env.RAZORPAY_KEY_ID;
   const secret = process.env.RAZORPAY_KEY_SECRET;
-  if (!key || !secret) throw new UserError("Razorpay keys not configured");
+  if (!key || !secret) throw new Error("Razorpay keys not configured");
   // btoa is available in the Worker runtime.
   return "Basic " + btoa(`${key}:${secret}`);
 }

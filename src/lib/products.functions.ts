@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { UserError } from "@/lib/user-error";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 export type ProductInput = {
@@ -22,9 +23,9 @@ function slugify(s: string) {
 export const createProduct = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: ProductInput) => {
-    if (!d.title?.trim()) throw new Error("Title required");
-    if (typeof d.price !== "number" || d.price < 0) throw new Error("Valid price required");
-    if (typeof d.stock !== "number" || d.stock < 0) throw new Error("Valid stock required");
+    if (!d.title?.trim()) throw new UserError("Title required");
+    if (typeof d.price !== "number" || d.price < 0) throw new UserError("Valid price required");
+    if (typeof d.stock !== "number" || d.stock < 0) throw new UserError("Valid stock required");
     return d;
   })
   .handler(async ({ data, context }) => {
@@ -73,8 +74,8 @@ export const deleteMyProduct = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     const { data: existing } = await supabase
       .from("products").select("seller_id").eq("id", data.id).maybeSingle();
-    if (!existing) throw new Error("Product not found");
-    if ((existing as any).seller_id !== userId) throw new Error("Forbidden");
+    if (!existing) throw new UserError("Product not found");
+    if ((existing as any).seller_id !== userId) throw new UserError("Forbidden");
     const { error } = await supabase.from("products").delete().eq("id", data.id);
     if (error) throw error;
     return { ok: true };
