@@ -42,7 +42,7 @@ export const createTicket = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     let sellerId: string | null = null;
-    if (data.orderId) sellerId = await resolveSellerForOrder(supabase, data.orderId);
+    if (data.orderId) sellerId = await resolveSellerForOrder(data.orderId);
 
     const { data: ticket, error } = await supabase
       .from("support_tickets")
@@ -66,7 +66,7 @@ export const createTicket = createServerFn({ method: "POST" })
       body: data.message,
     });
 
-    // Notify user (confirmation) + seller (if any)
+    // Notify user (confirmation) + seller (if any) + all admins
     const notifs: any[] = [
       {
         user_id: userId,
@@ -85,7 +85,19 @@ export const createTicket = createServerFn({ method: "POST" })
         link: `/seller/support`,
       });
     }
-    await supabase.from("notifications").insert(notifs);
+    const adminIds = await listAdminIds();
+    for (const aid of adminIds) {
+      if (aid === userId || aid === sellerId) continue;
+      notifs.push({
+        user_id: aid,
+        type: "system",
+        title: "New support ticket",
+        body: `New ticket from a customer: ${data.subject}`,
+        link: `/admin/support`,
+      });
+    }
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await supabaseAdmin.from("notifications").insert(notifs);
     return ticket;
   });
 
