@@ -77,7 +77,7 @@ function statusLabel(status?: string) {
     .replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
-export function createInvoicePdf(order: InvoiceOrder) {
+export async function createInvoicePdf(order: InvoiceOrder) {
   const doc = new jsPDF({ unit: "pt", format: "a4" });
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
