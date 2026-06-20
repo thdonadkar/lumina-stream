@@ -310,18 +310,20 @@ export function LocationPickerDialog({ open, onClose, onConfirm }: Props) {
               </span>
             </div>
 
-            <div className="relative flex-1">
-              <div ref={mapDivRef} className="absolute inset-0" />
+            <div className="px-4 py-3 border-b border-white/10 bg-background/70">
               <button
                 type="button"
                 onClick={recenterToMe}
                 aria-label="Use my current location"
-                title="Use my current location"
-                className="absolute top-4 right-4 z-[400] h-11 px-3 rounded-full bg-background border border-white/20 inline-flex items-center gap-2 shadow-lg hover:bg-white/5 text-xs font-bold"
+                className="w-full h-11 rounded-xl bg-aurora text-background inline-flex items-center justify-center gap-2 text-sm font-bold shadow-glow-cyan"
               >
-                <Crosshair className="size-5 text-cyan" />
-                <span className="hidden sm:inline">Use my location</span>
+                <Crosshair className="size-5" />
+                Use my current location
               </button>
+            </div>
+
+            <div className="relative flex-1">
+              <div ref={mapDivRef} className="absolute inset-0" />
             </div>
 
             <div className="p-4 border-t border-white/10 space-y-3">
