@@ -35,7 +35,7 @@ export const sanitizeServerErrors = createMiddleware({ type: "function" }).serve
       }
 
       const message = err instanceof Error ? err.message : String(err);
-      console.error(`[server-fn:${functionId ?? "unknown"}] failed:`, err);
+      console.error("[server-fn] failed:", err);
 
       if (message.startsWith("PUBLIC:")) {
         throw new Error(message.slice("PUBLIC:".length).trim());
