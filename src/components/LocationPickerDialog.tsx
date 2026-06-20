@@ -76,6 +76,18 @@ export function LocationPickerDialog({ open, onClose, onConfirm }: Props) {
   useEffect(() => {
     if (!open || !mapDivRef.current) return;
     let cancelled = false;
+    setSecureState(window.isSecureContext ? "secure" : "insecure");
+    navigator.permissions?.query({ name: "geolocation" as PermissionName }).then((status) => {
+      if (cancelled) return;
+      console.log("[geolocation] permission state", status.state);
+      setPermState(status.state as any);
+      setLocationMessage(status.state === "denied" ? "Enable location from browser settings" : "Click 📍 Use my current location to allow location access");
+      status.onchange = () => {
+        console.log("[geolocation] permission state", status.state);
+        setPermState(status.state as any);
+        setLocationMessage(status.state === "denied" ? "Enable location from browser settings" : "Click 📍 Use my current location to allow location access");
+      };
+    }).catch(() => undefined);
     (async () => {
       const L = (await import("leaflet")).default;
       // Fix marker icon URLs (Leaflet's default points to a path that doesn't exist after bundling)
