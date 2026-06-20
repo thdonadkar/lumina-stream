@@ -142,10 +142,10 @@ export function Navbar() {
             className="relative grid place-items-center size-9 rounded-full glass hover:glass-strong transition-all"
             aria-label="Wishlist"
           >
-            <Heart className={`size-4 ${wishCount > 0 ? "fill-rose-400 text-rose-400" : ""}`} />
-            {wishCount > 0 && (
-              <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-rose-400 text-[10px] font-bold grid place-items-center text-background">
-                {wishCount}
+            <Heart className={`size-4 ${wishBadge > 0 ? "fill-rose-400 text-rose-400" : ""}`} />
+            {wishBadge > 0 && (
+              <span className="absolute -top-1 -right-1 min-w-[20px] h-[20px] px-1.5 rounded-full bg-rose-400 text-[10px] font-bold grid place-items-center text-background tabular-nums">
+                {wishBadge > 99 ? "99+" : wishBadge}
               </span>
             )}
           </Link>
@@ -158,14 +158,14 @@ export function Navbar() {
             aria-label="Open cart"
           >
             <ShoppingBag className="size-4" />
-            {count > 0 && (
+            {cartBadge > 0 && (
               <motion.span
-                key={count}
+                key={cartBadge}
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-aurora animate-aurora text-[10px] font-bold grid place-items-center text-background"
+                className="absolute -top-1 -right-1 min-w-[20px] h-[20px] px-1.5 rounded-full bg-aurora animate-aurora text-[10px] font-bold grid place-items-center text-background tabular-nums"
               >
-                {count}
+                {cartBadge > 99 ? "99+" : cartBadge}
               </motion.span>
             )}
           </button>
