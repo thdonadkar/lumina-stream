@@ -190,6 +190,7 @@ export const placeOrder = createServerFn({ method: "POST" })
     const tax = Math.round((subtotal - discount) * 0.18);
     const total = Math.max(0, subtotal - discount) + shipping + tax;
 
+    const paymentMethod = data.payment_method ?? "cod";
     const { data: order, error: orderErr } = await supabase
       .from("orders")
       .insert({
@@ -203,10 +204,13 @@ export const placeOrder = createServerFn({ method: "POST" })
         coupon_code: data.coupon_code ?? null,
         notes: data.notes ?? null,
         status: "pending",
+        payment_method: paymentMethod as never,
+        payment_status: "pending" as never,
       })
       .select()
       .single();
     if (orderErr) throw orderErr;
+
 
     const { error: itemsErr } = await supabase.from("order_items").insert(
       safeItems.map((i) => ({
