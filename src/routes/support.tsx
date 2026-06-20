@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { motion } from "framer-motion";
-import { LifeBuoy, ChevronLeft, MessageCircle, Plus, FileText, ImageIcon } from "lucide-react";
+import { LifeBuoy, ChevronLeft, MessageCircle, Plus, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 import { useTicketRealtime } from "@/hooks/use-ticket-realtime";
