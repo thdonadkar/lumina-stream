@@ -107,6 +107,14 @@ function Page() {
                   </span>
                 </td>
                 <td className="p-4 text-right whitespace-nowrap">
+                  <Link
+                    to="/seller/edit-product/$id"
+                    params={{ id: p.id }}
+                    aria-label="Edit product"
+                    className="size-8 rounded-full glass grid place-items-center inline-flex mr-2"
+                  >
+                    <Pencil className="size-3.5 text-cyan" />
+                  </Link>
                   <button
                     aria-label="Delete product"
                     onClick={async () => { if (await confirm({ title: `Delete "${p.title}"?`, description: "This permanently removes the product from your catalog.", destructive: true, confirmText: "Delete" })) deleteMut.mutate(p.id); }}
