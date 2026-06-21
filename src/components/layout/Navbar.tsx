@@ -68,7 +68,9 @@ export function Navbar() {
     >
       <div className="glass-strong shadow-elevated rounded-2xl px-4 sm:px-6 py-3 flex flex-nowrap items-center justify-between gap-2 sm:gap-4">
         <Link to="/" className="flex items-center gap-2 shrink-0 min-w-0">
-          <img src={brandLogo.url} alt="AtomSpot" className="size-8 object-contain" />
+          <div className="size-9 rounded-lg bg-white grid place-items-center p-1 shadow-glow-cyan">
+            <img src={brandLogo.url} alt="AtomSpot" className="size-full object-contain" />
+          </div>
           <span className="font-extrabold tracking-tighter text-base sm:text-lg">ATOMSPOT.</span>
         </Link>
 
