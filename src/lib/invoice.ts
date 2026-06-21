@@ -1,5 +1,21 @@
 import jsPDF from "jspdf";
 import QRCode from "qrcode";
+import brandLogo from "@/assets/atomspot-logo.png.asset.json";
+
+async function loadLogoDataUrl(): Promise<string | null> {
+  try {
+    const res = await fetch(brandLogo.url);
+    const blob = await res.blob();
+    return await new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = () => resolve(null);
+      reader.readAsDataURL(blob);
+    });
+  } catch {
+    return null;
+  }
+}
 
 type InvoiceOrder = {
   id: string;
