@@ -10,7 +10,7 @@ import { ensureDemoAccounts } from "@/lib/demo-accounts.functions";
 import { z } from "zod";
 
 export const Route = createFileRoute("/auth")({
-  head: () => ({ meta: [{ title: "Sign in — Neural" }] }),
+  head: () => ({ meta: [{ title: "Sign in — AtomSpot" }] }),
   component: Auth,
 });
 
@@ -264,7 +264,7 @@ function Auth() {
           </form>
 
           <p className="text-center text-sm text-muted-foreground mt-6">
-            {mode === "signin" ? "New to Neural?" : "Already have an account?"}{" "}
+            {mode === "signin" ? "New to AtomSpot?" : "Already have an account?"}{" "}
             <button
               onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
               className="text-cyan font-medium hover:underline"

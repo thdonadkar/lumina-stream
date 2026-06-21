@@ -4,7 +4,7 @@ import { ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export const Route = createFileRoute("/faq")({
-  head: () => ({ meta: [{ title: "FAQ — Neural" }, { name: "description", content: "Frequently asked questions." }] }),
+  head: () => ({ meta: [{ title: "FAQ — AtomSpot" }, { name: "description", content: "Frequently asked questions." }] }),
   component: Page,
 });
 

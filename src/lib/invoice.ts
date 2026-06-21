@@ -103,11 +103,11 @@ export async function createInvoicePdf(order: InvoiceOrder) {
   };
 
   setFont("bold", 24, 15);
-  text("NEURAL", margin, y);
+  text("ATOMSPOT", margin, y);
   setFont("normal", 9, 95);
-  text("Neural Commerce Pvt Ltd", margin, y + 15);
+  text("AtomSpot Commerce Pvt Ltd", margin, y + 15);
   text("Bengaluru, Karnataka, India", margin, y + 28);
-  text("support@neural.shop", margin, y + 41);
+  text("support@atomspot.shop", margin, y + 41);
 
   setFont("bold", 16, 15);
   text("TAX INVOICE", pageWidth - margin, y, { align: "right" });
@@ -125,7 +125,7 @@ export async function createInvoicePdf(order: InvoiceOrder) {
     ["Invoice ID", invoiceId],
     ["Order ID", orderId],
     ["Date", prettyDate(order.created_at)],
-    ["Seller", "Neural Commerce Pvt Ltd"],
+    ["Seller", "AtomSpot Commerce Pvt Ltd"],
   ];
   const metaRight: Array<[string, string]> = [
     ["Payment", `${paymentStatus} (${paymentMethodShort(order.payment_method)})`],
@@ -289,12 +289,12 @@ export async function createInvoicePdf(order: InvoiceOrder) {
   divider(pageHeight - 50);
   setFont("normal", 8, 135);
   text(
-    "Thank you for shopping with Neural. This is a computer-generated invoice and does not require a signature.",
+    "Thank you for shopping with AtomSpot. This is a computer-generated invoice and does not require a signature.",
     pageWidth / 2,
     pageHeight - 32,
     { align: "center" },
   );
-  text("Neural Commerce Pvt Ltd - support@neural.shop - neural.shop", pageWidth / 2, pageHeight - 20, {
+  text("AtomSpot Commerce Pvt Ltd - support@atomspot.shop - atomspot.shop", pageWidth / 2, pageHeight - 20, {
     align: "center",
   });
 

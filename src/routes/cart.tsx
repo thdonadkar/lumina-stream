@@ -7,9 +7,9 @@ import { useCart, formatPrice } from "@/lib/cart-store";
 export const Route = createFileRoute("/cart")({
   head: () => ({
     meta: [
-      { title: "Your Cart — Neural" },
+      { title: "Your Cart — AtomSpot" },
       { name: "description", content: "Review the items in your cart and proceed to checkout." },
-      { property: "og:title", content: "Your Cart — Neural" },
+      { property: "og:title", content: "Your Cart — AtomSpot" },
       { property: "og:description", content: "Review the items in your cart and proceed to checkout." },
     ],
     links: [{ rel: "canonical", href: "/cart" }],

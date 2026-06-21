@@ -9,7 +9,7 @@ import { useConfirm } from "@/components/ConfirmDialog";
 import { listAddresses, saveAddress, deleteAddress, type AddressInput } from "@/lib/addresses.functions";
 
 export const Route = createFileRoute("/addresses")({
-  head: () => ({ meta: [{ title: "Saved addresses — Neural" }] }),
+  head: () => ({ meta: [{ title: "Saved addresses — AtomSpot" }] }),
   component: AddressesPage,
 });
 

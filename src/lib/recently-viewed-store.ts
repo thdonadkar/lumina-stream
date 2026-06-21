@@ -25,6 +25,6 @@ export const useRecentlyViewed = create<State>()(
         }),
       clear: () => set({ items: [] }),
     }),
-    { name: "neural-recently-viewed" },
+    { name: "atomspot-recently-viewed" },
   ),
 );

@@ -10,9 +10,9 @@ import { submitContactMessage } from "@/lib/contact.functions";
 export const Route = createFileRoute("/contact")({
   head: () => ({
     meta: [
-      { title: "Contact — Neural" },
-      { name: "description", content: "Reach the Neural team." },
-      { property: "og:title", content: "Contact — Neural" },
+      { title: "Contact — AtomSpot" },
+      { name: "description", content: "Reach the AtomSpot team." },
+      { property: "og:title", content: "Contact — AtomSpot" },
     ],
   }),
   component: Contact,
@@ -43,7 +43,7 @@ function Contact() {
         <h1 className="text-5xl font-extrabold tracking-tighter">Get in touch</h1>
         <p className="text-muted-foreground mt-3">We typically reply within one orbit.</p>
         <ul className="mt-8 space-y-3 text-sm">
-          <li className="flex items-center gap-3"><Mail className="size-4 text-cyan" /> hello@neural.app</li>
+          <li className="flex items-center gap-3"><Mail className="size-4 text-cyan" /> hello@atomspot.app</li>
           <li className="flex items-center gap-3"><MessageSquare className="size-4 text-cyan" /> +1 (415) 555-0199</li>
           <li className="flex items-center gap-3"><MapPin className="size-4 text-cyan" /> Pier 70, San Francisco</li>
         </ul>

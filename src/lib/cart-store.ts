@@ -54,7 +54,7 @@ export const useCart = create<CartState>()(
       count: () => get().items.reduce((acc, i) => acc + i.qty, 0),
     }),
     {
-      name: "neural-cart",
+      name: "atomspot-cart",
       version: 1,
       partialize: (state) => ({ items: state.items }),
     },

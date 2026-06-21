@@ -11,7 +11,7 @@ import { createTicket, listMyTickets, getTicketThread, markTicketRead } from "@/
 import { TicketComposer } from "@/components/TicketComposer";
 
 export const Route = createFileRoute("/support")({
-  head: () => ({ meta: [{ title: "Support — Neural" }] }),
+  head: () => ({ meta: [{ title: "Support — AtomSpot" }] }),
   component: Support,
 });
 

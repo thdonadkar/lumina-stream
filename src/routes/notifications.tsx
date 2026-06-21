@@ -9,7 +9,7 @@ import type { Database } from "@/integrations/supabase/types";
 
 export const Route = createFileRoute("/notifications")({
   ssr: false,
-  head: () => ({ meta: [{ title: "Notifications — Neural" }] }),
+  head: () => ({ meta: [{ title: "Notifications — AtomSpot" }] }),
   component: NotificationsPage,
 });
 

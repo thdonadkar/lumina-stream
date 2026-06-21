@@ -22,7 +22,7 @@ import {
 export const Route = createFileRoute("/admin/dashboard")({
   ssr: false,
   beforeLoad: () => requireRole("admin"),
-  head: () => ({ meta: [{ title: "Admin — Neural" }] }),
+  head: () => ({ meta: [{ title: "Admin — AtomSpot" }] }),
   component: () => (
     <RoleGate role="admin">
       <Page />

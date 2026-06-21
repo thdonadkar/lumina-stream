@@ -8,7 +8,7 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/wishlist")({
   head: () => ({
     meta: [
-      { title: "Wishlist — Neural" },
+      { title: "Wishlist — AtomSpot" },
       { name: "description", content: "Saved products you love." },
     ],
   }),

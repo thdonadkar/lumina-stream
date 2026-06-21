@@ -13,8 +13,8 @@ import { formatPrice } from "@/lib/cart-store";
 export const Route = createFileRoute("/shop")({
   head: () => ({
     meta: [
-      { title: "Shop — Neural" },
-      { name: "description", content: "Browse the full catalog of Neural hardware." },
+      { title: "Shop — AtomSpot" },
+      { name: "description", content: "Browse the full catalog of AtomSpot hardware." },
     ],
   }),
   component: Shop,

@@ -70,7 +70,7 @@ export function Navbar() {
           <div className="size-7 rounded-md bg-aurora animate-aurora animate-pulse-glow grid place-items-center">
             <div className="size-3 rounded-sm bg-background" />
           </div>
-          <span className="font-extrabold tracking-tighter text-base sm:text-lg">NEURAL.</span>
+          <span className="font-extrabold tracking-tighter text-base sm:text-lg">ATOMSPOT.</span>
         </Link>
 
         <nav className="hidden md:flex items-center gap-1">
@@ -272,7 +272,7 @@ export function Navbar() {
                 className="fixed top-0 right-0 bottom-0 z-[90] w-[92%] max-w-sm glass-strong border-l border-white/10 flex flex-col md:hidden"
               >
                 <div className="flex items-center justify-between p-4 border-b border-white/5">
-                  <span className="font-extrabold tracking-tighter text-lg">NEURAL.</span>
+                  <span className="font-extrabold tracking-tighter text-lg">ATOMSPOT.</span>
                   <button
                     onClick={() => setMobileOpen(false)}
                     aria-label="Close menu"
