@@ -10,7 +10,7 @@ import { CATEGORIES } from "@/lib/categories";
 import { NotificationBell } from "@/components/NotificationBell";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import brandLogo from "@/assets/atomspot-logo.png.asset.json";
+const brandLogo = { url: "/atomspot-logo.png" };
 
 
 const navLinks = [
