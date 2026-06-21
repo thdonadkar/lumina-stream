@@ -119,7 +119,13 @@ export async function createInvoicePdf(order: InvoiceOrder) {
   };
 
   setFont("bold", 24, 15);
-  text("ATOMSPOT", margin, y);
+  const logoData = await loadLogoDataUrl();
+  if (logoData) {
+    try { doc.addImage(logoData, "PNG", margin, y - 18, 26, 26); } catch {}
+    text("ATOMSPOT", margin + 32, y);
+  } else {
+    text("ATOMSPOT", margin, y);
+  }
   setFont("normal", 9, 95);
   text("AtomSpot Commerce Pvt Ltd", margin, y + 15);
   text("Bengaluru, Karnataka, India", margin, y + 28);
