@@ -1,6 +1,6 @@
 import jsPDF from "jspdf";
 import QRCode from "qrcode";
-import brandLogo from "@/assets/atomspot-logo.png.asset.json";
+const brandLogo = { url: "/atomspot-logo.png" };
 
 async function loadLogoDataUrl(): Promise<string | null> {
   try {
