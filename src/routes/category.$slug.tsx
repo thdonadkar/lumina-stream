@@ -15,7 +15,7 @@ export const Route = createFileRoute("/category/$slug")({
     const c = getCategory(params.slug);
     return {
       meta: [
-        { title: c ? `${c.name} — Neural` : "Category" },
+        { title: c ? `${c.name} — AtomSpot` : "Category" },
         { name: "description", content: c?.blurb ?? "Explore the catalog." },
       ],
     };

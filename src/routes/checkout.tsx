@@ -27,7 +27,7 @@ function loadRazorpayScript(): Promise<boolean> {
 }
 
 export const Route = createFileRoute("/checkout")({
-  head: () => ({ meta: [{ title: "Checkout — Neural" }] }),
+  head: () => ({ meta: [{ title: "Checkout — AtomSpot" }] }),
   component: Checkout,
 });
 
@@ -199,7 +199,7 @@ function Checkout() {
           amount: rzp.amount,
           currency: rzp.currency,
           order_id: rzp.razorpay_order_id,
-          name: "Neural",
+          name: "AtomSpot",
           description: `Order #${placed.id.slice(0, 8)}`,
           handler: async (resp: any) => {
             try {
@@ -465,7 +465,7 @@ function Checkout() {
                 <button onClick={() => { setCoupon(null); setCouponError(null); }} className="text-muted-foreground hover:text-rose-400">Remove</button>
               </p>
             )}
-            <p className="text-[10px] text-muted-foreground mt-2 font-mono">Try: WELCOME10 · NEURAL50 · FREESHIP · FLASH25</p>
+            <p className="text-[10px] text-muted-foreground mt-2 font-mono">Try: WELCOME10 · ATOMSPOT50 · FREESHIP · FLASH25</p>
           </div>
 
           <div className="mt-4 pt-4 border-t border-white/5 space-y-2 text-sm">

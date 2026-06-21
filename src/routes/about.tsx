@@ -4,9 +4,9 @@ import { motion } from "framer-motion";
 export const Route = createFileRoute("/about")({
   head: () => ({
     meta: [
-      { title: "About — Neural" },
-      { name: "description", content: "Neural builds cinematic commerce experiences for the post-screen era." },
-      { property: "og:title", content: "About — Neural" },
+      { title: "About — AtomSpot" },
+      { name: "description", content: "AtomSpot builds cinematic commerce experiences for the post-screen era." },
+      { property: "og:title", content: "About — AtomSpot" },
       { property: "og:description", content: "Cinematic commerce, engineered." },
     ],
   }),
@@ -20,7 +20,7 @@ function About() {
         <p className="text-xs uppercase tracking-widest text-cyan font-mono mb-2">About</p>
         <h1 className="text-5xl font-extrabold tracking-tighter">Commerce, made cinematic.</h1>
         <p className="text-muted-foreground mt-4 leading-relaxed">
-          Neural is a futuristic marketplace platform combining glass-grade UI, AI-native discovery, and
+          AtomSpot is a futuristic marketplace platform combining glass-grade UI, AI-native discovery, and
           a developer-first infrastructure. We exist to make every transaction feel like a product
           experience — not a checkout.
         </p>

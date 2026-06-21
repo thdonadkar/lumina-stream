@@ -9,9 +9,9 @@ import { CATEGORIES } from "@/lib/categories";
 export const Route = createFileRoute("/search")({
   head: () => ({
     meta: [
-      { title: "Search — Neural" },
-      { name: "description", content: "Search products on Neural." },
-      { property: "og:title", content: "Search — Neural" },
+      { title: "Search — AtomSpot" },
+      { name: "description", content: "Search products on AtomSpot." },
+      { property: "og:title", content: "Search — AtomSpot" },
       { property: "og:url", content: "/search" },
     ],
     links: [{ rel: "canonical", href: "/search" }],

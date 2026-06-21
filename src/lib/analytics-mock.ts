@@ -59,14 +59,14 @@ export function topProductsBar() {
 
 export function activityFeed() {
   return [
-    { kind: "order", text: "ORD-4831 placed by alex@neural.app", amount: "₹2,499", at: "2m ago", tone: "cyan" },
-    { kind: "user", text: "New signup — kai@neural.app", at: "6m ago", tone: "purple" },
+    { kind: "order", text: "ORD-4831 placed by alex@atomspot.app", amount: "₹2,499", at: "2m ago", tone: "cyan" },
+    { kind: "user", text: "New signup — kai@atomspot.app", at: "6m ago", tone: "purple" },
     { kind: "seller", text: "Seller Lumen Co. approved", at: "14m ago", tone: "rose" },
     { kind: "order", text: "ORD-4830 shipped to Priya S.", amount: "₹820", at: "21m ago", tone: "cyan" },
-    { kind: "user", text: "New signup — mira@neural.app", at: "38m ago", tone: "purple" },
+    { kind: "user", text: "New signup — mira@atomspot.app", at: "38m ago", tone: "purple" },
     { kind: "order", text: "ORD-4828 refunded", amount: "−₹390", at: "1h ago", tone: "rose" },
     { kind: "seller", text: "Onyx Labs submitted 5 products for review", at: "2h ago", tone: "rose" },
-    { kind: "user", text: "New signup — jules@neural.app", at: "3h ago", tone: "purple" },
+    { kind: "user", text: "New signup — jules@atomspot.app", at: "3h ago", tone: "purple" },
   ];
 }
 

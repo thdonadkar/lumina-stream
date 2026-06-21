@@ -12,7 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { OrderListSkeleton } from "@/components/skeletons";
 
 export const Route = createFileRoute("/dashboard")({
-  head: () => ({ meta: [{ title: "Account — Neural" }] }),
+  head: () => ({ meta: [{ title: "Account — AtomSpot" }] }),
   component: Dashboard,
 });
 
@@ -54,7 +54,7 @@ function Dashboard() {
     fetchOrders().then(setOrders).finally(() => setLoadingOrders(false));
     fetchAddrs().then(setAddrs).catch(() => {});
     try {
-      const p = localStorage.getItem("neural-prefs");
+      const p = localStorage.getItem("atomspot-prefs");
       if (p) setPrefs(JSON.parse(p));
     } catch { /* */ }
   }, [userId, fetchOrders, fetchAddrs]);
@@ -84,7 +84,7 @@ function Dashboard() {
 
   function savePrefs(next: typeof prefs) {
     setPrefs(next);
-    localStorage.setItem("neural-prefs", JSON.stringify(next));
+    localStorage.setItem("atomspot-prefs", JSON.stringify(next));
     toast.success("Preferences updated");
   }
 

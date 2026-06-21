@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { ArrowUpRight } from "lucide-react";
 
 export const Route = createFileRoute("/careers")({
-  head: () => ({ meta: [{ title: "Careers — Neural" }, { name: "description", content: "Build the future of commerce with us." }] }),
+  head: () => ({ meta: [{ title: "Careers — AtomSpot" }, { name: "description", content: "Build the future of commerce with us." }] }),
   component: Page,
 });
 
@@ -22,7 +22,7 @@ function Page() {
         {ROLES.map((r) => (
           <a
             key={r.title}
-            href={`mailto:careers@neural.app?subject=${encodeURIComponent("Application: " + r.title)}`}
+            href={`mailto:careers@atomspot.app?subject=${encodeURIComponent("Application: " + r.title)}`}
             className="glass hover:glass-strong rounded-2xl p-5 flex items-center justify-between gap-4 transition-all"
           >
             <div>

@@ -12,7 +12,7 @@ import { listActiveBanners } from "@/lib/banners.functions";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Neural — Future-grade hardware" },
+      { title: "AtomSpot — Future-grade hardware" },
       { name: "description", content: "Premium futuristic hardware for spatial computing, audio and wearables." },
     ],
   }),
@@ -188,7 +188,7 @@ function Home() {
               className="absolute -right-2 sm:-right-6 top-1/4 glass-strong rounded-2xl p-4 w-44 shadow-glow-cyan hidden sm:block"
             >
               <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
-                Neural sync
+                AtomSpot sync
               </p>
               <p className="text-2xl font-bold font-mono mt-1">0.002ms</p>
               <div className="mt-2 h-1 rounded-full bg-secondary overflow-hidden">

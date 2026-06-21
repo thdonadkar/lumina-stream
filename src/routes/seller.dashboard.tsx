@@ -21,7 +21,7 @@ import { RANGES, revenueSeries, totals, type Range } from "@/lib/analytics-mock"
 export const Route = createFileRoute("/seller/dashboard")({
   ssr: false,
   beforeLoad: () => requireRole("seller"),
-  head: () => ({ meta: [{ title: "Seller — Neural" }] }),
+  head: () => ({ meta: [{ title: "Seller — AtomSpot" }] }),
   component: () => (
     <RoleGate role="seller">
       <SellerDashboard />

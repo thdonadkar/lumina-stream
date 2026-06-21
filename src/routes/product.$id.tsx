@@ -16,13 +16,13 @@ export const Route = createFileRoute("/product/$id")({
   head: ({ params, loaderData }) => {
     const p = (loaderData as any)?.product ?? getProduct(params.id);
     if (!p) {
-      return { meta: [{ title: "Product not found — Neural" }] };
+      return { meta: [{ title: "Product not found — AtomSpot" }] };
     }
     const desc = (p.tagline ?? p.description ?? p.name).slice(0, 160);
     const url = `/product/${params.id}`;
     return {
       meta: [
-        { title: `${p.name} — Neural` },
+        { title: `${p.name} — AtomSpot` },
         { name: "description", content: desc },
         { property: "og:title", content: p.name },
         { property: "og:description", content: desc },
@@ -47,7 +47,7 @@ export const Route = createFileRoute("/product/$id")({
             description: p.tagline ?? p.description ?? "",
             image: p.image ? [p.image] : undefined,
             sku: p.id,
-            brand: { "@type": "Brand", name: "Neural" },
+            brand: { "@type": "Brand", name: "AtomSpot" },
             offers: {
               "@type": "Offer",
               priceCurrency: "INR",
