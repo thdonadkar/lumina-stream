@@ -335,7 +335,7 @@ export const updateOrderStatus = createServerFn({ method: "POST" })
 
     // AuthZ: only an admin or a seller whose product is in the order may change status.
     const { data: existing } = await supabase
-      .from("orders").select("user_id").eq("id", data.id).maybeSingle();
+      .from("orders").select("user_id, payment_method, payment_status, status").eq("id", data.id).maybeSingle();
     if (!existing) throw new UserError("Order not found");
 
     const [{ data: isAdmin }, { data: isSeller }] = await Promise.all([
@@ -344,9 +344,22 @@ export const updateOrderStatus = createServerFn({ method: "POST" })
     ]);
     if (!isAdmin && !isSeller) throw new UserError("Forbidden");
 
+    // Guard invalid transitions
+    const terminal = ["cancelled", "returned", "refunded"];
+    if (terminal.includes(existing.status))
+      throw new UserError(`Order is ${existing.status} and cannot change status`);
+
+    const updates: Record<string, unknown> = { status: data.status };
+    // COD: collecting cash at delivery flips payment_status to paid
+    if (data.status === "delivered"
+        && (existing as any).payment_method === "cod"
+        && (existing as any).payment_status === "pending") {
+      updates.payment_status = "paid";
+    }
+
     const { data: order, error } = await supabase
       .from("orders")
-      .update({ status: data.status as never })
+      .update(updates as never)
       .eq("id", data.id)
       .select()
       .single();
@@ -360,6 +373,7 @@ export const updateOrderStatus = createServerFn({ method: "POST" })
     });
     return order;
   });
+
 
 const RETURN_REASONS = new Set([
   "damaged",
