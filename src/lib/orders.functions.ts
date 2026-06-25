@@ -464,14 +464,29 @@ export const cancelOrder = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { data: existing } = await supabase
-      .from("orders").select("status, user_id").eq("id", data.id).maybeSingle();
+      .from("orders").select("status, user_id, payment_method, payment_status").eq("id", data.id).maybeSingle();
     if (!existing) throw new UserError("Order not found");
     if (existing.user_id !== userId) throw new UserError("Forbidden");
     if (!["pending", "confirmed"].includes(existing.status))
       throw new UserError("This order can no longer be cancelled");
+
+    // Payment & refund logic:
+    //   * Money already collected (paid) → refund must be issued → refund_status = pending.
+    //   * No money collected → no refund record. Mark payment_status as not_applicable
+    //     so we stop showing "PAYMENT: PENDING" on a cancelled order.
+    const wasPaid = (existing as any).payment_status === "paid";
+    const updates: Record<string, unknown> = { status: "cancelled" };
+    if (wasPaid) {
+      updates.refund_status = "pending";
+    } else {
+      updates.payment_status = "not_applicable";
+      updates.refund_status = "none";
+    }
+
     const { data: order, error } = await supabase
-      .from("orders").update({ status: "cancelled" as never }).eq("id", data.id).select().single();
+      .from("orders").update(updates as never).eq("id", data.id).select().single();
     if (error) throw error;
+
     // Return reserved stock to inventory (best-effort; do not fail the cancel).
     const { data: items } = await supabase
       .from("order_items").select("product_id, qty").eq("order_id", data.id);
