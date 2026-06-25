@@ -2,28 +2,33 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useSiteContent } from "@/hooks/use-site-content";
 
 export const Route = createFileRoute("/faq")({
   head: () => ({ meta: [{ title: "FAQ — AtomSpot" }, { name: "description", content: "Frequently asked questions." }] }),
   component: Page,
 });
 
-const FAQ = [
-  { q: "How fast is shipping?", a: "Standard shipping arrives in 2–4 days. Express options are calculated at checkout based on your address." },
-  { q: "What's your return policy?", a: "Free returns within 30 days on unused items. Open electronics carry a 15% restocking fee." },
-  { q: "How do I become a seller?", a: "Apply from your account dashboard. Most applications are reviewed within 48 hours." },
-  { q: "Are coupons stackable?", a: "One discount coupon per order. Free-shipping coupons can be combined with a discount coupon." },
-  { q: "Do you ship internationally?", a: "Yes — to 40+ countries. Duties are calculated at checkout where applicable." },
-  { q: "How do I cancel an order?", a: "Orders can be cancelled before they're marked Shipped from your Orders page." },
-];
+const DEFAULT_FAQ = {
+  items: [
+    { q: "How fast is shipping?", a: "Standard shipping arrives in 2–4 days. Express options are calculated at checkout based on your address." },
+    { q: "What's your return policy?", a: "Free returns within 30 days on unused items. Open electronics carry a 15% restocking fee." },
+    { q: "How do I become a seller?", a: "Apply from your account dashboard. Most applications are reviewed within 48 hours." },
+    { q: "Are coupons stackable?", a: "One discount coupon per order. Free-shipping coupons can be combined with a discount coupon." },
+    { q: "Do you ship internationally?", a: "Yes — to 40+ countries. Duties are calculated at checkout where applicable." },
+    { q: "How do I cancel an order?", a: "Orders can be cancelled before they're marked Shipped from your Orders page." },
+  ] as { q: string; a: string }[],
+};
 
 function Page() {
+  const c = useSiteContent("faq", DEFAULT_FAQ);
+  const items = Array.isArray(c.items) && c.items.length ? c.items : DEFAULT_FAQ.items;
   return (
     <div className="px-4 pt-28 pb-24 max-w-3xl mx-auto">
       <h1 className="text-5xl font-extrabold tracking-tighter mb-2">Frequently asked</h1>
       <p className="text-muted-foreground mb-8">Everything you need to know before reaching out.</p>
       <div className="space-y-2">
-        {FAQ.map((f) => <Item key={f.q} {...f} />)}
+        {items.map((f) => <Item key={f.q} {...f} />)}
       </div>
     </div>
   );
