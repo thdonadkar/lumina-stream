@@ -310,6 +310,15 @@ export const placeOrder = createServerFn({ method: "POST" })
       link: `/seller/orders`,
     });
 
+    // Admin always sees new orders
+    await notifyAdminsOfOrder({
+      type: "order",
+      title: "New order placed",
+      body: `Order #${order.id.slice(0, 8)} placed (₹${total}).`,
+      link: `/admin/orders`,
+    });
+
+
     return { id: order.id, total };
   });
 
