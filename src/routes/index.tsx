@@ -8,6 +8,14 @@ import { CATEGORIES } from "@/lib/categories";
 import { ProductCard } from "@/components/ProductCard";
 import { RecentlyViewed } from "@/components/RecentlyViewed";
 import { listActiveBanners } from "@/lib/banners.functions";
+import { useSiteContent } from "@/hooks/use-site-content";
+
+const HERO_DEFAULTS = {
+  title: "",
+  subtitle: "Next-gen bio-integrated hardware for the seamless synthesis of human consciousness and digital reality. Finished in obsidian glass.",
+  cta_text: "Explore Receptor",
+  cta_link: "",
+};
 
 export const Route = createFileRoute("/")({
   head: () => ({
