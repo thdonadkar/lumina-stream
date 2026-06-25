@@ -551,11 +551,31 @@ export const cancelOrder = createServerFn({ method: "POST" })
     await (await import("@/integrations/supabase/client.server")).supabaseAdmin.from("notifications").insert({
       user_id: order.user_id, type: "order",
       title: "Order cancelled",
-      body: `Your order #${order.id.slice(0, 8)} has been cancelled.`,
+      body: `Your order #${order.id.slice(0, 8)} has been cancelled.${wasPaid ? " Refund will be processed." : ""}`,
       link: `/orders/${order.id}`,
+    });
+    await notifySellersOfOrder(order.id, {
+      type: "order",
+      title: "Order cancelled",
+      body: `Order #${order.id.slice(0, 8)} was cancelled by the buyer.`,
+      link: `/seller/orders`,
+    });
+    await notifyAdminsOfOrder({
+      type: "order",
+      title: "Order cancelled",
+      body: `Order #${order.id.slice(0, 8)} cancelled${wasPaid ? " — refund pending" : ""}.`,
+      link: `/admin/orders`,
+    });
+    // Auto-create a support ticket so seller + admin have a thread
+    await autoCreateOrderTicket({
+      orderId: order.id,
+      userId: order.user_id,
+      subject: `Order cancelled — #${order.id.slice(0, 8)}`,
+      body: `Customer cancelled this order.\n\nOrder: #${order.id.slice(0, 8)}\nStatus: cancelled\nPayment: ${order.payment_status}\nRefund: ${order.refund_status}`,
     });
     return order;
   });
+
 
 async function assertAdmin(ctx: any) {
   const { data: isAdmin } = await ctx.supabase.rpc("has_role", {
