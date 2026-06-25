@@ -40,6 +40,60 @@ async function notifyAdminsOfOrder(payload: { type: "order" | "system" | "offer"
   } catch {}
 }
 
+// Auto-create a support ticket scoped to an order. Used when a customer
+// cancels or requests a return so the seller and admin always have a thread.
+async function autoCreateOrderTicket(opts: {
+  orderId: string;
+  userId: string;
+  subject: string;
+  body: string;
+}) {
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    // Find a single seller for the order (first product's seller) to scope the ticket
+    const { data: itemRow } = await supabaseAdmin
+      .from("order_items")
+      .select("products:product_id(seller_id)")
+      .eq("order_id", opts.orderId)
+      .limit(1)
+      .maybeSingle();
+    const sellerId = (itemRow as any)?.products?.seller_id ?? null;
+
+    const { data: ticket, error } = await supabaseAdmin
+      .from("support_tickets")
+      .insert({
+        user_id: opts.userId,
+        order_id: opts.orderId,
+        seller_id: sellerId,
+        subject: opts.subject.slice(0, 200),
+        status: "open",
+        priority: "normal",
+      })
+      .select("id")
+      .single();
+    if (error || !ticket) return;
+
+    await supabaseAdmin.from("support_ticket_messages").insert({
+      ticket_id: ticket.id,
+      sender_id: opts.userId,
+      body: opts.body.slice(0, 4000),
+    });
+  } catch {
+    // best-effort
+  }
+}
+
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: admins } = await supabaseAdmin
+      .from("user_roles").select("user_id").eq("role", "admin");
+    if (!admins?.length) return;
+    await supabaseAdmin.from("notifications").insert(
+      admins.map((a: any) => ({ user_id: a.user_id, ...payload })),
+    );
+  } catch {}
+}
+
 
 type CartLine = {
   product_id: string | null;
