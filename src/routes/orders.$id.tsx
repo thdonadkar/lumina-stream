@@ -16,7 +16,44 @@ export const Route = createFileRoute("/orders/$id")({
   component: OrderDetail,
 });
 
-const TIMELINE = ["pending", "confirmed", "packed", "shipped", "out_for_delivery", "delivered"];
+const FORWARD_TIMELINE = ["pending", "confirmed", "packed", "shipped", "out_for_delivery", "delivered"];
+const CANCEL_TIMELINE = ["pending", "confirmed", "cancelled"];
+const RETURN_TIMELINE = ["delivered", "return_requested", "returned", "refunded"];
+
+function pickTimeline(status: string) {
+  if (status === "cancelled") return CANCEL_TIMELINE;
+  if (["return_requested", "returned", "refunded"].includes(status)) return RETURN_TIMELINE;
+  return FORWARD_TIMELINE;
+}
+
+function paymentLabel(order: any): { label: string; tone: "ok" | "warn" | "bad" | "info" | "muted" } {
+  const ps = order.payment_status ?? "pending";
+  const pm = order.payment_method;
+  if (ps === "paid" && pm === "cod") return { label: "Cash on Delivery", tone: "ok" };
+  if (ps === "paid") return { label: "Paid", tone: "ok" };
+  if (ps === "authorized") return { label: "Authorized", tone: "info" };
+  if (ps === "failed") return { label: "Failed", tone: "bad" };
+  if (ps === "refunded") return { label: "Refunded", tone: "info" };
+  if (ps === "not_applicable") return { label: "Not Applicable", tone: "muted" };
+  // pending: COD before delivery vs online not-yet-captured
+  return { label: pm === "cod" ? "Pending (COD)" : "Pending", tone: "warn" };
+}
+
+function statusTone(status: string) {
+  if (["cancelled"].includes(status)) return "bad";
+  if (["delivered", "returned", "refunded"].includes(status)) return "ok";
+  if (["return_requested"].includes(status)) return "warn";
+  return "info";
+}
+
+const TONE_CLASS: Record<string, string> = {
+  ok:   "text-emerald-300 ring-emerald-300/40 bg-emerald-300/10",
+  warn: "text-amber-300 ring-amber-300/40 bg-amber-300/10",
+  bad:  "text-rose-400 ring-rose-400/40 bg-rose-400/10",
+  info: "text-cyan ring-cyan/40 bg-cyan/10",
+  muted:"text-muted-foreground ring-white/15 bg-white/5",
+};
+
 
 function OrderDetail() {
   const { id } = Route.useParams();
@@ -84,7 +121,49 @@ function OrderDetail() {
 
   const items = order.order_items ?? [];
   const addr = order.addresses;
-  const statusIdx = TIMELINE.indexOf(order.status);
+
+  // Build timeline based on the actual order trajectory
+  const timelineSteps: { key: string; label: string; done: boolean; current: boolean }[] = (() => {
+    if (order.status === "cancelled") {
+      return [
+        { key: "pending", label: "Pending", done: true, current: false },
+        { key: "confirmed", label: "Confirmed", done: true, current: false },
+        { key: "cancelled", label: "Cancelled", done: true, current: true },
+      ];
+    }
+    if (["return_requested", "returned", "refunded"].includes(order.status)) {
+      const stages: { key: string; label: string }[] = [
+        { key: "delivered", label: "Delivered" },
+        { key: "return_requested", label: "Return Requested" },
+        { key: "returned", label: "Returned" },
+      ];
+      if (order.refund_status && order.refund_status !== "none") {
+        stages.push({ key: "refund_approved", label: "Refund Approved" });
+        stages.push({ key: "refunded", label: "Refunded" });
+      }
+      let currentIdx = 0;
+      if (order.status === "return_requested") currentIdx = 1;
+      else if (order.status === "returned") currentIdx = 2;
+      if (order.refund_status === "pending") currentIdx = Math.max(currentIdx, 2);
+      if (order.refund_status === "approved") currentIdx = 3;
+      if (order.refund_status === "refunded") currentIdx = stages.length - 1;
+      return stages.map((s, i) => ({ ...s, done: i <= currentIdx, current: i === currentIdx }));
+    }
+    const fwd = FORWARD_TIMELINE;
+    const idx = fwd.indexOf(order.status);
+    return fwd.map((s, i) => ({
+      key: s,
+      label: s.replace(/_/g, " "),
+      done: i <= idx,
+      current: i === idx,
+    }));
+  })();
+
+  const showRefundBadge =
+    order.refund_status && order.refund_status !== "none" &&
+    ["return_requested", "returned", "refunded"].includes(order.status);
+
+  const pay = paymentLabel(order);
 
   return (
     <div className="px-4 sm:px-6 max-w-4xl mx-auto pb-24">
@@ -99,19 +178,19 @@ function OrderDetail() {
             <h1 className="text-3xl font-extrabold tracking-tighter font-mono">#{order.id.slice(0, 8)}</h1>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="px-3 py-1 rounded-full bg-aurora text-background text-xs font-bold uppercase">{order.status.replace(/_/g, " ")}</span>
-            <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase ring-1 ${
-              order.payment_status === "paid" ? "text-emerald-300 ring-emerald-300/40 bg-emerald-300/10" :
-              order.payment_status === "failed" ? "text-rose-400 ring-rose-400/40 bg-rose-400/10" :
-              order.payment_status === "refunded" ? "text-cyan ring-cyan/40 bg-cyan/10" :
-              "text-amber-300 ring-amber-300/40 bg-amber-300/10"
-            }`}>payment: {order.payment_status ?? "paid"}</span>
-            {order.refund_status && order.refund_status !== "none" && (
+            <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase ring-1 ${TONE_CLASS[statusTone(order.status)]}`}>
+              {order.status.replace(/_/g, " ")}
+            </span>
+            <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase ring-1 ${TONE_CLASS[pay.tone]}`}>
+              payment: {pay.label}
+            </span>
+            {showRefundBadge && (
               <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase ring-1 ${
-                order.refund_status === "refunded" ? "text-emerald-300 ring-emerald-300/40 bg-emerald-300/10" :
-                order.refund_status === "approved" ? "text-cyan ring-cyan/40 bg-cyan/10" :
-                order.refund_status === "rejected" ? "text-rose-400 ring-rose-400/40 bg-rose-400/10" :
-                "text-amber-300 ring-amber-300/40 bg-amber-300/10"
+                TONE_CLASS[
+                  order.refund_status === "refunded" ? "ok" :
+                  order.refund_status === "approved" ? "info" :
+                  order.refund_status === "rejected" ? "bad" : "warn"
+                ]
               }`}>refund: {order.refund_status}</span>
             )}
             <button
@@ -133,61 +212,65 @@ function OrderDetail() {
           </div>
         )}
 
-        {statusIdx >= 0 && (
+        {timelineSteps.length > 0 && (
           <div className="mt-8">
-            {/* Mobile/tablet: vertical timeline with connecting rail */}
             <ol className="md:hidden relative">
               <div className="absolute left-[18px] top-3 bottom-3 w-px bg-gradient-to-b from-aurora via-cyan/40 to-white/5" aria-hidden="true" />
-              {TIMELINE.map((s, i) => {
-                const done = i <= statusIdx;
-                const current = i === statusIdx;
+              {timelineSteps.map((s, i) => {
+                const cancelled = s.key === "cancelled";
                 return (
-                  <li key={s} className="relative flex items-center gap-4 py-2.5">
+                  <li key={s.key} className="relative flex items-center gap-4 py-2.5">
                     <motion.div
                       initial={{ scale: 0 }}
-                      animate={{ scale: current ? [1, 1.15, 1] : 1 }}
-                      transition={{ delay: i * 0.05, duration: current ? 1.6 : 0.3, repeat: current ? Infinity : 0 }}
+                      animate={{ scale: s.current ? [1, 1.15, 1] : 1 }}
+                      transition={{ delay: i * 0.05, duration: s.current ? 1.6 : 0.3, repeat: s.current ? Infinity : 0 }}
                       className={`relative z-10 size-9 rounded-full grid place-items-center shrink-0 ${
-                        done ? "bg-aurora text-background shadow-glow-cyan" : "glass text-muted-foreground"
+                        cancelled ? "bg-rose-400 text-background" :
+                        s.done ? "bg-aurora text-background shadow-glow-cyan" : "glass text-muted-foreground"
                       }`}
                     >
-                      {done && !current ? <CheckCircle2 className="size-4" /> : <span className="text-xs font-mono font-bold">{i + 1}</span>}
+                      {cancelled ? <XCircle className="size-4" /> : s.done && !s.current ? <CheckCircle2 className="size-4" /> : <span className="text-xs font-mono font-bold">{i + 1}</span>}
                     </motion.div>
                     <div className="flex-1 min-w-0">
-                      <p className={`text-sm uppercase font-mono tracking-wider truncate ${current ? "text-cyan font-bold" : done ? "text-foreground" : "text-muted-foreground"}`}>
-                        {s.replace(/_/g, " ")}
+                      <p className={`text-sm uppercase font-mono tracking-wider truncate ${s.current ? "text-cyan font-bold" : s.done ? "text-foreground" : "text-muted-foreground"}`}>
+                        {s.label}
                       </p>
-                      {current && <p className="text-[10px] text-cyan/70 font-mono mt-0.5">● current status</p>}
+                      {s.current && <p className="text-[10px] text-cyan/70 font-mono mt-0.5">● current status</p>}
                     </div>
                   </li>
                 );
               })}
             </ol>
-            {/* Desktop: horizontal timeline */}
             <div className="hidden md:block">
               <div className="flex items-start justify-between gap-1">
-                {TIMELINE.map((s, i) => (
-                  <div key={s} className="flex-1 flex flex-col items-center text-center min-w-[64px]">
-                    <motion.div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ delay: i * 0.1 }}
-                      className={`size-9 rounded-full grid place-items-center shrink-0 ${
-                        i <= statusIdx ? "bg-aurora text-background shadow-glow-cyan" : "glass text-muted-foreground"
-                      }`}
-                    >
-                      {i <= statusIdx ? <CheckCircle2 className="size-4" /> : <span className="text-xs font-mono">{i + 1}</span>}
-                    </motion.div>
-                    <p className={`text-[10px] mt-2 uppercase font-mono ${i <= statusIdx ? "text-cyan" : "text-muted-foreground"}`}>
-                      {s.replace(/_/g, " ")}
-                    </p>
-                  </div>
-                ))}
+                {timelineSteps.map((s, i) => {
+                  const cancelled = s.key === "cancelled";
+                  return (
+                    <div key={s.key} className="flex-1 flex flex-col items-center text-center min-w-[64px]">
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ delay: i * 0.1 }}
+                        className={`size-9 rounded-full grid place-items-center shrink-0 ${
+                          cancelled ? "bg-rose-400 text-background" :
+                          s.done ? "bg-aurora text-background shadow-glow-cyan" : "glass text-muted-foreground"
+                        }`}
+                      >
+                        {cancelled ? <XCircle className="size-4" /> : s.done ? <CheckCircle2 className="size-4" /> : <span className="text-xs font-mono">{i + 1}</span>}
+                      </motion.div>
+                      <p className={`text-[10px] mt-2 uppercase font-mono ${s.current ? "text-cyan" : s.done ? "text-cyan/70" : "text-muted-foreground"}`}>
+                        {s.label}
+                      </p>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>
         )}
       </div>
+
+
 
 
       <div className="grid md:grid-cols-[1fr_320px] gap-6">

@@ -335,7 +335,7 @@ export const updateOrderStatus = createServerFn({ method: "POST" })
 
     // AuthZ: only an admin or a seller whose product is in the order may change status.
     const { data: existing } = await supabase
-      .from("orders").select("user_id").eq("id", data.id).maybeSingle();
+      .from("orders").select("user_id, payment_method, payment_status, status").eq("id", data.id).maybeSingle();
     if (!existing) throw new UserError("Order not found");
 
     const [{ data: isAdmin }, { data: isSeller }] = await Promise.all([
@@ -344,9 +344,22 @@ export const updateOrderStatus = createServerFn({ method: "POST" })
     ]);
     if (!isAdmin && !isSeller) throw new UserError("Forbidden");
 
+    // Guard invalid transitions
+    const terminal = ["cancelled", "returned", "refunded"];
+    if (terminal.includes(existing.status))
+      throw new UserError(`Order is ${existing.status} and cannot change status`);
+
+    const updates: Record<string, unknown> = { status: data.status };
+    // COD: collecting cash at delivery flips payment_status to paid
+    if (data.status === "delivered"
+        && (existing as any).payment_method === "cod"
+        && (existing as any).payment_status === "pending") {
+      updates.payment_status = "paid";
+    }
+
     const { data: order, error } = await supabase
       .from("orders")
-      .update({ status: data.status as never })
+      .update(updates as never)
       .eq("id", data.id)
       .select()
       .single();
@@ -360,6 +373,7 @@ export const updateOrderStatus = createServerFn({ method: "POST" })
     });
     return order;
   });
+
 
 const RETURN_REASONS = new Set([
   "damaged",
@@ -388,7 +402,7 @@ export const requestReturn = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { data: existing } = await supabase
-      .from("orders").select("status, user_id").eq("id", data.id).maybeSingle();
+      .from("orders").select("status, user_id, payment_status, payment_method").eq("id", data.id).maybeSingle();
     if (!existing) throw new UserError("Order not found");
     if (existing.user_id !== userId) throw new UserError("Forbidden");
     if (existing.status !== "delivered") throw new UserError("Only delivered orders can be returned");
@@ -408,16 +422,19 @@ export const requestReturn = createServerFn({ method: "POST" })
     if (rrErr) throw rrErr;
 
     // …and keep the existing order-level fields in sync for legacy screens.
+    // Only mark a refund as pending when money was actually collected.
+    const moneyCollected = (existing as any).payment_status === "paid";
     const summary = `${data.reason}${data.description ? `: ${data.description}` : ""}`.slice(0, 500);
     const { data: order, error } = await (supabase as any)
       .from("orders")
       .update({
         status: "return_requested",
         return_reason: summary,
-        refund_status: "pending",
+        refund_status: moneyCollected ? "pending" : "none",
       })
       .eq("id", data.id).select().single();
     if (error) throw error;
+
     await (await import("@/integrations/supabase/client.server")).supabaseAdmin.from("notifications").insert({
       user_id: order.user_id, type: "order",
       title: "Return requested",
@@ -447,14 +464,29 @@ export const cancelOrder = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { data: existing } = await supabase
-      .from("orders").select("status, user_id").eq("id", data.id).maybeSingle();
+      .from("orders").select("status, user_id, payment_method, payment_status").eq("id", data.id).maybeSingle();
     if (!existing) throw new UserError("Order not found");
     if (existing.user_id !== userId) throw new UserError("Forbidden");
     if (!["pending", "confirmed"].includes(existing.status))
       throw new UserError("This order can no longer be cancelled");
+
+    // Payment & refund logic:
+    //   * Money already collected (paid) → refund must be issued → refund_status = pending.
+    //   * No money collected → no refund record. Mark payment_status as not_applicable
+    //     so we stop showing "PAYMENT: PENDING" on a cancelled order.
+    const wasPaid = (existing as any).payment_status === "paid";
+    const updates: Record<string, unknown> = { status: "cancelled" };
+    if (wasPaid) {
+      updates.refund_status = "pending";
+    } else {
+      updates.payment_status = "not_applicable";
+      updates.refund_status = "none";
+    }
+
     const { data: order, error } = await supabase
-      .from("orders").update({ status: "cancelled" as never }).eq("id", data.id).select().single();
+      .from("orders").update(updates as never).eq("id", data.id).select().single();
     if (error) throw error;
+
     // Return reserved stock to inventory (best-effort; do not fail the cancel).
     const { data: items } = await supabase
       .from("order_items").select("product_id, qty").eq("order_id", data.id);
