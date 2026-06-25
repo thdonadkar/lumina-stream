@@ -33,6 +33,7 @@ function Home() {
   const trending = products.slice(1, 7);
   const [banners, setBanners] = useState<any[]>([]);
   const fetchBanners = useServerFn(listActiveBanners);
+  const heroCms = useSiteContent("hero", HERO_DEFAULTS);
   useEffect(() => { fetchBanners().then(setBanners).catch(() => {}); }, [fetchBanners]);
 
   return (
