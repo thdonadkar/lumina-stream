@@ -692,6 +692,9 @@ export const markRefunded = createServerFn({ method: "POST" })
       body: `₹${data.amount ?? order.total} has been refunded for order #${order.id.slice(0, 8)}.`,
       link: `/orders/${order.id}`,
     });
+    await notifyAdminsOfOrder({ type: "order", title: "Refund completed", body: `Refund completed for order #${order.id.slice(0, 8)}.`, link: `/admin/orders` });
+    await notifySellersOfOrder(order.id, { type: "order", title: "Refund completed", body: `Refund issued on order #${order.id.slice(0, 8)}.`, link: `/seller/orders` });
     return order;
   });
+
 
