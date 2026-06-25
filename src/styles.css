@@ -40,55 +40,56 @@
   --color-glass: var(--glass);
   --color-glass-strong: var(--glass-strong);
 
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --font-sans: "Geist", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-display: "Geist", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, "JetBrains Mono", monospace;
 }
 
 :root {
-  --radius: 0.875rem;
+  --radius: 0.75rem;
 
-  /* Futuristic dark canvas */
-  --background: oklch(0.13 0.02 270);
-  --foreground: oklch(0.98 0.005 270);
+  /* Pure monochrome canvas — Recraft-inspired */
+  --background: oklch(0 0 0);
+  --foreground: oklch(0.98 0 0);
 
-  --card: oklch(0.17 0.025 270);
-  --card-foreground: oklch(0.98 0.005 270);
-  --popover: oklch(0.15 0.025 270);
-  --popover-foreground: oklch(0.98 0.005 270);
+  --card: oklch(0.08 0 0);
+  --card-foreground: oklch(0.98 0 0);
+  --popover: oklch(0.06 0 0);
+  --popover-foreground: oklch(0.98 0 0);
 
-  --primary: oklch(0.82 0.16 200);
-  --primary-foreground: oklch(0.13 0.03 270);
-  --secondary: oklch(0.22 0.03 270);
-  --secondary-foreground: oklch(0.98 0.005 270);
-  --muted: oklch(0.22 0.025 270);
-  --muted-foreground: oklch(0.68 0.02 270);
-  --accent: oklch(0.7 0.22 320);
-  --accent-foreground: oklch(0.98 0.005 270);
-  --destructive: oklch(0.65 0.24 25);
-  --destructive-foreground: oklch(0.98 0.005 270);
+  --primary: oklch(0.98 0 0);
+  --primary-foreground: oklch(0 0 0);
+  --secondary: oklch(0.16 0 0);
+  --secondary-foreground: oklch(0.98 0 0);
+  --muted: oklch(0.14 0 0);
+  --muted-foreground: oklch(0.62 0 0);
+  --accent: oklch(0.98 0 0);
+  --accent-foreground: oklch(0 0 0);
+  --destructive: oklch(0.6 0.18 25);
+  --destructive-foreground: oklch(0.98 0 0);
 
-  --border: oklch(1 0 0 / 0.08);
+  --border: oklch(1 0 0 / 0.10);
   --input: oklch(1 0 0 / 0.06);
-  --ring: oklch(0.82 0.16 200);
+  --ring: oklch(0.98 0 0);
 
-  /* Neon accents */
-  --neon-cyan: oklch(0.85 0.17 200);
-  --neon-purple: oklch(0.7 0.22 300);
-  --neon-rose: oklch(0.7 0.22 15);
+  /* "Neon" tokens — collapsed to monochrome whites/grays so all existing
+     bg-aurora / text-gradient / shadow-glow-* utilities stay valid but
+     render as a strict black-and-white palette. */
+  --neon-cyan: oklch(0.98 0 0);
+  --neon-purple: oklch(0.78 0 0);
+  --neon-rose: oklch(0.62 0 0);
 
   /* Glass surfaces */
   --glass: oklch(1 0 0 / 0.04);
-  --glass-strong: oklch(1 0 0 / 0.08);
+  --glass-strong: oklch(1 0 0 / 0.07);
 
-  /* Gradients & shadows */
-  --gradient-aurora: linear-gradient(135deg, oklch(0.85 0.17 200) 0%, oklch(0.7 0.22 300) 50%, oklch(0.7 0.22 15) 100%);
-  --gradient-hero: radial-gradient(ellipse at 20% 0%, oklch(0.7 0.22 300 / 0.35) 0%, transparent 60%),
-                   radial-gradient(ellipse at 80% 30%, oklch(0.85 0.17 200 / 0.25) 0%, transparent 55%),
-                   radial-gradient(ellipse at 50% 100%, oklch(0.7 0.22 15 / 0.18) 0%, transparent 60%);
-  --shadow-glow-cyan: 0 0 40px oklch(0.85 0.17 200 / 0.35), 0 0 80px oklch(0.85 0.17 200 / 0.15);
-  --shadow-glow-purple: 0 0 40px oklch(0.7 0.22 300 / 0.4), 0 0 90px oklch(0.7 0.22 300 / 0.2);
-  --shadow-elevated: 0 20px 60px -20px oklch(0 0 0 / 0.6), 0 0 0 1px oklch(1 0 0 / 0.06);
+  /* Gradients & shadows — grayscale */
+  --gradient-aurora: linear-gradient(135deg, oklch(1 0 0) 0%, oklch(0.7 0 0) 50%, oklch(0.35 0 0) 100%);
+  --gradient-hero: radial-gradient(ellipse at 20% 0%, oklch(1 0 0 / 0.08) 0%, transparent 60%),
+                   radial-gradient(ellipse at 80% 30%, oklch(1 0 0 / 0.05) 0%, transparent 55%);
+  --shadow-glow-cyan: 0 0 0 1px oklch(1 0 0 / 0.10);
+  --shadow-glow-purple: 0 0 0 1px oklch(1 0 0 / 0.12);
+  --shadow-elevated: 0 20px 60px -20px oklch(0 0 0 / 0.8), 0 0 0 1px oklch(1 0 0 / 0.06);
 }
 
 @layer base {
@@ -100,28 +101,35 @@
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
+    font-feature-settings: "ss01", "cv11";
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
+    letter-spacing: -0.011em;
   }
 
   body {
     background-image:
-      radial-gradient(ellipse 80% 50% at 50% -10%, oklch(0.7 0.22 300 / 0.18), transparent),
-      radial-gradient(ellipse 60% 50% at 100% 50%, oklch(0.85 0.17 200 / 0.10), transparent);
+      radial-gradient(ellipse 80% 50% at 50% -10%, oklch(1 0 0 / 0.06), transparent),
+      radial-gradient(ellipse 60% 50% at 100% 50%, oklch(1 0 0 / 0.03), transparent);
     background-attachment: fixed;
     min-height: 100vh;
   }
 
+  h1, h2, h3, h4, h5, h6 {
+    letter-spacing: -0.025em;
+    font-feature-settings: "ss01", "ss03";
+  }
+
   ::selection {
-    background: oklch(0.85 0.17 200 / 0.3);
-    color: oklch(0.98 0.005 270);
+    background: oklch(1 0 0 / 0.18);
+    color: oklch(1 0 0);
   }
 
   /* Custom scrollbar */
   ::-webkit-scrollbar { width: 10px; height: 10px; }
   ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: oklch(1 0 0 / 0.08); border-radius: 8px; }
-  ::-webkit-scrollbar-thumb:hover { background: oklch(1 0 0 / 0.15); }
+  ::-webkit-scrollbar-thumb { background: oklch(1 0 0 / 0.10); border-radius: 8px; }
+  ::-webkit-scrollbar-thumb:hover { background: oklch(1 0 0 / 0.18); }
 }
 
 @utility glass {
@@ -137,14 +145,10 @@
 }
 
 @utility text-gradient {
-  background-image: var(--gradient-aurora);
-  background-size: 200% 200%;
+  background-image: linear-gradient(180deg, oklch(1 0 0) 0%, oklch(0.7 0 0) 100%);
   background-clip: text;
   color: transparent;
-  animation: aurora-shift 8s ease-in-out infinite;
 }
-
-
 
 @utility shadow-glow-cyan {
   box-shadow: var(--shadow-glow-cyan);
@@ -173,7 +177,7 @@
     position: absolute;
     inset: 0;
     pointer-events: none;
-    opacity: 0.05;
+    opacity: 0.04;
     mix-blend-mode: overlay;
     background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence baseFrequency='0.9' numOctaves='2'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/></svg>");
   }
@@ -188,8 +192,8 @@
   50% { transform: translateY(-12px); }
 }
 @keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 20px oklch(0.85 0.17 200 / 0.4); }
-  50% { box-shadow: 0 0 40px oklch(0.85 0.17 200 / 0.7); }
+  0%, 100% { box-shadow: 0 0 0 1px oklch(1 0 0 / 0.20); }
+  50% { box-shadow: 0 0 0 1px oklch(1 0 0 / 0.40); }
 }
 @keyframes shimmer {
   0% { background-position: -200% 0; }

@@ -86,7 +86,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:description", content: "Premium futuristic hardware for spatial computing, audio and wearables." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "theme-color", content: "#0a0a0f" },
+      { name: "theme-color", content: "#000000" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
       { name: "apple-mobile-web-app-title", content: "AtomSpot" },
@@ -100,7 +100,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap",
+        href: "https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800;900&family=Geist+Mono:wght@400;500;600&display=swap",
       },
     ],
   }),
