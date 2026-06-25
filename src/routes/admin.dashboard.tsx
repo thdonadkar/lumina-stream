@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import {
   Users, Store, Package, ShoppingBag, TrendingUp, ShieldAlert,
   ShoppingCart, UserPlus, BadgeCheck, Activity, ArrowUpRight,
-  Megaphone, Undo2, LifeBuoy, FolderTree,
+  Megaphone, Undo2, LifeBuoy, FolderTree, FileText,
 } from "lucide-react";
 import {
   Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Legend, Line, LineChart,
@@ -212,6 +212,7 @@ function Page() {
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 mb-4">
         {[
           { to: "/admin/banners", label: "Manage Banners", icon: Megaphone, accent: "ring-1 ring-cyan/40 bg-cyan/5" },
+          { to: "/admin/content", label: "Website Content", icon: FileText, accent: "ring-1 ring-white/20 bg-white/5" },
           { to: "/admin/products", label: "Products", icon: Package },
           { to: "/admin/orders", label: "Orders", icon: ShoppingBag },
           { to: "/admin/returns", label: "Returns & Refunds", icon: Undo2 },
@@ -251,6 +252,7 @@ export function AdminNav() {
     { to: "/admin/orders", label: "Orders" },
     { to: "/admin/returns", label: "Returns" },
     { to: "/admin/banners", label: "Banners" },
+    { to: "/admin/content", label: "Content" },
     { to: "/admin/categories", label: "Categories" },
     { to: "/admin/support", label: "Support" },
   ];

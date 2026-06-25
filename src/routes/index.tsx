@@ -8,6 +8,14 @@ import { CATEGORIES } from "@/lib/categories";
 import { ProductCard } from "@/components/ProductCard";
 import { RecentlyViewed } from "@/components/RecentlyViewed";
 import { listActiveBanners } from "@/lib/banners.functions";
+import { useSiteContent } from "@/hooks/use-site-content";
+
+const HERO_DEFAULTS = {
+  title: "",
+  subtitle: "Next-gen bio-integrated hardware for the seamless synthesis of human consciousness and digital reality. Finished in obsidian glass.",
+  cta_text: "Explore Receptor",
+  cta_link: "",
+};
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -25,6 +33,7 @@ function Home() {
   const trending = products.slice(1, 7);
   const [banners, setBanners] = useState<any[]>([]);
   const fetchBanners = useServerFn(listActiveBanners);
+  const heroCms = useSiteContent("hero", HERO_DEFAULTS);
   useEffect(() => { fetchBanners().then(setBanners).catch(() => {}); }, [fetchBanners]);
 
   return (
@@ -97,27 +106,38 @@ function Home() {
             </motion.div>
 
             <h1 className="text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-extrabold tracking-tighter leading-[0.9] text-balance">
-              Objects of pure{" "}
-              <span className="text-gradient">
-                computational
-              </span>{" "}
-              light.
+              {heroCms.title ? heroCms.title : (
+                <>
+                  Objects of pure{" "}
+                  <span className="text-gradient">computational</span>{" "}
+                  light.
+                </>
+              )}
             </h1>
 
-            <p className="mt-8 text-base md:text-lg text-muted-foreground max-w-md text-pretty">
-              Next-gen bio-integrated hardware for the seamless synthesis of human
-              consciousness and digital reality. Finished in obsidian glass.
+            <p className="mt-8 text-base md:text-lg text-muted-foreground max-w-md text-pretty whitespace-pre-line">
+              {heroCms.subtitle}
             </p>
 
             <div className="mt-10 flex flex-wrap items-center gap-3">
-              <Link
-                to="/product/$id"
-                params={{ id: hero.id }}
-                className="group inline-flex items-center gap-2 px-6 py-3.5 rounded-full bg-aurora animate-aurora font-bold text-background shadow-glow-cyan hover:scale-[1.02] active:scale-95 transition-transform"
-              >
-                Explore Receptor
-                <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
-              </Link>
+              {heroCms.cta_link ? (
+                <a
+                  href={heroCms.cta_link}
+                  className="group inline-flex items-center gap-2 px-6 py-3.5 rounded-full bg-aurora animate-aurora font-bold text-background shadow-glow-cyan hover:scale-[1.02] active:scale-95 transition-transform"
+                >
+                  {heroCms.cta_text || "Explore"}
+                  <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
+                </a>
+              ) : (
+                <Link
+                  to="/product/$id"
+                  params={{ id: hero.id }}
+                  className="group inline-flex items-center gap-2 px-6 py-3.5 rounded-full bg-aurora animate-aurora font-bold text-background shadow-glow-cyan hover:scale-[1.02] active:scale-95 transition-transform"
+                >
+                  {heroCms.cta_text || "Explore Receptor"}
+                  <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
+                </Link>
+              )}
               <Link
                 to="/shop"
                 className="inline-flex items-center gap-2 px-6 py-3.5 rounded-full glass-strong font-semibold hover:bg-glass-strong transition-colors"

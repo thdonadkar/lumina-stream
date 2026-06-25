@@ -6,6 +6,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { z } from "zod";
 import { submitContactMessage } from "@/lib/contact.functions";
+import { useSiteContent } from "@/hooks/use-site-content";
 
 export const Route = createFileRoute("/contact")({
   head: () => ({
@@ -24,7 +25,14 @@ const Schema = z.object({
   message: z.string().trim().min(1, "Message required").max(2000),
 });
 
+const CONTACT_DEFAULTS = {
+  email: "hello@atomspot.app",
+  phone: "+1 (415) 555-0199",
+  address: "Pier 70, San Francisco",
+};
+
 function Contact() {
+  const c = useSiteContent("contact", CONTACT_DEFAULTS);
   const [form, setForm] = useState({ name: "", email: "", message: "" });
   const submit = useServerFn(submitContactMessage);
 
@@ -43,9 +51,9 @@ function Contact() {
         <h1 className="text-5xl font-extrabold tracking-tighter">Get in touch</h1>
         <p className="text-muted-foreground mt-3">We typically reply within one orbit.</p>
         <ul className="mt-8 space-y-3 text-sm">
-          <li className="flex items-center gap-3"><Mail className="size-4 text-cyan" /> hello@atomspot.app</li>
-          <li className="flex items-center gap-3"><MessageSquare className="size-4 text-cyan" /> +1 (415) 555-0199</li>
-          <li className="flex items-center gap-3"><MapPin className="size-4 text-cyan" /> Pier 70, San Francisco</li>
+          <li className="flex items-center gap-3"><Mail className="size-4" /> {c.email}</li>
+          <li className="flex items-center gap-3"><MessageSquare className="size-4" /> {c.phone}</li>
+          <li className="flex items-center gap-3"><MapPin className="size-4" /> {c.address}</li>
         </ul>
       </div>
       <form

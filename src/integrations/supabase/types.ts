@@ -838,6 +838,33 @@ export type Database = {
           },
         ]
       }
+      site_content: {
+        Row: {
+          created_at: string
+          id: string
+          key: string
+          updated_at: string
+          updated_by: string | null
+          value: Json
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          key: string
+          updated_at?: string
+          updated_by?: string | null
+          value?: Json
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          key?: string
+          updated_at?: string
+          updated_by?: string | null
+          value?: Json
+        }
+        Relationships: []
+      }
       support_ticket_attachments: {
         Row: {
           created_at: string
