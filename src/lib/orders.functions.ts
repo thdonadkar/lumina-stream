@@ -67,8 +67,8 @@ async function autoCreateOrderTicket(opts: {
         seller_id: sellerId,
         subject: opts.subject.slice(0, 200),
         status: "open",
-        priority: "normal",
-      })
+      } as never)
+
       .select("id")
       .single();
     if (error || !ticket) return;
