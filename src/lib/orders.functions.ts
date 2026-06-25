@@ -507,8 +507,15 @@ export const requestReturn = createServerFn({ method: "POST" })
       body: `A buyer requested a return on order #${order.id.slice(0, 8)}.`,
       link: `/seller/orders`,
     });
+    await autoCreateOrderTicket({
+      orderId: order.id,
+      userId: order.user_id,
+      subject: `Return requested — #${order.id.slice(0, 8)}`,
+      body: `Customer requested a return.\n\nReason: ${summary}\nPayment: ${order.payment_status}\nRefund: ${order.refund_status}`,
+    });
     return order;
   });
+
 
 
 
