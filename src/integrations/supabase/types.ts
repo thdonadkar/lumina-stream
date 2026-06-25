@@ -1103,7 +1103,13 @@ export type Database = {
         | "return_requested"
         | "returned"
         | "refunded"
-      payment_status: "pending" | "paid" | "failed" | "refunded"
+      payment_status:
+        | "pending"
+        | "paid"
+        | "failed"
+        | "refunded"
+        | "not_applicable"
+        | "authorized"
       product_status: "draft" | "pending" | "active" | "rejected" | "archived"
       refund_status: "none" | "pending" | "approved" | "rejected" | "refunded"
       ticket_status: "open" | "in_progress" | "resolved" | "closed"
@@ -1249,7 +1255,14 @@ export const Constants = {
         "returned",
         "refunded",
       ],
-      payment_status: ["pending", "paid", "failed", "refunded"],
+      payment_status: [
+        "pending",
+        "paid",
+        "failed",
+        "refunded",
+        "not_applicable",
+        "authorized",
+      ],
       product_status: ["draft", "pending", "active", "rejected", "archived"],
       refund_status: ["none", "pending", "approved", "rejected", "refunded"],
       ticket_status: ["open", "in_progress", "resolved", "closed"],
