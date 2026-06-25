@@ -620,8 +620,11 @@ export const approveReturn = createServerFn({ method: "POST" })
       body: `Your return for #${order.id.slice(0, 8)} has been approved. Refund in progress.`,
       link: `/orders/${order.id}`,
     });
+    await notifyAdminsOfOrder({ type: "order", title: "Refund approved", body: `Refund approved for order #${order.id.slice(0, 8)}.`, link: `/admin/returns` });
+    await notifySellersOfOrder(order.id, { type: "order", title: "Return approved", body: `A return on order #${order.id.slice(0, 8)} was approved.`, link: `/seller/orders` });
     return order;
   });
+
 
 export const rejectReturn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
