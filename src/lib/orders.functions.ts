@@ -402,7 +402,7 @@ export const requestReturn = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { data: existing } = await supabase
-      .from("orders").select("status, user_id").eq("id", data.id).maybeSingle();
+      .from("orders").select("status, user_id, payment_status, payment_method").eq("id", data.id).maybeSingle();
     if (!existing) throw new UserError("Order not found");
     if (existing.user_id !== userId) throw new UserError("Forbidden");
     if (existing.status !== "delivered") throw new UserError("Only delivered orders can be returned");
@@ -422,16 +422,19 @@ export const requestReturn = createServerFn({ method: "POST" })
     if (rrErr) throw rrErr;
 
     // …and keep the existing order-level fields in sync for legacy screens.
+    // Only mark a refund as pending when money was actually collected.
+    const moneyCollected = (existing as any).payment_status === "paid";
     const summary = `${data.reason}${data.description ? `: ${data.description}` : ""}`.slice(0, 500);
     const { data: order, error } = await (supabase as any)
       .from("orders")
       .update({
         status: "return_requested",
         return_reason: summary,
-        refund_status: "pending",
+        refund_status: moneyCollected ? "pending" : "none",
       })
       .eq("id", data.id).select().single();
     if (error) throw error;
+
     await (await import("@/integrations/supabase/client.server")).supabaseAdmin.from("notifications").insert({
       user_id: order.user_id, type: "order",
       title: "Return requested",
