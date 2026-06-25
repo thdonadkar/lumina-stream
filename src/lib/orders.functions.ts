@@ -40,6 +40,51 @@ async function notifyAdminsOfOrder(payload: { type: "order" | "system" | "offer"
   } catch {}
 }
 
+// Auto-create a support ticket scoped to an order. Used when a customer
+// cancels or requests a return so the seller and admin always have a thread.
+async function autoCreateOrderTicket(opts: {
+  orderId: string;
+  userId: string;
+  subject: string;
+  body: string;
+}) {
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    // Find a single seller for the order (first product's seller) to scope the ticket
+    const { data: itemRow } = await supabaseAdmin
+      .from("order_items")
+      .select("products:product_id(seller_id)")
+      .eq("order_id", opts.orderId)
+      .limit(1)
+      .maybeSingle();
+    const sellerId = (itemRow as any)?.products?.seller_id ?? null;
+
+    const { data: ticket, error } = await supabaseAdmin
+      .from("support_tickets")
+      .insert({
+        user_id: opts.userId,
+        order_id: opts.orderId,
+        seller_id: sellerId,
+        subject: opts.subject.slice(0, 200),
+        status: "open",
+      } as never)
+
+      .select("id")
+      .single();
+    if (error || !ticket) return;
+
+    await supabaseAdmin.from("support_ticket_messages").insert({
+      ticket_id: ticket.id,
+      sender_id: opts.userId,
+      body: opts.body.slice(0, 4000),
+    });
+  } catch {
+    // best-effort
+  }
+}
+
+
+
 
 type CartLine = {
   product_id: string | null;
@@ -265,6 +310,15 @@ export const placeOrder = createServerFn({ method: "POST" })
       link: `/seller/orders`,
     });
 
+    // Admin always sees new orders
+    await notifyAdminsOfOrder({
+      type: "order",
+      title: "New order placed",
+      body: `Order #${order.id.slice(0, 8)} placed (₹${total}).`,
+      link: `/admin/orders`,
+    });
+
+
     return { id: order.id, total };
   });
 
@@ -453,8 +507,15 @@ export const requestReturn = createServerFn({ method: "POST" })
       body: `A buyer requested a return on order #${order.id.slice(0, 8)}.`,
       link: `/seller/orders`,
     });
+    await autoCreateOrderTicket({
+      orderId: order.id,
+      userId: order.user_id,
+      subject: `Return requested — #${order.id.slice(0, 8)}`,
+      body: `Customer requested a return.\n\nReason: ${summary}\nPayment: ${order.payment_status}\nRefund: ${order.refund_status}`,
+    });
     return order;
   });
+
 
 
 
@@ -497,11 +558,31 @@ export const cancelOrder = createServerFn({ method: "POST" })
     await (await import("@/integrations/supabase/client.server")).supabaseAdmin.from("notifications").insert({
       user_id: order.user_id, type: "order",
       title: "Order cancelled",
-      body: `Your order #${order.id.slice(0, 8)} has been cancelled.`,
+      body: `Your order #${order.id.slice(0, 8)} has been cancelled.${wasPaid ? " Refund will be processed." : ""}`,
       link: `/orders/${order.id}`,
+    });
+    await notifySellersOfOrder(order.id, {
+      type: "order",
+      title: "Order cancelled",
+      body: `Order #${order.id.slice(0, 8)} was cancelled by the buyer.`,
+      link: `/seller/orders`,
+    });
+    await notifyAdminsOfOrder({
+      type: "order",
+      title: "Order cancelled",
+      body: `Order #${order.id.slice(0, 8)} cancelled${wasPaid ? " — refund pending" : ""}.`,
+      link: `/admin/orders`,
+    });
+    // Auto-create a support ticket so seller + admin have a thread
+    await autoCreateOrderTicket({
+      orderId: order.id,
+      userId: order.user_id,
+      subject: `Order cancelled — #${order.id.slice(0, 8)}`,
+      body: `Customer cancelled this order.\n\nOrder: #${order.id.slice(0, 8)}\nStatus: cancelled\nPayment: ${order.payment_status}\nRefund: ${order.refund_status}`,
     });
     return order;
   });
+
 
 async function assertAdmin(ctx: any) {
   const { data: isAdmin } = await ctx.supabase.rpc("has_role", {
@@ -539,8 +620,11 @@ export const approveReturn = createServerFn({ method: "POST" })
       body: `Your return for #${order.id.slice(0, 8)} has been approved. Refund in progress.`,
       link: `/orders/${order.id}`,
     });
+    await notifyAdminsOfOrder({ type: "order", title: "Refund approved", body: `Refund approved for order #${order.id.slice(0, 8)}.`, link: `/admin/returns` });
+    await notifySellersOfOrder(order.id, { type: "order", title: "Return approved", body: `A return on order #${order.id.slice(0, 8)} was approved.`, link: `/seller/orders` });
     return order;
   });
+
 
 export const rejectReturn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -608,6 +692,9 @@ export const markRefunded = createServerFn({ method: "POST" })
       body: `₹${data.amount ?? order.total} has been refunded for order #${order.id.slice(0, 8)}.`,
       link: `/orders/${order.id}`,
     });
+    await notifyAdminsOfOrder({ type: "order", title: "Refund completed", body: `Refund completed for order #${order.id.slice(0, 8)}.`, link: `/admin/orders` });
+    await notifySellersOfOrder(order.id, { type: "order", title: "Refund completed", body: `Refund issued on order #${order.id.slice(0, 8)}.`, link: `/seller/orders` });
     return order;
   });
+
 
