@@ -106,25 +106,26 @@ function Home() {
             </motion.div>
 
             <h1 className="text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-extrabold tracking-tighter leading-[0.9] text-balance">
-              Objects of pure{" "}
-              <span className="text-gradient">
-                computational
-              </span>{" "}
-              light.
+              {heroCms.title ? heroCms.title : (
+                <>
+                  Objects of pure{" "}
+                  <span className="text-gradient">computational</span>{" "}
+                  light.
+                </>
+              )}
             </h1>
 
-            <p className="mt-8 text-base md:text-lg text-muted-foreground max-w-md text-pretty">
-              Next-gen bio-integrated hardware for the seamless synthesis of human
-              consciousness and digital reality. Finished in obsidian glass.
+            <p className="mt-8 text-base md:text-lg text-muted-foreground max-w-md text-pretty whitespace-pre-line">
+              {heroCms.subtitle}
             </p>
 
             <div className="mt-10 flex flex-wrap items-center gap-3">
               <Link
-                to="/product/$id"
-                params={{ id: hero.id }}
+                to={(heroCms.cta_link || "/product/$id") as any}
+                params={heroCms.cta_link ? undefined as any : { id: hero.id }}
                 className="group inline-flex items-center gap-2 px-6 py-3.5 rounded-full bg-aurora animate-aurora font-bold text-background shadow-glow-cyan hover:scale-[1.02] active:scale-95 transition-transform"
               >
-                Explore Receptor
+                {heroCms.cta_text || "Explore Receptor"}
                 <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
               </Link>
               <Link
