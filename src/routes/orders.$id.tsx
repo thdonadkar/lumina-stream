@@ -16,7 +16,44 @@ export const Route = createFileRoute("/orders/$id")({
   component: OrderDetail,
 });
 
-const TIMELINE = ["pending", "confirmed", "packed", "shipped", "out_for_delivery", "delivered"];
+const FORWARD_TIMELINE = ["pending", "confirmed", "packed", "shipped", "out_for_delivery", "delivered"];
+const CANCEL_TIMELINE = ["pending", "confirmed", "cancelled"];
+const RETURN_TIMELINE = ["delivered", "return_requested", "returned", "refunded"];
+
+function pickTimeline(status: string) {
+  if (status === "cancelled") return CANCEL_TIMELINE;
+  if (["return_requested", "returned", "refunded"].includes(status)) return RETURN_TIMELINE;
+  return FORWARD_TIMELINE;
+}
+
+function paymentLabel(order: any): { label: string; tone: "ok" | "warn" | "bad" | "info" | "muted" } {
+  const ps = order.payment_status ?? "pending";
+  const pm = order.payment_method;
+  if (ps === "paid" && pm === "cod") return { label: "Cash on Delivery", tone: "ok" };
+  if (ps === "paid") return { label: "Paid", tone: "ok" };
+  if (ps === "authorized") return { label: "Authorized", tone: "info" };
+  if (ps === "failed") return { label: "Failed", tone: "bad" };
+  if (ps === "refunded") return { label: "Refunded", tone: "info" };
+  if (ps === "not_applicable") return { label: "Not Applicable", tone: "muted" };
+  // pending: COD before delivery vs online not-yet-captured
+  return { label: pm === "cod" ? "Pending (COD)" : "Pending", tone: "warn" };
+}
+
+function statusTone(status: string) {
+  if (["cancelled"].includes(status)) return "bad";
+  if (["delivered", "returned", "refunded"].includes(status)) return "ok";
+  if (["return_requested"].includes(status)) return "warn";
+  return "info";
+}
+
+const TONE_CLASS: Record<string, string> = {
+  ok:   "text-emerald-300 ring-emerald-300/40 bg-emerald-300/10",
+  warn: "text-amber-300 ring-amber-300/40 bg-amber-300/10",
+  bad:  "text-rose-400 ring-rose-400/40 bg-rose-400/10",
+  info: "text-cyan ring-cyan/40 bg-cyan/10",
+  muted:"text-muted-foreground ring-white/15 bg-white/5",
+};
+
 
 function OrderDetail() {
   const { id } = Route.useParams();
