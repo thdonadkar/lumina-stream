@@ -83,16 +83,7 @@ async function autoCreateOrderTicket(opts: {
   }
 }
 
-  try {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: admins } = await supabaseAdmin
-      .from("user_roles").select("user_id").eq("role", "admin");
-    if (!admins?.length) return;
-    await supabaseAdmin.from("notifications").insert(
-      admins.map((a: any) => ({ user_id: a.user_id, ...payload })),
-    );
-  } catch {}
-}
+
 
 
 type CartLine = {
