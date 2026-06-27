@@ -381,13 +381,54 @@ export const listSellerOrders = createServerFn({ method: "GET" })
     return data ?? [];
   });
 
+// Allowed forward transitions a seller can perform on their own order.
+// Note: "delivered" is intentionally NOT seller-controlled — admin only.
+const SELLER_TRANSITIONS: Record<string, string> = {
+  pending: "confirmed",
+  confirmed: "packed",
+  packed: "shipped",
+  shipped: "out_for_delivery",
+};
+
+const ADMIN_STATUSES = new Set([
+  "pending", "confirmed", "packed", "shipped",
+  "out_for_delivery", "delivered",
+]);
+
+async function writeAuditLog(opts: {
+  actorId: string;
+  orderId: string;
+  action: string;
+  previous: string | null;
+  next: string | null;
+  byRole: "admin" | "seller" | "customer" | "system";
+  extra?: Record<string, unknown>;
+}) {
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await supabaseAdmin.from("audit_log").insert({
+      actor_id: opts.actorId,
+      action: opts.action,
+      target_table: "orders",
+      target_id: opts.orderId,
+      metadata: {
+        previous_status: opts.previous,
+        new_status: opts.next,
+        by_role: opts.byRole,
+        ...(opts.extra ?? {}),
+      },
+    } as never);
+  } catch {
+    // best-effort
+  }
+}
+
 export const updateOrderStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { id: string; status: string }) => d)
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
 
-    // AuthZ: only an admin or a seller whose product is in the order may change status.
     const { data: existing } = await supabase
       .from("orders").select("user_id, payment_method, payment_status, status").eq("id", data.id).maybeSingle();
     if (!existing) throw new UserError("Order not found");
@@ -398,13 +439,21 @@ export const updateOrderStatus = createServerFn({ method: "POST" })
     ]);
     if (!isAdmin && !isSeller) throw new UserError("Forbidden");
 
-    // Guard invalid transitions
     const terminal = ["cancelled", "returned", "refunded"];
     if (terminal.includes(existing.status))
       throw new UserError(`Order is ${existing.status} and cannot change status`);
 
+    // Sellers are restricted to the strict forward path; delivery is admin-only.
+    if (!isAdmin) {
+      const allowedNext = SELLER_TRANSITIONS[existing.status];
+      if (!allowedNext || allowedNext !== data.status) {
+        throw new UserError("Sellers can only progress the order one step forward (delivery is set by admin).");
+      }
+    } else if (!ADMIN_STATUSES.has(data.status)) {
+      throw new UserError(`Invalid status: ${data.status}`);
+    }
+
     const updates: Record<string, unknown> = { status: data.status };
-    // COD: collecting cash at delivery flips payment_status to paid
     if (data.status === "delivered"
         && (existing as any).payment_method === "cod"
         && (existing as any).payment_status === "pending") {
@@ -412,12 +461,18 @@ export const updateOrderStatus = createServerFn({ method: "POST" })
     }
 
     const { data: order, error } = await supabase
-      .from("orders")
-      .update(updates as never)
-      .eq("id", data.id)
-      .select()
-      .single();
+      .from("orders").update(updates as never).eq("id", data.id).select().single();
     if (error) throw error;
+
+    await writeAuditLog({
+      actorId: userId,
+      orderId: order.id,
+      action: "order.status_changed",
+      previous: existing.status,
+      next: data.status,
+      byRole: isAdmin ? "admin" : "seller",
+    });
+
     await (await import("@/integrations/supabase/client.server")).supabaseAdmin.from("notifications").insert({
       user_id: order.user_id,
       type: "order",
@@ -426,6 +481,30 @@ export const updateOrderStatus = createServerFn({ method: "POST" })
       link: `/orders/${order.id}`,
     });
     return order;
+  });
+
+export const getOrderHistory = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { id: string }) => d)
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    // Authorize: owner, seller-of-order, or admin
+    const [{ data: isAdmin }, { data: isSeller }, { data: isOwner }] = await Promise.all([
+      supabase.rpc("has_role", { _user_id: userId, _role: "admin" }),
+      supabase.rpc("is_order_seller", { _user_id: userId, _order_id: data.id }),
+      supabase.rpc("is_order_owner", { _user_id: userId, _order_id: data.id }),
+    ]);
+    if (!isAdmin && !isSeller && !isOwner) throw new UserError("Forbidden");
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: rows, error } = await supabaseAdmin
+      .from("audit_log")
+      .select("id, actor_id, action, metadata, created_at")
+      .eq("target_table", "orders")
+      .eq("target_id", data.id)
+      .order("created_at", { ascending: true });
+    if (error) throw error;
+    return rows ?? [];
   });
 
 
@@ -489,6 +568,18 @@ export const requestReturn = createServerFn({ method: "POST" })
       .eq("id", data.id).select().single();
     if (error) throw error;
 
+    await writeAuditLog({
+      actorId: userId,
+      orderId: order.id,
+      action: "order.return_requested",
+      previous: existing.status,
+      next: "return_requested",
+      byRole: "customer",
+      extra: { reason: data.reason, description: data.description ?? null },
+    });
+
+
+
     await (await import("@/integrations/supabase/client.server")).supabaseAdmin.from("notifications").insert({
       user_id: order.user_id, type: "order",
       title: "Return requested",
@@ -547,6 +638,18 @@ export const cancelOrder = createServerFn({ method: "POST" })
     const { data: order, error } = await supabase
       .from("orders").update(updates as never).eq("id", data.id).select().single();
     if (error) throw error;
+
+    await writeAuditLog({
+      actorId: userId,
+      orderId: order.id,
+      action: "order.cancelled",
+      previous: existing.status,
+      next: "cancelled",
+      byRole: "customer",
+      extra: { refund_pending: wasPaid },
+    });
+
+
 
     // Return reserved stock to inventory (best-effort; do not fail the cancel).
     const { data: items } = await supabase
@@ -614,6 +717,11 @@ export const approveReturn = createServerFn({ method: "POST" })
       .update({ status: "returned", refund_status: "approved" })
       .eq("id", data.id).select().single();
     if (error) throw error;
+    await writeAuditLog({
+      actorId: context.userId, orderId: order.id,
+      action: "order.return_approved", previous: "return_requested", next: "returned",
+      byRole: "admin",
+    });
     await (await import("@/integrations/supabase/client.server")).supabaseAdmin.from("notifications").insert({
       user_id: order.user_id, type: "order",
       title: "Return approved",
@@ -636,6 +744,11 @@ export const rejectReturn = createServerFn({ method: "POST" })
       .update({ status: "delivered", refund_status: "rejected" })
       .eq("id", data.id).select().single();
     if (error) throw error;
+    await writeAuditLog({
+      actorId: context.userId, orderId: order.id,
+      action: "order.return_rejected", previous: "return_requested", next: "delivered",
+      byRole: "admin", extra: { reason: data.reason ?? null },
+    });
     await (await import("@/integrations/supabase/client.server")).supabaseAdmin.from("notifications").insert({
       user_id: order.user_id, type: "order",
       title: "Return rejected",
@@ -686,6 +799,11 @@ export const markRefunded = createServerFn({ method: "POST" })
       .update({ refund_status: "refunded", refund_amount: data.amount ?? null, payment_status: "refunded" })
       .eq("id", data.id).select().single();
     if (error) throw error;
+    await writeAuditLog({
+      actorId: context.userId, orderId: order.id,
+      action: "order.refunded", previous: null, next: "refunded",
+      byRole: "admin", extra: { amount: data.amount ?? null },
+    });
     await (await import("@/integrations/supabase/client.server")).supabaseAdmin.from("notifications").insert({
       user_id: order.user_id, type: "order",
       title: "Refund processed",

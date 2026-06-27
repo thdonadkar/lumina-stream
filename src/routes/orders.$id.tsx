@@ -4,7 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { motion } from "framer-motion";
 import { ChevronLeft, Package, MapPin, CreditCard, CheckCircle2, RotateCcw, XCircle, LifeBuoy, Download } from "lucide-react";
 import { toast } from "sonner";
-import { getOrder, requestReturn, cancelOrder } from "@/lib/orders.functions";
+import { getOrder, requestReturn, cancelOrder, getOrderHistory } from "@/lib/orders.functions";
 import { createTicket, listMyTickets } from "@/lib/support.functions";
 import { downloadInvoice } from "@/lib/invoice";
 import { formatPrice } from "@/lib/cart-store";
@@ -58,12 +58,14 @@ const TONE_CLASS: Record<string, string> = {
 function OrderDetail() {
   const { id } = Route.useParams();
   const [order, setOrder] = useState<any>(null);
+  const [history, setHistory] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [returnOpen, setReturnOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const [helpSubject, setHelpSubject] = useState("");
   const [helpMessage, setHelpMessage] = useState("");
   const fetchOrder = useServerFn(getOrder);
+  const fetchHistory = useServerFn(getOrderHistory);
   const doReturn = useServerFn(requestReturn);
   const doCancel = useServerFn(cancelOrder);
   const openTicket = useServerFn(createTicket);
@@ -73,8 +75,9 @@ function OrderDetail() {
 
   function refresh() {
     fetchOrder({ data: { id } }).then(setOrder).finally(() => setLoading(false));
+    fetchHistory({ data: { id } }).then(setHistory).catch(() => setHistory([]));
   }
-  useEffect(refresh, [id, fetchOrder]);
+  useEffect(refresh, [id, fetchOrder, fetchHistory]);
 
   async function submitReturn(payload: { reason: string; description: string; order_item_id: string | null; photos: string[] }) {
     try {
@@ -290,7 +293,34 @@ function OrderDetail() {
               </div>
             ))}
           </div>
+          {history.length > 0 && (
+            <div className="mt-6">
+              <h3 className="font-bold mb-3 text-sm uppercase tracking-widest font-mono text-muted-foreground">History</h3>
+              <ol className="space-y-2">
+                {history.map((h) => {
+                  const m = h.metadata ?? {};
+                  const prev = m.previous_status as string | null;
+                  const next = m.new_status as string | null;
+                  const by = (m.by_role ?? "system") as string;
+                  return (
+                    <li key={h.id} className="glass rounded-xl p-3 text-xs flex items-center justify-between gap-3 flex-wrap">
+                      <div className="font-mono">
+                        <span className="uppercase tracking-wider">{String(h.action).replace(/^order\./, "").replace(/_/g, " ")}</span>
+                        {prev || next ? (
+                          <span className="text-muted-foreground"> · {prev ?? "—"} → {next ?? "—"}</span>
+                        ) : null}
+                      </div>
+                      <div className="text-muted-foreground font-mono">
+                        by {by} · {new Date(h.created_at).toLocaleString()}
+                      </div>
+                    </li>
+                  );
+                })}
+              </ol>
+            </div>
+          )}
         </div>
+
 
         <aside className="space-y-4">
           {addr && (
