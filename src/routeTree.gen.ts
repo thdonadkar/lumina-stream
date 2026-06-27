@@ -47,6 +47,7 @@ import { Route as AdminCategoriesRouteImport } from './routes/admin.categories'
 import { Route as AdminBannersRouteImport } from './routes/admin.banners'
 import { Route as SellerEditProductIdRouteImport } from './routes/seller.edit-product.$id'
 import { Route as ApiPublicRazorpayWebhookRouteImport } from './routes/api/public/razorpay-webhook'
+import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
 
 const WishlistRoute = WishlistRouteImport.update({
   id: '/wishlist',
@@ -239,6 +240,11 @@ const ApiPublicRazorpayWebhookRoute =
     path: '/api/public/razorpay-webhook',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHealthRoute = ApiPublicHealthRouteImport.update({
+  id: '/api/public/health',
+  path: '/api/public/health',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -277,6 +283,7 @@ export interface FileRoutesByFullPath {
   '/seller/orders': typeof SellerOrdersRoute
   '/seller/products': typeof SellerProductsRoute
   '/seller/support': typeof SellerSupportRoute
+  '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/razorpay-webhook': typeof ApiPublicRazorpayWebhookRoute
   '/seller/edit-product/$id': typeof SellerEditProductIdRoute
 }
@@ -317,6 +324,7 @@ export interface FileRoutesByTo {
   '/seller/orders': typeof SellerOrdersRoute
   '/seller/products': typeof SellerProductsRoute
   '/seller/support': typeof SellerSupportRoute
+  '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/razorpay-webhook': typeof ApiPublicRazorpayWebhookRoute
   '/seller/edit-product/$id': typeof SellerEditProductIdRoute
 }
@@ -358,6 +366,7 @@ export interface FileRoutesById {
   '/seller/orders': typeof SellerOrdersRoute
   '/seller/products': typeof SellerProductsRoute
   '/seller/support': typeof SellerSupportRoute
+  '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/razorpay-webhook': typeof ApiPublicRazorpayWebhookRoute
   '/seller/edit-product/$id': typeof SellerEditProductIdRoute
 }
@@ -400,6 +409,7 @@ export interface FileRouteTypes {
     | '/seller/orders'
     | '/seller/products'
     | '/seller/support'
+    | '/api/public/health'
     | '/api/public/razorpay-webhook'
     | '/seller/edit-product/$id'
   fileRoutesByTo: FileRoutesByTo
@@ -440,6 +450,7 @@ export interface FileRouteTypes {
     | '/seller/orders'
     | '/seller/products'
     | '/seller/support'
+    | '/api/public/health'
     | '/api/public/razorpay-webhook'
     | '/seller/edit-product/$id'
   id:
@@ -480,6 +491,7 @@ export interface FileRouteTypes {
     | '/seller/orders'
     | '/seller/products'
     | '/seller/support'
+    | '/api/public/health'
     | '/api/public/razorpay-webhook'
     | '/seller/edit-product/$id'
   fileRoutesById: FileRoutesById
@@ -521,6 +533,7 @@ export interface RootRouteChildren {
   SellerOrdersRoute: typeof SellerOrdersRoute
   SellerProductsRoute: typeof SellerProductsRoute
   SellerSupportRoute: typeof SellerSupportRoute
+  ApiPublicHealthRoute: typeof ApiPublicHealthRoute
   ApiPublicRazorpayWebhookRoute: typeof ApiPublicRazorpayWebhookRoute
   SellerEditProductIdRoute: typeof SellerEditProductIdRoute
 }
@@ -793,6 +806,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicRazorpayWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/health': {
+      id: '/api/public/health'
+      path: '/api/public/health'
+      fullPath: '/api/public/health'
+      preLoaderRoute: typeof ApiPublicHealthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -833,6 +853,7 @@ const rootRouteChildren: RootRouteChildren = {
   SellerOrdersRoute: SellerOrdersRoute,
   SellerProductsRoute: SellerProductsRoute,
   SellerSupportRoute: SellerSupportRoute,
+  ApiPublicHealthRoute: ApiPublicHealthRoute,
   ApiPublicRazorpayWebhookRoute: ApiPublicRazorpayWebhookRoute,
   SellerEditProductIdRoute: SellerEditProductIdRoute,
 }
