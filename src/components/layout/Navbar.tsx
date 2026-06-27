@@ -8,6 +8,7 @@ import { useWishlist } from "@/lib/wishlist-store";
 import { useAuth } from "@/hooks/use-auth";
 import { CATEGORIES } from "@/lib/categories";
 import { NotificationBell } from "@/components/NotificationBell";
+import { ThemeToggle } from "@/components/ThemeManager";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 const brandLogo = { url: "/atomspot-logo.png" };
@@ -160,6 +161,10 @@ export function Navbar() {
             )}
           </Link>
 
+          <div className="hidden md:block">
+            <ThemeToggle />
+          </div>
+
           <div className="shrink-0">
             <NotificationBell />
           </div>
@@ -294,6 +299,7 @@ export function Navbar() {
                   </Link>
                   <Link to="/dashboard" className="block px-4 py-3 rounded-xl glass hover:glass-strong font-semibold">Account</Link>
                   <Link to="/support" className="block px-4 py-3 rounded-xl glass hover:glass-strong font-semibold">Support</Link>
+                  <ThemeToggle variant="row" />
                   {isSeller && (
                     <Link to="/seller/dashboard" className="block px-4 py-3 rounded-xl glass hover:glass-strong font-semibold text-cyan">
                       Seller console
