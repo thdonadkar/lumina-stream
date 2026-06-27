@@ -799,6 +799,11 @@ export const markRefunded = createServerFn({ method: "POST" })
       .update({ refund_status: "refunded", refund_amount: data.amount ?? null, payment_status: "refunded" })
       .eq("id", data.id).select().single();
     if (error) throw error;
+    await writeAuditLog({
+      actorId: context.userId, orderId: order.id,
+      action: "order.refunded", previous: null, next: "refunded",
+      byRole: "admin", extra: { amount: data.amount ?? null },
+    });
     await (await import("@/integrations/supabase/client.server")).supabaseAdmin.from("notifications").insert({
       user_id: order.user_id, type: "order",
       title: "Refund processed",
