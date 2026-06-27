@@ -568,6 +568,18 @@ export const requestReturn = createServerFn({ method: "POST" })
       .eq("id", data.id).select().single();
     if (error) throw error;
 
+    await writeAuditLog({
+      actorId: userId,
+      orderId: order.id,
+      action: "order.return_requested",
+      previous: existing.status,
+      next: "return_requested",
+      byRole: "customer",
+      extra: { reason: data.reason, description: data.description ?? null },
+    });
+
+
+
     await (await import("@/integrations/supabase/client.server")).supabaseAdmin.from("notifications").insert({
       user_id: order.user_id, type: "order",
       title: "Return requested",
