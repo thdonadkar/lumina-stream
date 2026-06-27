@@ -352,17 +352,17 @@ function OrderDetail() {
             </div>
           </div>
 
-          {(order.status === "pending" || order.status === "confirmed") && (
+          {isOwner && (order.status === "pending" || order.status === "confirmed") && (
             <button onClick={handleCancel} className="w-full rounded-2xl glass-strong hover:bg-rose-400/10 hover:text-rose-400 transition-all p-3 text-sm font-bold inline-flex items-center justify-center gap-2">
               <XCircle className="size-4" /> Cancel order
             </button>
           )}
-          {order.status === "delivered" && !returnOpen && (
+          {isOwner && order.status === "delivered" && !returnOpen && (
             <button onClick={() => setReturnOpen(true)} className="w-full rounded-2xl glass-strong hover:glass transition-all p-3 text-sm font-bold inline-flex items-center justify-center gap-2">
               <RotateCcw className="size-4" /> Request return
             </button>
           )}
-          {returnOpen && (
+          {isOwner && returnOpen && (
             <ReturnForm
               items={items.map((i: any) => ({ id: i.id, title: i.title, image: i.image }))}
               onCancel={() => setReturnOpen(false)}
