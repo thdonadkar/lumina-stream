@@ -8,6 +8,7 @@ import { useWishlist } from "@/lib/wishlist-store";
 import { useAuth } from "@/hooks/use-auth";
 import { CATEGORIES } from "@/lib/categories";
 import { NotificationBell } from "@/components/NotificationBell";
+import { ThemeToggle } from "@/components/ThemeManager";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 const brandLogo = { url: "/atomspot-logo.png" };
