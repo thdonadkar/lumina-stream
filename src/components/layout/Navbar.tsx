@@ -118,17 +118,7 @@ export function Navbar() {
           </Link>
         </nav>
 
-        <div className="flex flex-nowrap items-center gap-1.5 sm:gap-2 shrink-0">
-          <button
-            onClick={() => setMobileOpen(true)}
-            className="md:hidden grid place-items-center size-9 rounded-full glass hover:glass-strong shrink-0"
-            aria-label="Open menu"
-            aria-expanded={mobileOpen}
-            aria-controls="mobile-nav-drawer"
-          >
-            <Menu className="size-4" aria-hidden="true" />
-          </button>
-
+        <div className="flex flex-nowrap items-center gap-1 sm:gap-2 shrink-0">
           {isSeller && (
             <Link to="/seller/dashboard" title="Seller console" className="hidden md:grid place-items-center size-9 rounded-full glass hover:glass-strong shrink-0">
               <Store className="size-4 text-cyan" />
@@ -148,9 +138,18 @@ export function Navbar() {
             <span className="font-mono uppercase tracking-wider">Search</span>
           </Link>
 
+          {/* Mobile-only search icon */}
+          <Link
+            to="/search"
+            className="md:hidden grid place-items-center size-9 rounded-full glass hover:glass-strong transition-all shrink-0"
+            aria-label="Search"
+          >
+            <Search className="size-4" />
+          </Link>
+
           <Link
             to="/wishlist"
-            className="relative grid place-items-center size-9 rounded-full glass hover:glass-strong transition-all shrink-0"
+            className="hidden md:grid relative place-items-center size-9 rounded-full glass hover:glass-strong transition-all shrink-0"
             aria-label="Wishlist"
           >
             <Heart className={`size-4 ${wishBadge > 0 ? "fill-rose-400 text-rose-400" : ""}`} />
@@ -214,6 +213,17 @@ export function Navbar() {
               <LogOut className="size-4" />
             </button>
           )}
+
+          {/* Mobile hamburger — moved to end (right side) */}
+          <button
+            onClick={() => setMobileOpen(true)}
+            className="md:hidden grid place-items-center size-9 rounded-full glass hover:glass-strong shrink-0"
+            aria-label="Open menu"
+            aria-expanded={mobileOpen}
+            aria-controls="mobile-nav-drawer"
+          >
+            <Menu className="size-4" aria-hidden="true" />
+          </button>
         </div>
       </div>
 
