@@ -744,6 +744,11 @@ export const rejectReturn = createServerFn({ method: "POST" })
       .update({ status: "delivered", refund_status: "rejected" })
       .eq("id", data.id).select().single();
     if (error) throw error;
+    await writeAuditLog({
+      actorId: context.userId, orderId: order.id,
+      action: "order.return_rejected", previous: "return_requested", next: "delivered",
+      byRole: "admin", extra: { reason: data.reason ?? null },
+    });
     await (await import("@/integrations/supabase/client.server")).supabaseAdmin.from("notifications").insert({
       user_id: order.user_id, type: "order",
       title: "Return rejected",
