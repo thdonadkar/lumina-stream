@@ -146,20 +146,36 @@ psql "$DST_DB" -v ON_ERROR_STOP=1 -f storage_buckets.sql
 psql "$DST_DB" -v ON_ERROR_STOP=1 -f auth_data.sql
 ```
 
-Expected harmless warnings:
+### 3d. Re-create the `auth.users` trigger (CRITICAL)
 
-- `extension "pg_trgm" already exists` — fine.
-- `role "supabase_admin" does not exist` — fine, we used `--no-owner`.
-- `permission denied for schema auth` on some sub-tables — Supabase
-  restricts a handful; the user-data tables (users, identities) restore
-  correctly, which is what matters.
-
-**Verify**:
+`handle_new_user` fires on `auth.users` INSERT to seed `public.profiles` +
+`public.user_roles`. `--schema=public` does NOT include triggers attached
+to `auth.*` tables, so re-bind on the target or new sign-ups silently skip
+profile/role creation.
 
 ```bash
-psql "$DST_DB" -c "select count(*) from public.products;"
-psql "$DST_DB" -c "select count(*) from auth.users;"
-psql "$DST_DB" -c "select key from public.site_content;"
+psql "$DST_DB" -v ON_ERROR_STOP=1 <<'SQL'
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+SQL
+```
+
+Expected harmless warnings during restore:
+
+- `extension "pg_trgm" already exists` — fine.
+- `role "supabase_admin" does not exist` — fine; we used `--no-owner`.
+- `permission denied for schema auth` on `auth.schema_migrations` etc. —
+  Supabase locks those tables; user/identity data still restores.
+
+**Sanity counts**:
+
+```bash
+psql "$DST_DB" -c "select 'products' t, count(*) from public.products
+                   union all select 'orders', count(*) from public.orders
+                   union all select 'auth.users', count(*) from auth.users
+                   union all select 'user_roles', count(*) from public.user_roles;"
 ```
 
 ---
