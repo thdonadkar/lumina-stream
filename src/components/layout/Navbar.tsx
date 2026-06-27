@@ -128,12 +128,12 @@ export function Navbar() {
 
         <div className="flex flex-nowrap items-center gap-1 sm:gap-2 shrink-0">
           {isSeller && (
-            <Link to="/seller/dashboard" title="Seller console" className="hidden md:grid place-items-center size-9 rounded-full glass hover:glass-strong shrink-0">
+            <Link to="/seller/dashboard" title="Seller console" aria-label="Seller console" className="grid place-items-center size-9 rounded-full glass hover:glass-strong shrink-0">
               <Store className="size-4 text-cyan" />
             </Link>
           )}
           {isAdmin && (
-            <Link to="/admin/dashboard" title="Admin" className="hidden md:grid place-items-center size-9 rounded-full glass hover:glass-strong shrink-0">
+            <Link to="/admin/dashboard" title="Admin" aria-label="Admin" className="grid place-items-center size-9 rounded-full glass hover:glass-strong shrink-0">
               <ShieldAlert className="size-4 text-rose-400" />
             </Link>
           )}
