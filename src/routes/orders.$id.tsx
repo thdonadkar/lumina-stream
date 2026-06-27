@@ -4,7 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { motion } from "framer-motion";
 import { ChevronLeft, Package, MapPin, CreditCard, CheckCircle2, RotateCcw, XCircle, LifeBuoy, Download } from "lucide-react";
 import { toast } from "sonner";
-import { getOrder, requestReturn, cancelOrder } from "@/lib/orders.functions";
+import { getOrder, requestReturn, cancelOrder, getOrderHistory } from "@/lib/orders.functions";
 import { createTicket, listMyTickets } from "@/lib/support.functions";
 import { downloadInvoice } from "@/lib/invoice";
 import { formatPrice } from "@/lib/cart-store";
