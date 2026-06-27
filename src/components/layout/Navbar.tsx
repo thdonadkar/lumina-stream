@@ -299,6 +299,7 @@ export function Navbar() {
                   </Link>
                   <Link to="/dashboard" className="block px-4 py-3 rounded-xl glass hover:glass-strong font-semibold">Account</Link>
                   <Link to="/support" className="block px-4 py-3 rounded-xl glass hover:glass-strong font-semibold">Support</Link>
+                  <ThemeToggle variant="row" />
                   {isSeller && (
                     <Link to="/seller/dashboard" className="block px-4 py-3 rounded-xl glass hover:glass-strong font-semibold text-cyan">
                       Seller console
