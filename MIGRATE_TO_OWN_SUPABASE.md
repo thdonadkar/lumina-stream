@@ -238,14 +238,167 @@ directly and run `supabase db push`.
 
 ---
 
-## 7. Final cutover checklist
+## 7. Code change: drop the Lovable OAuth broker
 
+`src/routes/auth.tsx` currently calls `lovable.auth.signInWithOAuth(...)`,
+which routes through Lovable Cloud's OAuth broker. Self-hosted, that
+broker isn't available — replace both call sites with direct Supabase calls:
+
+```ts
+// before
+const r = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
+
+// after
+const { error } = await supabase.auth.signInWithOAuth({
+  provider: "google",
+  options: { redirectTo: `${window.location.origin}/auth/callback` },
+});
+```
+
+Apply the same change for the Apple button if you keep it (and configure
+Apple in your new Supabase project's Auth → Providers). Remove the
+`@lovable.dev/cloud-auth-js` dependency and the `src/integrations/lovable/`
+folder once both are unused.
+
+---
+
+## 8. Rollback plan
+
+The dump is **read-only against the source** — Lovable Cloud is never
+written to. Before cutover:
+
+```bash
+cp /opt/atomspot/.env /opt/atomspot/.env.lovable-backup
+```
+
+If anything goes wrong:
+
+| Failure point | Action |
+|---|---|
+| `restore-target.sh` fails midway | Delete the target Supabase project, recreate, re-run dump+restore. Cheaper than untangling a partial restore. |
+| Auth restore fails, data restore OK | Users hit "Forgot password" against new project. Roles/orders intact. |
+| Storage copy fails partway | Re-run `copy-storage.mjs` — it's idempotent. |
+| Discovered post-cutover that something is broken | `cp /opt/atomspot/.env.lovable-backup /opt/atomspot/.env && pm2 reload ecosystem.config.js --update-env`. Back on Lovable Cloud in seconds. Any writes that happened on the new project during the window are lost — **freeze writes (maintenance page) during cutover** to make this a clean rollback. |
+
+---
+
+## 9. Post-migration validation checklist
+
+Run this against the new project BEFORE flipping DNS / EC2 to it. Use a
+staging hostname (e.g. `staging.shop.example.com`) or `localhost:3000`
+pointed at the new env. Mark each box only after you observe the result.
+
+### 9.1 Database integrity
+
+```bash
+psql "$DST_DB" -f scripts/migrate/validate.sql
+```
+
+(see `scripts/migrate/validate.sql` — generated alongside this doc).
+
+- [ ] Row counts match source for: `products`, `orders`, `order_items`, `profiles`, `user_roles`, `addresses`, `notifications`, `support_tickets`, `payments`
+- [ ] `auth.users` count matches source
+- [ ] `select count(*) from public.user_roles where role='admin'` ≥ 1
+- [ ] No orphan `order_items` (FK to deleted product/order)
+- [ ] All 25 tables listed in `<supabase-tables>` exist on target
+- [ ] `pg_trgm` extension enabled (`select * from pg_extension where extname='pg_trgm'`)
+
+### 9.2 Functions & triggers
+
+- [ ] `select has_role('<admin-uuid>'::uuid, 'admin'::app_role)` returns `true`
+- [ ] `select * from pg_proc where proname in ('handle_new_user','decrement_stock','increment_stock','is_order_owner','is_order_seller','has_role','update_updated_at_column')` returns 7 rows
+- [ ] `on_auth_user_created` trigger exists on `auth.users` (`\dft auth.*`)
+- [ ] Sign up a brand-new test email → confirm row appears in `public.profiles` AND `public.user_roles` (proves trigger works end-to-end)
+
+### 9.3 RLS policies
+
+- [ ] `select schemaname, tablename, count(*) from pg_policies where schemaname='public' group by 1,2` matches source (25 tables, total policy count matches)
+- [ ] Anonymous user CAN read `products` (active), `categories`, `banners`, `site_content`
+- [ ] Anonymous user CANNOT read `orders`, `user_roles`, `addresses`, `notifications`
+- [ ] Customer A signed in CANNOT read Customer B's orders
+- [ ] Seller CANNOT read orders that don't contain their products
+
+### 9.4 Authentication
+
+- [ ] Existing customer logs in with old password → success
+- [ ] Existing seller logs in → lands on `/seller/dashboard`, sees own products
+- [ ] Existing admin logs in → lands on `/admin/dashboard`, sees all sections
+- [ ] "Forgot password" email arrives, link works, password updates
+- [ ] New sign-up via email creates `profiles` + `user_roles` row with role `user`
+- [ ] Google OAuth: existing Google-linked user signs in without re-linking
+- [ ] Google OAuth: brand-new Google account creates `auth.users` + `auth.identities` row
+
+### 9.5 User roles
+
+- [ ] Admin user can open `/admin/orders`, `/admin/users`, `/admin/products`
+- [ ] Seller user can open `/seller/orders` but blocked from `/admin/*`
+- [ ] Customer blocked from both `/admin/*` and `/seller/*`
+- [ ] Role progression test: promote a test user via admin UI → reload → new role active
+
+### 9.6 Storage
+
+- [ ] Source object count per bucket == target object count
+  ```bash
+  for b in product-images return-photos support-attachments; do
+    echo "=== $b ==="
+    psql "$SRC_DB" -c "select count(*) from storage.objects where bucket_id='$b'"
+    psql "$DST_DB" -c "select count(*) from storage.objects where bucket_id='$b'"
+  done
+  ```
+- [ ] All 3 buckets exist on target and are **private** (`public=false`)
+- [ ] Storage RLS policies copied (re-create from migrations if missing — they live in `supabase/migrations/*.sql`, search for `storage.objects`)
+- [ ] Open an existing product page → product image loads (signed URL works)
+- [ ] Submit a new return with photo → file appears in `return-photos`
+- [ ] Reply to a support ticket with attachment → file appears in `support-attachments`
+
+### 9.7 Orders workflow (smoke)
+
+- [ ] Customer: add to cart → checkout → place order (test mode) → order appears in `/orders/:id`
+- [ ] Customer: cancel a pending order → status → `cancelled`
+- [ ] Seller: progress order pending → confirmed → packed → shipped → delivered
+- [ ] Admin: override status; row inserted into `audit_log` with prev/new/updated_by/timestamp
+- [ ] Customer: after delivered, "Request return" submits to `return_requests`
+- [ ] Inventory: stock decremented on order, restored on cancel (check `products.stock`)
+
+### 9.8 Products & catalog
+
+- [ ] Public `/shop` lists active products
+- [ ] Search bar returns results (proves `pg_trgm` works)
+- [ ] Category page filters correctly
+- [ ] Seller creates a new product → appears in admin + public catalog
+- [ ] Reviews: post a review → appears on product page, average rating updates
+
+### 9.9 Payments (Razorpay)
+
+- [ ] Razorpay keys in new `.env` are the LIVE keys (not Lovable's test keys, if different)
+- [ ] Razorpay dashboard → Webhooks: URL points to `https://<your-domain>/api/public/razorpay-webhook`, secret matches `RAZORPAY_WEBHOOK_SECRET` on EC2
+- [ ] Test payment in test mode → `payments` row created with status `captured`, order moves to `confirmed`
+- [ ] Send a test webhook from Razorpay dashboard → 200 response, row in `payments`
+- [ ] Invalid signature webhook → 401 response (proves signature verification works)
+
+### 9.10 Notifications & realtime
+
+- [ ] Realtime is enabled on `notifications` in the new project (Supabase dashboard → Database → Replication → toggle `notifications`)
+- [ ] Trigger a notification (e.g. order status update) → bell icon updates without reload
+- [ ] Mark as read → row updates, bell badge decrements
+
+### 9.11 Support
+
+- [ ] Customer opens a new ticket → row in `support_tickets`
+- [ ] Admin replies → message in `support_ticket_messages`, customer sees it live
+- [ ] Attachment upload + download round-trip works
+
+### 9.12 Final cutover
+
+- [ ] Site put into maintenance mode (block writes on Lovable Cloud)
+- [ ] Final delta dump+restore of just changed rows since the rehearsal (or just re-run full dump if downtime budget allows)
 - [ ] DNS for EC2 domain points at the instance
-- [ ] Google OAuth client has new callback URLs whitelisted
-- [ ] Razorpay webhook URL updated to `https://<your-domain>/api/public/razorpay-webhook`
-- [ ] Smoke test: sign in with an existing email, place a test order, upload a return photo
+- [ ] Google OAuth Cloud Console has new callback URLs whitelisted
+- [ ] Razorpay webhook URL switched to new domain
 - [ ] `backup.sh` cron now points at `$DST_DB`
-- [ ] Lovable Cloud project disabled or kept read-only for a week as fallback
+- [ ] `/opt/atomspot/.env.lovable-backup` kept on EC2 for instant rollback
+- [ ] Lovable Cloud project kept read-only for 7 days as fallback
 
-After 7 days of green metrics on your own Supabase, you can delete the
-Lovable Cloud project from the Cloud panel.
+After 7 days of green metrics on your own Supabase, delete the Lovable
+Cloud project from the Cloud panel.
+
