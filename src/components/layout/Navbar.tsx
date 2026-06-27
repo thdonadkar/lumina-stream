@@ -409,15 +409,37 @@ export function Navbar() {
                   <Link to="/dashboard" className="block px-4 py-3 rounded-xl glass hover:glass-strong font-semibold">Account</Link>
                   <Link to="/support" className="block px-4 py-3 rounded-xl glass hover:glass-strong font-semibold">Support</Link>
                   <ThemeToggle variant="row" />
+                  <Link to="/addresses" className="block px-4 py-3 rounded-xl glass hover:glass-strong font-semibold">Addresses</Link>
+
                   {isSeller && (
-                    <Link to="/seller/dashboard" className="block px-4 py-3 rounded-xl glass hover:glass-strong font-semibold text-cyan">
-                      Seller console
-                    </Link>
+                    <div className="pt-3">
+                      <p className="px-4 pb-2 text-[10px] font-mono uppercase tracking-widest text-cyan">Seller</p>
+                      <div className="space-y-1">
+                        <Link to="/seller/dashboard" className="block px-4 py-3 rounded-xl glass hover:glass-strong font-semibold">Seller Dashboard</Link>
+                        <Link to="/seller/products" className="block px-4 py-3 rounded-xl glass hover:glass-strong font-semibold">My Products</Link>
+                        <Link to="/seller/add-product" className="block px-4 py-3 rounded-xl glass hover:glass-strong font-semibold">Add Product</Link>
+                        <Link to="/seller/orders" className="block px-4 py-3 rounded-xl glass hover:glass-strong font-semibold">Seller Orders</Link>
+                        <Link to="/seller/analytics" className="block px-4 py-3 rounded-xl glass hover:glass-strong font-semibold">Analytics</Link>
+                        <Link to="/seller/support" className="block px-4 py-3 rounded-xl glass hover:glass-strong font-semibold">Seller Support</Link>
+                      </div>
+                    </div>
                   )}
                   {isAdmin && (
-                    <Link to="/admin/dashboard" className="block px-4 py-3 rounded-xl glass hover:glass-strong font-semibold text-rose-400">
-                      Admin
-                    </Link>
+                    <div className="pt-3">
+                      <p className="px-4 pb-2 text-[10px] font-mono uppercase tracking-widest text-rose-400">Admin</p>
+                      <div className="space-y-1">
+                        <Link to="/admin/dashboard" className="block px-4 py-3 rounded-xl glass hover:glass-strong font-semibold">Admin Dashboard</Link>
+                        <Link to="/admin/users" className="block px-4 py-3 rounded-xl glass hover:glass-strong font-semibold">Users</Link>
+                        <Link to="/admin/sellers" className="block px-4 py-3 rounded-xl glass hover:glass-strong font-semibold">Sellers</Link>
+                        <Link to="/admin/products" className="block px-4 py-3 rounded-xl glass hover:glass-strong font-semibold">Products</Link>
+                        <Link to="/admin/orders" className="block px-4 py-3 rounded-xl glass hover:glass-strong font-semibold">Orders</Link>
+                        <Link to="/admin/categories" className="block px-4 py-3 rounded-xl glass hover:glass-strong font-semibold">Categories</Link>
+                        <Link to="/admin/returns" className="block px-4 py-3 rounded-xl glass hover:glass-strong font-semibold">Returns</Link>
+                        <Link to="/admin/banners" className="block px-4 py-3 rounded-xl glass hover:glass-strong font-semibold">Banners</Link>
+                        <Link to="/admin/content" className="block px-4 py-3 rounded-xl glass hover:glass-strong font-semibold">CMS / Content</Link>
+                        <Link to="/admin/support" className="block px-4 py-3 rounded-xl glass hover:glass-strong font-semibold">Support</Link>
+                      </div>
+                    </div>
                   )}
 
                   <div className="pt-4">
