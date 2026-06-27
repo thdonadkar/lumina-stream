@@ -73,6 +73,8 @@ function OrderDetail() {
   const listTickets = useServerFn(listMyTickets);
   const { confirm } = useConfirm();
   const navigate = useNavigate();
+  const { userId } = useAuth();
+  const isOwner = !!order && !!userId && order.user_id === userId;
 
   function refresh() {
     fetchOrder({ data: { id } }).then(setOrder).finally(() => setLoading(false));
