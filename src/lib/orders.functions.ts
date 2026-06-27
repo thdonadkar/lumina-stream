@@ -717,6 +717,11 @@ export const approveReturn = createServerFn({ method: "POST" })
       .update({ status: "returned", refund_status: "approved" })
       .eq("id", data.id).select().single();
     if (error) throw error;
+    await writeAuditLog({
+      actorId: context.userId, orderId: order.id,
+      action: "order.return_approved", previous: "return_requested", next: "returned",
+      byRole: "admin",
+    });
     await (await import("@/integrations/supabase/client.server")).supabaseAdmin.from("notifications").insert({
       user_id: order.user_id, type: "order",
       title: "Return approved",
