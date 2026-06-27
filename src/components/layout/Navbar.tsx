@@ -67,12 +67,12 @@ export function Navbar() {
       className="fixed top-3 sm:top-5 left-1/2 -translate-x-1/2 z-50 w-[95%] max-w-6xl"
       onMouseLeave={() => setCatsOpen(false)}
     >
-      <div className="glass-strong shadow-elevated rounded-2xl px-4 sm:px-6 py-3 flex flex-nowrap items-center justify-between gap-2 sm:gap-4">
-        <Link to="/" className="flex items-center gap-2 shrink-0 min-w-0">
-          <div className="size-9 rounded-lg bg-white grid place-items-center p-1 shadow-glow-cyan">
+      <div className="glass-strong shadow-elevated rounded-2xl px-2.5 sm:px-6 py-2 sm:py-3 flex flex-nowrap items-center justify-between gap-1 sm:gap-4">
+        <Link to="/" className="flex items-center gap-1.5 sm:gap-2 shrink-0 min-w-0 mr-1">
+          <div className="size-8 sm:size-9 rounded-lg bg-white grid place-items-center p-1 shadow-glow-cyan shrink-0">
             <img src={brandLogo.url} alt="AtomSpot" className="size-full object-contain" />
           </div>
-          <span className="font-extrabold tracking-tighter text-base sm:text-lg">ATOMSPOT.</span>
+          <span className="hidden xs:inline font-extrabold tracking-tighter text-base sm:text-lg">ATOMSPOT.</span>
         </Link>
 
         <nav className="hidden md:flex items-center gap-1">
