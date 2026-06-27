@@ -639,6 +639,18 @@ export const cancelOrder = createServerFn({ method: "POST" })
       .from("orders").update(updates as never).eq("id", data.id).select().single();
     if (error) throw error;
 
+    await writeAuditLog({
+      actorId: userId,
+      orderId: order.id,
+      action: "order.cancelled",
+      previous: existing.status,
+      next: "cancelled",
+      byRole: "customer",
+      extra: { refund_pending: wasPaid },
+    });
+
+
+
     // Return reserved stock to inventory (best-effort; do not fail the cancel).
     const { data: items } = await supabase
       .from("order_items").select("product_id, qty").eq("order_id", data.id);
