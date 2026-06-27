@@ -508,6 +508,63 @@ export const getOrderHistory = createServerFn({ method: "POST" })
   });
 
 
+// Rich detail used by the Order Management drawer (admin & seller).
+// For sellers, items are filtered to only their products.
+export const getOrderManageDetail = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { id: string }) => d)
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const [{ data: isAdmin }, { data: isSeller }] = await Promise.all([
+      supabase.rpc("has_role", { _user_id: userId, _role: "admin" }),
+      supabase.rpc("is_order_seller", { _user_id: userId, _order_id: data.id }),
+    ]);
+    if (!isAdmin && !isSeller) throw new UserError("Forbidden");
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { data: order, error: oErr } = await supabaseAdmin
+      .from("orders").select("*, addresses(*)").eq("id", data.id).maybeSingle();
+    if (oErr) throw oErr;
+    if (!order) throw new UserError("Order not found");
+
+    const { data: itemsRaw } = await supabaseAdmin
+      .from("order_items")
+      .select("*, products:product_id(id, title, seller_id)")
+      .eq("order_id", data.id);
+    let items = (itemsRaw ?? []) as any[];
+    if (!isAdmin && isSeller) {
+      items = items.filter((it) => it?.products?.seller_id === userId);
+    }
+
+    const sellerIds = Array.from(
+      new Set(items.map((it) => it?.products?.seller_id).filter(Boolean)),
+    ) as string[];
+    const profileIds = [(order as any).user_id, ...sellerIds].filter(Boolean) as string[];
+    const { data: profiles } = profileIds.length
+      ? await supabaseAdmin.from("profiles").select("id, display_name, phone, avatar_url").in("id", profileIds)
+      : { data: [] as any[] };
+    const profileMap = new Map((profiles ?? []).map((p: any) => [p.id, p]));
+
+    const { data: payment } = await supabaseAdmin
+      .from("payments")
+      .select("provider, status, method, amount, currency, provider_payment_id, created_at")
+      .eq("order_id", data.id)
+      .order("created_at", { ascending: false }).limit(1).maybeSingle();
+
+    return {
+      order,
+      items,
+      customer: profileMap.get((order as any).user_id) ?? null,
+      sellers: sellerIds.map((id) => profileMap.get(id)).filter(Boolean),
+      payment: payment ?? null,
+      viewerRole: (isAdmin ? "admin" : "seller") as "admin" | "seller",
+    };
+  });
+
+
+
+
 const RETURN_REASONS = new Set([
   "damaged",
   "wrong_item",
