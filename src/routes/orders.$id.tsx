@@ -293,7 +293,34 @@ function OrderDetail() {
               </div>
             ))}
           </div>
+          {history.length > 0 && (
+            <div className="mt-6">
+              <h3 className="font-bold mb-3 text-sm uppercase tracking-widest font-mono text-muted-foreground">History</h3>
+              <ol className="space-y-2">
+                {history.map((h) => {
+                  const m = h.metadata ?? {};
+                  const prev = m.previous_status as string | null;
+                  const next = m.new_status as string | null;
+                  const by = (m.by_role ?? "system") as string;
+                  return (
+                    <li key={h.id} className="glass rounded-xl p-3 text-xs flex items-center justify-between gap-3 flex-wrap">
+                      <div className="font-mono">
+                        <span className="uppercase tracking-wider">{String(h.action).replace(/^order\./, "").replace(/_/g, " ")}</span>
+                        {prev || next ? (
+                          <span className="text-muted-foreground"> · {prev ?? "—"} → {next ?? "—"}</span>
+                        ) : null}
+                      </div>
+                      <div className="text-muted-foreground font-mono">
+                        by {by} · {new Date(h.created_at).toLocaleString()}
+                      </div>
+                    </li>
+                  );
+                })}
+              </ol>
+            </div>
+          )}
         </div>
+
 
         <aside className="space-y-4">
           {addr && (
