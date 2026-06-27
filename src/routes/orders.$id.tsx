@@ -58,12 +58,14 @@ const TONE_CLASS: Record<string, string> = {
 function OrderDetail() {
   const { id } = Route.useParams();
   const [order, setOrder] = useState<any>(null);
+  const [history, setHistory] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [returnOpen, setReturnOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const [helpSubject, setHelpSubject] = useState("");
   const [helpMessage, setHelpMessage] = useState("");
   const fetchOrder = useServerFn(getOrder);
+  const fetchHistory = useServerFn(getOrderHistory);
   const doReturn = useServerFn(requestReturn);
   const doCancel = useServerFn(cancelOrder);
   const openTicket = useServerFn(createTicket);
@@ -73,8 +75,9 @@ function OrderDetail() {
 
   function refresh() {
     fetchOrder({ data: { id } }).then(setOrder).finally(() => setLoading(false));
+    fetchHistory({ data: { id } }).then(setHistory).catch(() => setHistory([]));
   }
-  useEffect(refresh, [id, fetchOrder]);
+  useEffect(refresh, [id, fetchOrder, fetchHistory]);
 
   async function submitReturn(payload: { reason: string; description: string; order_item_id: string | null; photos: string[] }) {
     try {
