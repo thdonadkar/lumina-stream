@@ -161,6 +161,10 @@ export function Navbar() {
             )}
           </Link>
 
+          <div className="hidden md:block">
+            <ThemeToggle />
+          </div>
+
           <div className="shrink-0">
             <NotificationBell />
           </div>
