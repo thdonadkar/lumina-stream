@@ -72,7 +72,7 @@ export function Navbar() {
           <div className="size-8 sm:size-9 rounded-lg bg-white grid place-items-center p-1 shadow-glow-cyan shrink-0">
             <img src={brandLogo.url} alt="AtomSpot" className="size-full object-contain" />
           </div>
-          <span className="hidden xs:inline font-extrabold tracking-tighter text-base sm:text-lg">ATOMSPOT.</span>
+          <span className="hidden sm:inline font-extrabold tracking-tighter text-base sm:text-lg">ATOMSPOT.</span>
         </Link>
 
         <nav className="hidden md:flex items-center gap-1">
