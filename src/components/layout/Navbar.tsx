@@ -203,23 +203,114 @@ export function Navbar() {
             <LifeBuoy className="size-4" />
           </Link>
 
-          <Link
-            to={userId ? "/dashboard" : "/auth"}
-            className="grid place-items-center size-9 rounded-full glass hover:glass-strong transition-all shrink-0"
-            aria-label="Account"
-          >
-            <User className="size-4" />
-          </Link>
+          {userId ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                className="grid place-items-center size-9 rounded-full glass hover:glass-strong transition-all shrink-0 outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                aria-label="Account menu"
+              >
+                <User className="size-4" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-60 glass-strong border-white/10">
+                <DropdownMenuLabel className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
+                  Account
+                </DropdownMenuLabel>
+                <DropdownMenuItem asChild>
+                  <Link to="/dashboard"><User className="size-4" /> Profile</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/dashboard"><Package className="size-4" /> Orders</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/wishlist"><Heart className="size-4" /> Wishlist</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/addresses"><MapPin className="size-4" /> Addresses</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/support"><LifeBuoy className="size-4" /> Support</Link>
+                </DropdownMenuItem>
 
-          {userId && (
-            <button
-              onClick={handleLogout}
-              aria-label="Sign out"
-              title="Sign out"
-              className="hidden md:grid place-items-center size-9 rounded-full glass hover:glass-strong transition-all text-muted-foreground hover:text-rose-400 shrink-0"
+                {isSeller && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuLabel className="text-[10px] font-mono uppercase tracking-widest text-cyan">
+                      Seller
+                    </DropdownMenuLabel>
+                    <DropdownMenuItem asChild>
+                      <Link to="/seller/dashboard"><LayoutDashboard className="size-4" /> Seller Dashboard</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/seller/products"><Package className="size-4" /> My Products</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/seller/add-product"><PlusSquare className="size-4" /> Add Product</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/seller/orders"><ShoppingBag className="size-4" /> Seller Orders</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/seller/analytics"><BarChart3 className="size-4" /> Analytics</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/seller/support"><LifeBuoy className="size-4" /> Seller Support</Link>
+                    </DropdownMenuItem>
+                  </>
+                )}
+
+                {isAdmin && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuLabel className="text-[10px] font-mono uppercase tracking-widest text-rose-400">
+                      Admin
+                    </DropdownMenuLabel>
+                    <DropdownMenuItem asChild>
+                      <Link to="/admin/dashboard"><LayoutDashboard className="size-4" /> Admin Dashboard</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/admin/users"><UsersIcon className="size-4" /> Users</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/admin/sellers"><Store className="size-4" /> Sellers</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/admin/products"><Package className="size-4" /> Products</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/admin/orders"><ShoppingBag className="size-4" /> Orders</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/admin/categories"><FileText className="size-4" /> Categories</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/admin/returns"><Undo2 className="size-4" /> Returns</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/admin/banners"><ImageIcon className="size-4" /> Banners</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/admin/content"><FileText className="size-4" /> CMS / Content</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/admin/support"><LifeBuoy className="size-4" /> Support</Link>
+                    </DropdownMenuItem>
+                  </>
+                )}
+
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout} className="text-rose-400 focus:text-rose-400">
+                  <LogOut className="size-4" /> Sign out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Link
+              to="/auth"
+              className="grid place-items-center size-9 rounded-full glass hover:glass-strong transition-all shrink-0"
+              aria-label="Sign in"
             >
-              <LogOut className="size-4" />
-            </button>
+              <User className="size-4" />
+            </Link>
           )}
 
           {/* Mobile hamburger — moved to end (right side) */}
