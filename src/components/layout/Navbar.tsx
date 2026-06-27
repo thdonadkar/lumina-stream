@@ -1,6 +1,14 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, ShoppingBag, User, Heart, ChevronDown, ShieldAlert, Store, LogOut, LifeBuoy, Menu, X } from "lucide-react";
+import { Search, ShoppingBag, User, Heart, ChevronDown, ShieldAlert, Store, LogOut, LifeBuoy, Menu, X, Package, MapPin, BarChart3, Users as UsersIcon, Image as ImageIcon, FileText, Undo2, LayoutDashboard, PlusSquare } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useCart } from "@/lib/cart-store";
@@ -120,12 +128,12 @@ export function Navbar() {
 
         <div className="flex flex-nowrap items-center gap-1 sm:gap-2 shrink-0">
           {isSeller && (
-            <Link to="/seller/dashboard" title="Seller console" className="hidden md:grid place-items-center size-9 rounded-full glass hover:glass-strong shrink-0">
+            <Link to="/seller/dashboard" title="Seller console" aria-label="Seller console" className="grid place-items-center size-9 rounded-full glass hover:glass-strong shrink-0">
               <Store className="size-4 text-cyan" />
             </Link>
           )}
           {isAdmin && (
-            <Link to="/admin/dashboard" title="Admin" className="hidden md:grid place-items-center size-9 rounded-full glass hover:glass-strong shrink-0">
+            <Link to="/admin/dashboard" title="Admin" aria-label="Admin" className="grid place-items-center size-9 rounded-full glass hover:glass-strong shrink-0">
               <ShieldAlert className="size-4 text-rose-400" />
             </Link>
           )}
@@ -195,23 +203,114 @@ export function Navbar() {
             <LifeBuoy className="size-4" />
           </Link>
 
-          <Link
-            to={userId ? "/dashboard" : "/auth"}
-            className="grid place-items-center size-9 rounded-full glass hover:glass-strong transition-all shrink-0"
-            aria-label="Account"
-          >
-            <User className="size-4" />
-          </Link>
+          {userId ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                className="grid place-items-center size-9 rounded-full glass hover:glass-strong transition-all shrink-0 outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                aria-label="Account menu"
+              >
+                <User className="size-4" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-60 glass-strong border-white/10">
+                <DropdownMenuLabel className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
+                  Account
+                </DropdownMenuLabel>
+                <DropdownMenuItem asChild>
+                  <Link to="/dashboard"><User className="size-4" /> Profile</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/dashboard"><Package className="size-4" /> Orders</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/wishlist"><Heart className="size-4" /> Wishlist</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/addresses"><MapPin className="size-4" /> Addresses</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/support"><LifeBuoy className="size-4" /> Support</Link>
+                </DropdownMenuItem>
 
-          {userId && (
-            <button
-              onClick={handleLogout}
-              aria-label="Sign out"
-              title="Sign out"
-              className="hidden md:grid place-items-center size-9 rounded-full glass hover:glass-strong transition-all text-muted-foreground hover:text-rose-400 shrink-0"
+                {isSeller && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuLabel className="text-[10px] font-mono uppercase tracking-widest text-cyan">
+                      Seller
+                    </DropdownMenuLabel>
+                    <DropdownMenuItem asChild>
+                      <Link to="/seller/dashboard"><LayoutDashboard className="size-4" /> Seller Dashboard</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/seller/products"><Package className="size-4" /> My Products</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/seller/add-product"><PlusSquare className="size-4" /> Add Product</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/seller/orders"><ShoppingBag className="size-4" /> Seller Orders</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/seller/analytics"><BarChart3 className="size-4" /> Analytics</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/seller/support"><LifeBuoy className="size-4" /> Seller Support</Link>
+                    </DropdownMenuItem>
+                  </>
+                )}
+
+                {isAdmin && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuLabel className="text-[10px] font-mono uppercase tracking-widest text-rose-400">
+                      Admin
+                    </DropdownMenuLabel>
+                    <DropdownMenuItem asChild>
+                      <Link to="/admin/dashboard"><LayoutDashboard className="size-4" /> Admin Dashboard</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/admin/users"><UsersIcon className="size-4" /> Users</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/admin/sellers"><Store className="size-4" /> Sellers</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/admin/products"><Package className="size-4" /> Products</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/admin/orders"><ShoppingBag className="size-4" /> Orders</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/admin/categories"><FileText className="size-4" /> Categories</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/admin/returns"><Undo2 className="size-4" /> Returns</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/admin/banners"><ImageIcon className="size-4" /> Banners</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/admin/content"><FileText className="size-4" /> CMS / Content</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/admin/support"><LifeBuoy className="size-4" /> Support</Link>
+                    </DropdownMenuItem>
+                  </>
+                )}
+
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout} className="text-rose-400 focus:text-rose-400">
+                  <LogOut className="size-4" /> Sign out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Link
+              to="/auth"
+              className="grid place-items-center size-9 rounded-full glass hover:glass-strong transition-all shrink-0"
+              aria-label="Sign in"
             >
-              <LogOut className="size-4" />
-            </button>
+              <User className="size-4" />
+            </Link>
           )}
 
           {/* Mobile hamburger — moved to end (right side) */}
@@ -310,15 +409,37 @@ export function Navbar() {
                   <Link to="/dashboard" className="block px-4 py-3 rounded-xl glass hover:glass-strong font-semibold">Account</Link>
                   <Link to="/support" className="block px-4 py-3 rounded-xl glass hover:glass-strong font-semibold">Support</Link>
                   <ThemeToggle variant="row" />
+                  <Link to="/addresses" className="block px-4 py-3 rounded-xl glass hover:glass-strong font-semibold">Addresses</Link>
+
                   {isSeller && (
-                    <Link to="/seller/dashboard" className="block px-4 py-3 rounded-xl glass hover:glass-strong font-semibold text-cyan">
-                      Seller console
-                    </Link>
+                    <div className="pt-3">
+                      <p className="px-4 pb-2 text-[10px] font-mono uppercase tracking-widest text-cyan">Seller</p>
+                      <div className="space-y-1">
+                        <Link to="/seller/dashboard" className="block px-4 py-3 rounded-xl glass hover:glass-strong font-semibold">Seller Dashboard</Link>
+                        <Link to="/seller/products" className="block px-4 py-3 rounded-xl glass hover:glass-strong font-semibold">My Products</Link>
+                        <Link to="/seller/add-product" className="block px-4 py-3 rounded-xl glass hover:glass-strong font-semibold">Add Product</Link>
+                        <Link to="/seller/orders" className="block px-4 py-3 rounded-xl glass hover:glass-strong font-semibold">Seller Orders</Link>
+                        <Link to="/seller/analytics" className="block px-4 py-3 rounded-xl glass hover:glass-strong font-semibold">Analytics</Link>
+                        <Link to="/seller/support" className="block px-4 py-3 rounded-xl glass hover:glass-strong font-semibold">Seller Support</Link>
+                      </div>
+                    </div>
                   )}
                   {isAdmin && (
-                    <Link to="/admin/dashboard" className="block px-4 py-3 rounded-xl glass hover:glass-strong font-semibold text-rose-400">
-                      Admin
-                    </Link>
+                    <div className="pt-3">
+                      <p className="px-4 pb-2 text-[10px] font-mono uppercase tracking-widest text-rose-400">Admin</p>
+                      <div className="space-y-1">
+                        <Link to="/admin/dashboard" className="block px-4 py-3 rounded-xl glass hover:glass-strong font-semibold">Admin Dashboard</Link>
+                        <Link to="/admin/users" className="block px-4 py-3 rounded-xl glass hover:glass-strong font-semibold">Users</Link>
+                        <Link to="/admin/sellers" className="block px-4 py-3 rounded-xl glass hover:glass-strong font-semibold">Sellers</Link>
+                        <Link to="/admin/products" className="block px-4 py-3 rounded-xl glass hover:glass-strong font-semibold">Products</Link>
+                        <Link to="/admin/orders" className="block px-4 py-3 rounded-xl glass hover:glass-strong font-semibold">Orders</Link>
+                        <Link to="/admin/categories" className="block px-4 py-3 rounded-xl glass hover:glass-strong font-semibold">Categories</Link>
+                        <Link to="/admin/returns" className="block px-4 py-3 rounded-xl glass hover:glass-strong font-semibold">Returns</Link>
+                        <Link to="/admin/banners" className="block px-4 py-3 rounded-xl glass hover:glass-strong font-semibold">Banners</Link>
+                        <Link to="/admin/content" className="block px-4 py-3 rounded-xl glass hover:glass-strong font-semibold">CMS / Content</Link>
+                        <Link to="/admin/support" className="block px-4 py-3 rounded-xl glass hover:glass-strong font-semibold">Support</Link>
+                      </div>
+                    </div>
                   )}
 
                   <div className="pt-4">
