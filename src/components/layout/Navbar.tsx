@@ -1,6 +1,14 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, ShoppingBag, User, Heart, ChevronDown, ShieldAlert, Store, LogOut, LifeBuoy, Menu, X } from "lucide-react";
+import { Search, ShoppingBag, User, Heart, ChevronDown, ShieldAlert, Store, LogOut, LifeBuoy, Menu, X, Package, MapPin, BarChart3, Users as UsersIcon, Image as ImageIcon, FileText, Undo2, LayoutDashboard, PlusSquare } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useCart } from "@/lib/cart-store";
